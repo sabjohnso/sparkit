@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.12)
 project(sparkit VERSION 0.1.0 LANGUAGES C CXX)
 
 option(sparkit_BUILD_TESTING "Build the sparkit tests" ON)
+set(sparkit_CXX_STANDARD 20 CACHE STRING "C++ standard for sparkit")
+set(sparkit_DEFAULT_VALUE_TYPE double CACHE STRING "Default type for values in sparkit")
+set(sparkit_DEFAULT_SIZE_TYPE std::ptrdiff_t CACHE STRING "Default type for sizes in sparkit")
 
 include(GNUInstallDirs)
 set(sparkit_INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR})
@@ -30,11 +33,3 @@ install(EXPORT sparkit_EXPORTS
 configure_file(sparkit-config.cmake.in sparkit-config.cmake)
 install(FILES ${PROJECT_BINARY_DIR}/sparkit-config.cmake
   DESTINATION ${sparkit_INSTALL_CONFDIR})
-
-
-
-
-
-
-
-

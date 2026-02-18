@@ -18,7 +18,8 @@ add_library(sparkit_shared_library SHARED
   data/Coordinate_sparsity.hpp data/Coordinate_sparsity.cpp
   data/Coordinate_sparsity_Impl.hpp data/Coordinate_sparsity_Impl.cpp
   data/Compressed_row_sparsity.hpp data/Compressed_row_sparsity.cpp
-  data/Compressed_row_sparsity_Impl.hpp data/Compressed_row_sparsity_Impl.cpp)
+  data/Compressed_row_sparsity_Impl.hpp data/Compressed_row_sparsity_Impl.cpp
+  data/conversions.hpp data/conversions.cpp)
 
 set_target_properties(sparkit_shared_library
   PROPERTIES

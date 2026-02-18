@@ -4,6 +4,7 @@
 // ... Standard header files
 //
 #include <initializer_list>
+#include <vector>
 //
 // ... sparkit header files
 //
@@ -49,6 +50,9 @@ namespace sparkit::data::detail {
 
     Shape
     shape() const;
+
+    std::vector<Index>
+    indices() const;
 
     virtual ~Coordinate_sparsity();
 

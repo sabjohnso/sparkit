@@ -98,4 +98,11 @@ namespace sparkit::data::detail {
     return pimpl->shape();
   }
 
+  std::vector<Index>
+  Coordinate_sparsity::indices() const
+  {
+    assert(pimpl);
+    return pimpl->indices();
+  }
+
 } // end of namespace sparkit::data::detail

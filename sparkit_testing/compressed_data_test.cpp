@@ -6,18 +6,51 @@
 //
 // ... Standard header files
 //
+#include <algorithm>
 #include <vector>
 
 //
 // ... sparkit header files
 //
+#include <sparkit/data/Coordinate_sparsity.hpp>
 #include <sparkit/data/Compressed_row_sparsity.hpp>
+#include <sparkit/data/conversions.hpp>
 
 namespace sparkit::testing {
 
+  using sparkit::data::detail::Coordinate_sparsity;
   using sparkit::data::detail::Compressed_row_sparsity;
   using sparkit::data::detail::Shape;
   using sparkit::data::detail::Index;
+
+  // -- COO indices() accessor --
+
+  TEST(coordinate_sparsity, indices_empty)
+  {
+    Coordinate_sparsity coo{Shape{3, 3}, {}};
+    auto idx = coo.indices();
+    EXPECT_TRUE(idx.empty());
+  }
+
+  TEST(coordinate_sparsity, indices_returns_all)
+  {
+    Coordinate_sparsity coo{Shape{5, 6},
+      {Index{2, 3}, Index{3, 4}, Index{4, 5}}};
+
+    auto idx = coo.indices();
+    ASSERT_EQ(std::ssize(idx), 3);
+
+    // Order-independent check
+    auto by_row_col = [](Index const& a, Index const& b) {
+      return a.row() < b.row() || (a.row() == b.row() && a.column() < b.column());
+    };
+    std::sort(begin(idx), end(idx), by_row_col);
+    EXPECT_EQ(idx[0], Index(2, 3));
+    EXPECT_EQ(idx[1], Index(3, 4));
+    EXPECT_EQ(idx[2], Index(4, 5));
+  }
+
+  // -- CSR tests --
 
   TEST(compressed_row_sparsity, construction_from_initializer_list)
   {
@@ -206,6 +239,65 @@ namespace sparkit::testing {
 
     EXPECT_EQ(target.shape(), original_shape);
     EXPECT_EQ(target.size(), original_size);
+  }
+
+  // -- COO to CSR conversion --
+
+  TEST(conversions, coo_to_csr_empty)
+  {
+    Coordinate_sparsity coo{Shape{3, 3}, {}};
+    auto csr = sparkit::data::detail::to_compressed_row(coo);
+
+    EXPECT_EQ(csr.shape(), Shape(3, 3));
+    EXPECT_EQ(csr.size(), 0);
+    EXPECT_EQ(std::ssize(csr.col_ind()), 0);
+  }
+
+  TEST(conversions, coo_to_csr_basic)
+  {
+    // 5x6 matrix with entries at (2,2), (2,4), (3,5)
+    Coordinate_sparsity coo{Shape{5, 6},
+      {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
+
+    auto csr = sparkit::data::detail::to_compressed_row(coo);
+
+    EXPECT_EQ(csr.size(), 3);
+
+    auto rp = csr.row_ptr();
+    ASSERT_EQ(std::ssize(rp), 6);
+    EXPECT_EQ(rp[0], 0);
+    EXPECT_EQ(rp[1], 0);
+    EXPECT_EQ(rp[2], 0);
+    EXPECT_EQ(rp[3], 2);
+    EXPECT_EQ(rp[4], 3);
+    EXPECT_EQ(rp[5], 3);
+
+    auto ci = csr.col_ind();
+    ASSERT_EQ(std::ssize(ci), 3);
+    EXPECT_EQ(ci[0], 2);
+    EXPECT_EQ(ci[1], 4);
+    EXPECT_EQ(ci[2], 5);
+  }
+
+  TEST(conversions, coo_to_csr_preserves_shape)
+  {
+    Coordinate_sparsity coo{Shape{7, 9}, {Index{3, 4}}};
+    auto csr = sparkit::data::detail::to_compressed_row(coo);
+    EXPECT_EQ(csr.shape(), Shape(7, 9));
+  }
+
+  TEST(conversions, coo_to_csr_deduplicates)
+  {
+    Coordinate_sparsity coo{Shape{5, 6}, {}};
+    coo.add(Index{2, 3});
+    coo.add(Index{2, 3});  // duplicate
+    coo.add(Index{3, 4});
+
+    auto csr = sparkit::data::detail::to_compressed_row(coo);
+
+    // COO's unordered_set already deduplicates, but CSR constructor
+    // also deduplicates — either way, result has 2 unique entries.
+    EXPECT_EQ(csr.size(), 2);
   }
 
 } // end of namespace sparkit::testing

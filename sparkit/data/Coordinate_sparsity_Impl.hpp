@@ -4,6 +4,7 @@
 // ... Standard header files
 //
 #include <unordered_set>
+#include <vector>
 
 //
 // ... sparkit header files
@@ -34,6 +35,9 @@ namespace sparkit::data::detail{
 
     size_type
     size() const;
+
+    std::vector<Index>
+    indices() const;
 
   private:
 

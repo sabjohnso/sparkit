@@ -49,7 +49,10 @@ namespace sparkit::data::detail {
   size_type
   Coordinate_sparsity::Impl::size() const { return std::size(nonzeros_); }
 
-
-
+  std::vector<Index>
+  Coordinate_sparsity::Impl::indices() const
+  {
+    return {begin(nonzeros_), end(nonzeros_)};
+  }
 
 } // end of namespace sparkit::data::detail

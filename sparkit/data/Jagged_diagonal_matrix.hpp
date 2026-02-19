@@ -82,6 +82,12 @@ namespace sparkit::data::detail {
       return T{0};
     }
 
+    std::span<T const>
+    values() const
+    {
+      return {values_.data(), values_.size()};
+    }
+
     Jagged_diagonal_sparsity const&
     sparsity() const
     {

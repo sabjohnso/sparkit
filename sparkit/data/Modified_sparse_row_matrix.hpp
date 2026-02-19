@@ -89,6 +89,12 @@ namespace sparkit::data::detail {
       return T{0};
     }
 
+    std::span<T const>
+    off_diagonal_values() const
+    {
+      return {off_diagonal_values_.data(), off_diagonal_values_.size()};
+    }
+
     Modified_sparse_row_sparsity const&
     sparsity() const
     {

@@ -96,6 +96,12 @@ namespace sparkit::data::detail {
       return values_[static_cast<std::size_t>(pos + within)];
     }
 
+    std::span<T const>
+    values() const
+    {
+      return {values_.data(), values_.size()};
+    }
+
     Diagonal_sparsity const&
     sparsity() const
     {

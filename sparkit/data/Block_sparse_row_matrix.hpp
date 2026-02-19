@@ -80,6 +80,12 @@ namespace sparkit::data::detail {
       return T{0};
     }
 
+    std::span<T const>
+    values() const
+    {
+      return {values_.data(), values_.size()};
+    }
+
     Block_sparse_row_sparsity const&
     sparsity() const
     {

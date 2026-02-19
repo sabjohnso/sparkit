@@ -38,3 +38,4 @@ sparkit_add_test(symmetric_block_sparse_row_data symmetric_block_sparse_row_data
 sparkit_add_test(symmetric_block_sparse_row_matrix symmetric_block_sparse_row_matrix_test symmetric_block_sparse_row_matrix_test.cpp)
 sparkit_add_test(unary unary_test unary_test.cpp)
 sparkit_add_test(info info_test info_test.cpp)
+sparkit_add_test(spmv spmv_test spmv_test.cpp)

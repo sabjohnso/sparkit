@@ -14,3 +14,4 @@ endmacro()
 
 sparkit_add_test(shape shape_test shape_test.cpp)
 sparkit_add_test(compressed_data compressed_data_test compressed_data_test.cpp)
+sparkit_add_test(sparse_matrix sparse_matrix_test sparse_matrix_test.cpp)

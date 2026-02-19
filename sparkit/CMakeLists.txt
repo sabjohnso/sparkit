@@ -31,6 +31,12 @@ add_library(sparkit_shared_library SHARED
   data/Block_sparse_row_sparsity_Impl.hpp data/Block_sparse_row_sparsity_Impl.cpp
   data/Jagged_diagonal_sparsity.hpp data/Jagged_diagonal_sparsity.cpp
   data/Jagged_diagonal_sparsity_Impl.hpp data/Jagged_diagonal_sparsity_Impl.cpp
+  data/Symmetric_compressed_row_sparsity.hpp data/Symmetric_compressed_row_sparsity.cpp
+  data/Symmetric_compressed_row_sparsity_Impl.hpp data/Symmetric_compressed_row_sparsity_Impl.cpp
+  data/Symmetric_coordinate_sparsity.hpp data/Symmetric_coordinate_sparsity.cpp
+  data/Symmetric_coordinate_sparsity_Impl.hpp data/Symmetric_coordinate_sparsity_Impl.cpp
+  data/Symmetric_block_sparse_row_sparsity.hpp data/Symmetric_block_sparse_row_sparsity.cpp
+  data/Symmetric_block_sparse_row_sparsity_Impl.hpp data/Symmetric_block_sparse_row_sparsity_Impl.cpp
   data/conversions.hpp data/conversions.cpp)
 
 set_target_properties(sparkit_shared_library

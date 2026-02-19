@@ -26,6 +26,12 @@
 #include <sparkit/data/Block_sparse_row_sparsity.hpp>
 #include <sparkit/data/Jagged_diagonal_matrix.hpp>
 #include <sparkit/data/Jagged_diagonal_sparsity.hpp>
+#include <sparkit/data/Symmetric_compressed_row_matrix.hpp>
+#include <sparkit/data/Symmetric_compressed_row_sparsity.hpp>
+#include <sparkit/data/Symmetric_coordinate_matrix.hpp>
+#include <sparkit/data/Symmetric_coordinate_sparsity.hpp>
+#include <sparkit/data/Symmetric_block_sparse_row_matrix.hpp>
+#include <sparkit/data/Symmetric_block_sparse_row_sparsity.hpp>
 
 namespace sparkit::data::detail {
 
@@ -732,6 +738,305 @@ namespace sparkit::data::detail {
 
     Compressed_row_sparsity csr_sp{shape, indices.begin(), indices.end()};
     return Compressed_row_matrix<T>{std::move(csr_sp), std::move(values)};
+  }
+
+  // -- CSR <-> sCSR sparsity --
+
+  Compressed_row_sparsity
+  to_compressed_row(Symmetric_compressed_row_sparsity const& scsr);
+
+  Symmetric_compressed_row_sparsity
+  to_symmetric_compressed_row(Compressed_row_sparsity const& csr);
+
+  // -- CSR <-> sCSR matrix --
+
+  template<typename T>
+  Compressed_row_matrix<T>
+  to_compressed_row(Symmetric_compressed_row_matrix<T> const& scsr)
+  {
+    auto rp = scsr.row_ptr();
+    auto ci = scsr.col_ind();
+    auto sv = scsr.values();
+    auto shape = scsr.shape();
+    auto nrow = shape.row();
+
+    // Expand lower triangle to full matrix:
+    // for each stored (i,j): emit (i,j); if i != j also emit (j,i)
+    std::vector<Entry<T>> entries;
+    entries.reserve(static_cast<std::size_t>(scsr.size() * 2));
+
+    for (size_type row = 0; row < nrow; ++row) {
+      for (auto j = rp[row]; j < rp[row + 1]; ++j) {
+        auto col = ci[j];
+        auto val = sv[j];
+        entries.push_back({Index{row, col}, val});
+        if (row != col) {
+          entries.push_back({Index{col, row}, val});
+        }
+      }
+    }
+
+    auto by_row_col = [](auto const& a, auto const& b) {
+      return a.index.row() < b.index.row()
+        || (a.index.row() == b.index.row()
+            && a.index.column() < b.index.column());
+    };
+    std::sort(entries.begin(), entries.end(), by_row_col);
+
+    std::vector<Index> indices;
+    std::vector<T> values;
+    indices.reserve(entries.size());
+    values.reserve(entries.size());
+
+    for (auto const& e : entries) {
+      indices.push_back(e.index);
+      values.push_back(e.value);
+    }
+
+    Compressed_row_sparsity sparsity{shape, indices.begin(), indices.end()};
+    return Compressed_row_matrix<T>{std::move(sparsity), std::move(values)};
+  }
+
+  template<typename T>
+  Symmetric_compressed_row_matrix<T>
+  to_symmetric_compressed_row(Compressed_row_matrix<T> const& csr)
+  {
+    auto rp = csr.row_ptr();
+    auto ci = csr.col_ind();
+    auto sv = csr.values();
+    auto shape = csr.shape();
+    auto nrow = shape.row();
+
+    // Extract lower triangle entries (row >= col)
+    std::vector<Entry<T>> entries;
+    entries.reserve(static_cast<std::size_t>(csr.size()));
+
+    for (size_type row = 0; row < nrow; ++row) {
+      for (auto j = rp[row]; j < rp[row + 1]; ++j) {
+        if (row >= ci[j]) {
+          entries.push_back({Index{row, ci[j]}, sv[j]});
+        }
+      }
+    }
+
+    auto by_row_col = [](auto const& a, auto const& b) {
+      return a.index.row() < b.index.row()
+        || (a.index.row() == b.index.row()
+            && a.index.column() < b.index.column());
+    };
+    std::sort(entries.begin(), entries.end(), by_row_col);
+
+    std::vector<Index> indices;
+    std::vector<T> values;
+    indices.reserve(entries.size());
+    values.reserve(entries.size());
+
+    for (auto const& e : entries) {
+      indices.push_back(e.index);
+      values.push_back(e.value);
+    }
+
+    Symmetric_compressed_row_sparsity sparsity{
+      shape, indices.begin(), indices.end()};
+    return Symmetric_compressed_row_matrix<T>{
+      std::move(sparsity), std::move(values)};
+  }
+
+  // -- sCOO -> sCSR sparsity --
+
+  Symmetric_compressed_row_sparsity
+  to_symmetric_compressed_row(Symmetric_coordinate_sparsity const& scoo);
+
+  // -- sCOO -> CSR sparsity --
+
+  Compressed_row_sparsity
+  to_compressed_row(Symmetric_coordinate_sparsity const& scoo);
+
+  // -- sCOO -> sCSR matrix --
+
+  template<typename T>
+  Symmetric_compressed_row_matrix<T>
+  to_symmetric_compressed_row(Symmetric_coordinate_matrix<T> const& scoo)
+  {
+    auto entries = scoo.entries();
+
+    auto by_row_col = [](auto const& a, auto const& b) {
+      return a.first.row() < b.first.row()
+        || (a.first.row() == b.first.row()
+            && a.first.column() < b.first.column());
+    };
+    std::sort(entries.begin(), entries.end(), by_row_col);
+
+    std::vector<Index> indices;
+    std::vector<T> values;
+    indices.reserve(entries.size());
+    values.reserve(entries.size());
+
+    for (auto const& [index, value] : entries) {
+      indices.push_back(index);
+      values.push_back(value);
+    }
+
+    Symmetric_compressed_row_sparsity sparsity{
+      scoo.shape(), indices.begin(), indices.end()};
+
+    return Symmetric_compressed_row_matrix<T>{
+      std::move(sparsity), std::move(values)};
+  }
+
+  // -- sCOO -> CSR matrix --
+
+  template<typename T>
+  Compressed_row_matrix<T>
+  to_compressed_row(Symmetric_coordinate_matrix<T> const& scoo)
+  {
+    // Route through sCSR as intermediate
+    auto scsr = to_symmetric_compressed_row(scoo);
+    return to_compressed_row(scsr);
+  }
+
+  // -- CSR <-> sBSR sparsity --
+
+  Symmetric_block_sparse_row_sparsity
+  to_symmetric_block_sparse_row(
+    Compressed_row_sparsity const& csr,
+    size_type block_rows, size_type block_cols);
+
+  Compressed_row_sparsity
+  to_compressed_row(Symmetric_block_sparse_row_sparsity const& sbsr);
+
+  // -- CSR <-> sBSR matrix --
+
+  template<typename T>
+  Symmetric_block_sparse_row_matrix<T>
+  to_symmetric_block_sparse_row(
+    Compressed_row_matrix<T> const& csr,
+    size_type block_rows, size_type block_cols)
+  {
+    auto rp = csr.row_ptr();
+    auto ci = csr.col_ind();
+    auto sv = csr.values();
+    auto shape = csr.shape();
+    auto nrow = shape.row();
+
+    // Collect entries and normalize to lower-triangle blocks
+    std::vector<Entry<T>> entries;
+    entries.reserve(static_cast<std::size_t>(csr.size()));
+    for (size_type row = 0; row < nrow; ++row) {
+      for (auto j = rp[row]; j < rp[row + 1]; ++j) {
+        auto br_idx = row / block_rows;
+        auto bc_idx = ci[j] / block_cols;
+        if (br_idx < bc_idx) {
+          // Swap block and local indices
+          auto local_row = row % block_rows;
+          auto local_col = ci[j] % block_cols;
+          auto new_row = bc_idx * block_rows + local_col;
+          auto new_col = br_idx * block_cols + local_row;
+          entries.push_back({Index{new_row, new_col}, sv[j]});
+        } else {
+          entries.push_back({Index{row, ci[j]}, sv[j]});
+        }
+      }
+    }
+
+    std::vector<Index> indices;
+    indices.reserve(entries.size());
+    for (auto const& e : entries) {
+      indices.push_back(e.index);
+    }
+
+    Symmetric_block_sparse_row_sparsity sparsity{
+      shape, block_rows, block_cols, indices.begin(), indices.end()};
+
+    auto num_blocks = sparsity.num_blocks();
+    std::vector<T> values(
+      static_cast<std::size_t>(num_blocks * block_rows * block_cols), T{0});
+
+    auto sbsr_rp = sparsity.row_ptr();
+    auto sbsr_ci = sparsity.col_ind();
+
+    for (auto const& entry : entries) {
+      auto br_idx = entry.index.row() / block_rows;
+      auto bc_idx = entry.index.column() / block_cols;
+      auto local_row = entry.index.row() % block_rows;
+      auto local_col = entry.index.column() % block_cols;
+
+      for (auto j = sbsr_rp[br_idx]; j < sbsr_rp[br_idx + 1]; ++j) {
+        if (sbsr_ci[j] == bc_idx) {
+          auto offset = j * block_rows * block_cols
+                      + local_row * block_cols + local_col;
+          values[static_cast<std::size_t>(offset)] = entry.value;
+          break;
+        }
+      }
+    }
+
+    return Symmetric_block_sparse_row_matrix<T>{
+      std::move(sparsity), std::move(values)};
+  }
+
+  template<typename T>
+  Compressed_row_matrix<T>
+  to_compressed_row(Symmetric_block_sparse_row_matrix<T> const& sbsr)
+  {
+    auto shape = sbsr.shape();
+    auto nrow = shape.row();
+    auto ncol = shape.column();
+    auto br = sbsr.sparsity().block_rows();
+    auto bc = sbsr.sparsity().block_cols();
+    auto rp = sbsr.sparsity().row_ptr();
+    auto ci = sbsr.sparsity().col_ind();
+
+    std::vector<Entry<T>> entries;
+    entries.reserve(static_cast<std::size_t>(sbsr.size() * 2));
+
+    auto nbr = sbsr.sparsity().num_block_rows();
+    for (size_type block_row = 0; block_row < nbr; ++block_row) {
+      for (auto j = rp[block_row]; j < rp[block_row + 1]; ++j) {
+        auto block_col = ci[j];
+        for (size_type lr = 0; lr < br; ++lr) {
+          for (size_type lc = 0; lc < bc; ++lc) {
+            auto row = block_row * br + lr;
+            auto col = block_col * bc + lc;
+            if (row < nrow && col < ncol) {
+              auto val = sbsr(row, col);
+              entries.push_back({Index{row, col}, val});
+              if (block_row != block_col) {
+                entries.push_back({Index{col, row}, sbsr(col, row)});
+              }
+            }
+          }
+        }
+      }
+    }
+
+    auto by_row_col = [](auto const& a, auto const& b) {
+      return a.index.row() < b.index.row()
+        || (a.index.row() == b.index.row()
+            && a.index.column() < b.index.column());
+    };
+    std::sort(entries.begin(), entries.end(), by_row_col);
+
+    // Deduplicate
+    auto same_index = [](auto const& a, auto const& b) {
+      return a.index == b.index;
+    };
+    entries.erase(
+      std::unique(entries.begin(), entries.end(), same_index),
+      entries.end());
+
+    std::vector<Index> indices;
+    std::vector<T> values;
+    indices.reserve(entries.size());
+    values.reserve(entries.size());
+
+    for (auto const& e : entries) {
+      indices.push_back(e.index);
+      values.push_back(e.value);
+    }
+
+    Compressed_row_sparsity sparsity{shape, indices.begin(), indices.end()};
+    return Compressed_row_matrix<T>{std::move(sparsity), std::move(values)};
   }
 
 } // end of namespace sparkit::data::detail

@@ -277,4 +277,128 @@ namespace sparkit::data::detail {
     return Compressed_row_sparsity(shape, indices.begin(), indices.end());
   }
 
+  Compressed_row_sparsity
+  to_compressed_row(Symmetric_compressed_row_sparsity const& scsr)
+  {
+    auto rp = scsr.row_ptr();
+    auto ci = scsr.col_ind();
+    auto shape = scsr.shape();
+    auto nrow = shape.row();
+
+    // Expand lower triangle to full: emit (i,j) and (j,i) for off-diagonal
+    std::vector<Index> indices;
+    indices.reserve(static_cast<std::size_t>(scsr.size() * 2));
+
+    for (size_type row = 0; row < nrow; ++row) {
+      for (auto j = rp[row]; j < rp[row + 1]; ++j) {
+        auto col = ci[j];
+        indices.push_back(Index{row, col});
+        if (row != col) {
+          indices.push_back(Index{col, row});
+        }
+      }
+    }
+
+    return Compressed_row_sparsity(shape, indices.begin(), indices.end());
+  }
+
+  Symmetric_compressed_row_sparsity
+  to_symmetric_compressed_row(Compressed_row_sparsity const& csr)
+  {
+    auto rp = csr.row_ptr();
+    auto ci = csr.col_ind();
+    auto shape = csr.shape();
+    auto nrow = shape.row();
+
+    // Filter to lower triangle (row >= col)
+    std::vector<Index> indices;
+    indices.reserve(static_cast<std::size_t>(csr.size()));
+
+    for (size_type row = 0; row < nrow; ++row) {
+      for (auto j = rp[row]; j < rp[row + 1]; ++j) {
+        if (row >= ci[j]) {
+          indices.push_back(Index{row, ci[j]});
+        }
+      }
+    }
+
+    return Symmetric_compressed_row_sparsity(
+      shape, indices.begin(), indices.end());
+  }
+
+  Symmetric_compressed_row_sparsity
+  to_symmetric_compressed_row(Symmetric_coordinate_sparsity const& scoo)
+  {
+    auto idx = scoo.indices();
+    return Symmetric_compressed_row_sparsity(
+      scoo.shape(), begin(idx), end(idx));
+  }
+
+  Compressed_row_sparsity
+  to_compressed_row(Symmetric_coordinate_sparsity const& scoo)
+  {
+    // Route through sCSR as intermediate
+    auto scsr = to_symmetric_compressed_row(scoo);
+    return to_compressed_row(scsr);
+  }
+
+  Symmetric_block_sparse_row_sparsity
+  to_symmetric_block_sparse_row(
+    Compressed_row_sparsity const& csr,
+    size_type block_rows, size_type block_cols)
+  {
+    auto rp = csr.row_ptr();
+    auto ci = csr.col_ind();
+    auto nrow = csr.shape().row();
+
+    std::vector<Index> indices;
+    indices.reserve(static_cast<std::size_t>(csr.size()));
+
+    for (size_type row = 0; row < nrow; ++row) {
+      for (auto j = rp[row]; j < rp[row + 1]; ++j) {
+        indices.push_back(Index{row, ci[j]});
+      }
+    }
+
+    return Symmetric_block_sparse_row_sparsity(
+      csr.shape(), block_rows, block_cols,
+      indices.begin(), indices.end());
+  }
+
+  Compressed_row_sparsity
+  to_compressed_row(Symmetric_block_sparse_row_sparsity const& sbsr)
+  {
+    auto shape = sbsr.shape();
+    auto nrow = shape.row();
+    auto ncol = shape.column();
+    auto br = sbsr.block_rows();
+    auto bc = sbsr.block_cols();
+    auto rp = sbsr.row_ptr();
+    auto ci = sbsr.col_ind();
+
+    std::vector<Index> indices;
+    indices.reserve(static_cast<std::size_t>(sbsr.size() * 2));
+
+    auto nbr = sbsr.num_block_rows();
+    for (size_type block_row = 0; block_row < nbr; ++block_row) {
+      for (auto j = rp[block_row]; j < rp[block_row + 1]; ++j) {
+        auto block_col = ci[j];
+        for (size_type lr = 0; lr < br; ++lr) {
+          for (size_type lc = 0; lc < bc; ++lc) {
+            auto row = block_row * br + lr;
+            auto col = block_col * bc + lc;
+            if (row < nrow && col < ncol) {
+              indices.push_back(Index{row, col});
+              if (block_row != block_col) {
+                indices.push_back(Index{col, row});
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return Compressed_row_sparsity(shape, indices.begin(), indices.end());
+  }
+
 } // end of namespace sparkit::data::detail

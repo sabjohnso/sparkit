@@ -1,7 +1,7 @@
 //
 // ... Test header files
 //
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
 
 //
 // ... External header files
@@ -16,16 +16,16 @@
 namespace sparkit::testing {
   using nlohmann::json;
 
-  TEST(shape, to_json)
+  TEST_CASE("shape - to_json", "[shape]")
   {
     Shape shape{3, 4};
-    EXPECT_EQ(json({3, 4}), json(shape));
+    CHECK(json({3, 4}) == json(shape));
   }
 
-  TEST(shape, default_construction){
+  TEST_CASE("shape - default_construction", "[shape]"){
     Shape shape{};
-    EXPECT_EQ(0, shape.row());
-    EXPECT_EQ(0, shape.column());
+    CHECK(0 == shape.row());
+    CHECK(0 == shape.column());
   }
 
 } // end of namespace sparkit::testing

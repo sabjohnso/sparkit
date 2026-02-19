@@ -18,6 +18,10 @@ namespace sparkit::data::detail {
 
     Shape(size_type row, size_type column);
     Shape(const Shape& input) = default;
+    Shape& operator=(const Shape& input) = default;
+    Shape(Shape&& input) = default;
+    Shape& operator=(Shape&& input) = default;
+    ~Shape() = default;
     Shape() = default;
 
 

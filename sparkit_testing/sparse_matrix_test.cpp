@@ -152,6 +152,25 @@ namespace sparkit::testing {
     EXPECT_EQ(idx[2], Index(4, 5));
   }
 
+  // -- Coordinate_matrix sparsity + function construction --
+
+  TEST(coordinate_matrix, construction_from_sparsity_and_function)
+  {
+    Coordinate_sparsity sp{Shape{5, 6},
+      {Index{2, 3}, Index{3, 4}, Index{4, 5}}};
+
+    Coordinate_matrix<double> mat{sp, [](auto row, auto col) {
+      return static_cast<double>(row * 10 + col);
+    }};
+
+    EXPECT_EQ(mat.shape(), Shape(5, 6));
+    EXPECT_EQ(mat.size(), 3);
+    EXPECT_DOUBLE_EQ(mat(2, 3), 23.0);
+    EXPECT_DOUBLE_EQ(mat(3, 4), 34.0);
+    EXPECT_DOUBLE_EQ(mat(4, 5), 45.0);
+    EXPECT_DOUBLE_EQ(mat(2, 2), 0.0);
+  }
+
   // -- Coordinate_matrix element access --
 
   TEST(coordinate_matrix, element_access_existing)
@@ -369,6 +388,48 @@ namespace sparkit::testing {
     EXPECT_DOUBLE_EQ(vals[1], 20.0);
     EXPECT_EQ(ci[2], 5);
     EXPECT_DOUBLE_EQ(vals[2], 30.0);
+  }
+
+  // -- Compressed_row_matrix sparsity + function construction --
+
+  TEST(compressed_row_matrix, construction_from_sparsity_and_function)
+  {
+    Compressed_row_sparsity sp{Shape{5, 6},
+      {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
+
+    Compressed_row_matrix<double> mat{sp, [](auto row, auto col) {
+      return static_cast<double>(row + col);
+    }};
+
+    EXPECT_EQ(mat.shape(), Shape(5, 6));
+    EXPECT_EQ(mat.size(), 3);
+
+    auto rp = mat.row_ptr();
+    auto ci = mat.col_ind();
+    ASSERT_EQ(std::ssize(rp), 6);
+    ASSERT_EQ(std::ssize(ci), 3);
+
+    EXPECT_DOUBLE_EQ(mat(2, 2), 4.0);
+    EXPECT_DOUBLE_EQ(mat(2, 4), 6.0);
+    EXPECT_DOUBLE_EQ(mat(3, 5), 8.0);
+  }
+
+  TEST(compressed_row_matrix, construction_from_sparsity_and_function_values_match_structure)
+  {
+    Compressed_row_sparsity sp{Shape{5, 6},
+      {Index{2, 3}, Index{3, 4}, Index{4, 5}}};
+
+    Compressed_row_matrix<double> mat{sp, [](auto row, auto col) {
+      return static_cast<double>(row * 10 + col);
+    }};
+
+    auto vals = mat.values();
+
+    // Each value encodes its (row, col) position
+    ASSERT_EQ(std::ssize(vals), 3);
+    EXPECT_DOUBLE_EQ(vals[0], 23.0);  // row=2, col=3
+    EXPECT_DOUBLE_EQ(vals[1], 34.0);  // row=3, col=4
+    EXPECT_DOUBLE_EQ(vals[2], 45.0);  // row=4, col=5
   }
 
   // -- COO matrix to CSR matrix conversion --

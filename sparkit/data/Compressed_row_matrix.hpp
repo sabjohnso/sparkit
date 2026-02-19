@@ -37,6 +37,21 @@ namespace sparkit::data::detail {
       , values_(values)
     {}
 
+    template<typename F>
+    Compressed_row_matrix(Compressed_row_sparsity sparsity, F f)
+      : sparsity_(std::move(sparsity))
+    {
+      auto rp = sparsity_.row_ptr();
+      auto ci = sparsity_.col_ind();
+      values_.resize(static_cast<std::size_t>(sparsity_.size()));
+
+      for (size_type row = 0; row < sparsity_.shape().row(); ++row) {
+        for (auto j = rp[row]; j < rp[row + 1]; ++j) {
+          values_[static_cast<std::size_t>(j)] = f(row, ci[j]);
+        }
+      }
+    }
+
     Compressed_row_matrix(
       Shape shape,
       std::initializer_list<Entry<T>> const& input)

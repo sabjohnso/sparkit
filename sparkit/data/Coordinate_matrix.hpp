@@ -47,6 +47,15 @@ namespace sparkit::data::detail {
       }
     }
 
+    template<typename F>
+    Coordinate_matrix(Coordinate_sparsity sparsity, F f)
+      : shape_(sparsity.shape())
+    {
+      for (auto const& index : sparsity.indices()) {
+        entries_.insert_or_assign(index, f(index.row(), index.column()));
+      }
+    }
+
     void
     add(Index index, T value)
     {

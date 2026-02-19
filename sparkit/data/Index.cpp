@@ -6,7 +6,7 @@ namespace sparkit::data::detail{
       : row_(row)
       , column_(column)
     {
-      if (row_ <= 1 || column_ <= 1) {
+      if (row_ < 0 || column_ < 0) {
         throw logic_error("invalid matrix index");
       }
     }

@@ -23,6 +23,51 @@ namespace sparkit::testing {
   using sparkit::data::detail::Shape;
   using sparkit::data::detail::Index;
 
+  // -- Index construction --
+
+  TEST(index, zero_based_indices_are_valid)
+  {
+    Index idx{0, 0};
+    EXPECT_EQ(idx.row(), 0);
+    EXPECT_EQ(idx.column(), 0);
+  }
+
+  TEST(index, row_zero_column_nonzero)
+  {
+    Index idx{0, 5};
+    EXPECT_EQ(idx.row(), 0);
+    EXPECT_EQ(idx.column(), 5);
+  }
+
+  TEST(index, row_nonzero_column_zero)
+  {
+    Index idx{3, 0};
+    EXPECT_EQ(idx.row(), 3);
+    EXPECT_EQ(idx.column(), 0);
+  }
+
+  TEST(index, row_one_column_one)
+  {
+    Index idx{1, 1};
+    EXPECT_EQ(idx.row(), 1);
+    EXPECT_EQ(idx.column(), 1);
+  }
+
+  TEST(index, negative_row_throws)
+  {
+    EXPECT_THROW(Index(-1, 3), std::logic_error);
+  }
+
+  TEST(index, negative_column_throws)
+  {
+    EXPECT_THROW(Index(3, -1), std::logic_error);
+  }
+
+  TEST(index, both_negative_throws)
+  {
+    EXPECT_THROW(Index(-1, -1), std::logic_error);
+  }
+
   // -- COO indices() accessor --
 
   TEST(coordinate_sparsity, indices_empty)

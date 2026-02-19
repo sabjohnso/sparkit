@@ -19,6 +19,18 @@ add_library(sparkit_shared_library SHARED
   data/Coordinate_sparsity_Impl.hpp data/Coordinate_sparsity_Impl.cpp
   data/Compressed_row_sparsity.hpp data/Compressed_row_sparsity.cpp
   data/Compressed_row_sparsity_Impl.hpp data/Compressed_row_sparsity_Impl.cpp
+  data/Compressed_column_sparsity.hpp data/Compressed_column_sparsity.cpp
+  data/Compressed_column_sparsity_Impl.hpp data/Compressed_column_sparsity_Impl.cpp
+  data/Modified_sparse_row_sparsity.hpp data/Modified_sparse_row_sparsity.cpp
+  data/Modified_sparse_row_sparsity_Impl.hpp data/Modified_sparse_row_sparsity_Impl.cpp
+  data/Diagonal_sparsity.hpp data/Diagonal_sparsity.cpp
+  data/Diagonal_sparsity_Impl.hpp data/Diagonal_sparsity_Impl.cpp
+  data/Ellpack_sparsity.hpp data/Ellpack_sparsity.cpp
+  data/Ellpack_sparsity_Impl.hpp data/Ellpack_sparsity_Impl.cpp
+  data/Block_sparse_row_sparsity.hpp data/Block_sparse_row_sparsity.cpp
+  data/Block_sparse_row_sparsity_Impl.hpp data/Block_sparse_row_sparsity_Impl.cpp
+  data/Jagged_diagonal_sparsity.hpp data/Jagged_diagonal_sparsity.cpp
+  data/Jagged_diagonal_sparsity_Impl.hpp data/Jagged_diagonal_sparsity_Impl.cpp
   data/conversions.hpp data/conversions.cpp)
 
 set_target_properties(sparkit_shared_library

@@ -15,6 +15,7 @@
 //
 #include <sparkit/data/Compressed_row_matrix.hpp>
 #include <sparkit/data/sparse_blas.hpp>
+#include <sparkit/data/unary.hpp>
 
 namespace sparkit::testing {
 
@@ -27,6 +28,8 @@ namespace sparkit::testing {
   using sparkit::data::detail::multiply_right_diagonal;
   using sparkit::data::detail::add_diagonal;
   using sparkit::data::detail::add;
+  using sparkit::data::detail::add_transpose;
+  using sparkit::data::detail::transpose;
 
   // -- Phase 1: SpMV --
 
@@ -437,6 +440,167 @@ namespace sparkit::testing {
         CHECK(C(i, j) == Catch::Approx(0.0));
       }
     }
+  }
+
+  // -- Phase 4b: Sparse transpose-add (APLSBT) --
+
+  TEST_CASE("sparse_blas - add_transpose_known_result", "[sparse_blas]")
+  {
+    // A = [[1,2],[3,4]], B = [[5,6],[7,8]]
+    // B^T = [[5,7],[6,8]]
+    // C = A + B^T = [[6,9],[9,12]]
+    Compressed_row_matrix<double> A{Shape{2, 2}, {
+      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
+      {Index{1, 0}, 3.0}, {Index{1, 1}, 4.0}
+    }};
+    Compressed_row_matrix<double> B{Shape{2, 2}, {
+      {Index{0, 0}, 5.0}, {Index{0, 1}, 6.0},
+      {Index{1, 0}, 7.0}, {Index{1, 1}, 8.0}
+    }};
+
+    auto C = add_transpose(A, B);
+
+    CHECK(C.shape() == Shape(2, 2));
+    CHECK(C(0, 0) == Catch::Approx(6.0));
+    CHECK(C(0, 1) == Catch::Approx(9.0));
+    CHECK(C(1, 0) == Catch::Approx(9.0));
+    CHECK(C(1, 1) == Catch::Approx(12.0));
+  }
+
+  TEST_CASE("sparse_blas - add_transpose_cross_validation", "[sparse_blas]")
+  {
+    // add_transpose(A, s, B) == add(A, s, transpose(B))
+    Compressed_row_matrix<double> A{Shape{3, 3}, {
+      {Index{0, 0}, 1.0}, {Index{0, 2}, 2.0},
+      {Index{1, 1}, 3.0},
+      {Index{2, 0}, 4.0}, {Index{2, 2}, 5.0}
+    }};
+    Compressed_row_matrix<double> B{Shape{3, 3}, {
+      {Index{0, 0}, 10.0}, {Index{0, 1}, 20.0},
+      {Index{1, 2}, 30.0},
+      {Index{2, 1}, 40.0}
+    }};
+    double s = 2.5;
+
+    auto fused = add_transpose(A, s, B);
+    auto naive = add(A, s, transpose(B));
+
+    CHECK(fused.shape() == naive.shape());
+    for (config::size_type i = 0; i < 3; ++i) {
+      for (config::size_type j = 0; j < 3; ++j) {
+        CHECK(fused(i, j) == Catch::Approx(naive(i, j)));
+      }
+    }
+  }
+
+  TEST_CASE("sparse_blas - add_transpose_rectangular", "[sparse_blas]")
+  {
+    // A is (2,3), B is (3,2), B^T is (2,3)
+    // C = A + B^T is (2,3)
+    Compressed_row_matrix<double> A{Shape{2, 3}, {
+      {Index{0, 0}, 1.0}, {Index{0, 2}, 2.0},
+      {Index{1, 1}, 3.0}
+    }};
+    Compressed_row_matrix<double> B{Shape{3, 2}, {
+      {Index{0, 0}, 10.0}, {Index{0, 1}, 20.0},
+      {Index{1, 0}, 30.0},
+      {Index{2, 1}, 40.0}
+    }};
+
+    auto C = add_transpose(A, B);
+
+    CHECK(C.shape() == Shape(2, 3));
+
+    auto naive = add(A, transpose(B));
+    for (config::size_type i = 0; i < 2; ++i) {
+      for (config::size_type j = 0; j < 3; ++j) {
+        CHECK(C(i, j) == Catch::Approx(naive(i, j)));
+      }
+    }
+  }
+
+  TEST_CASE("sparse_blas - add_transpose_identity", "[sparse_blas]")
+  {
+    // A + I^T = A + I
+    Compressed_row_matrix<double> A{Shape{3, 3}, {
+      {Index{0, 0}, 1.0}, {Index{0, 2}, 2.0},
+      {Index{1, 1}, 3.0},
+      {Index{2, 0}, 4.0}
+    }};
+    Compressed_row_matrix<double> I{Shape{3, 3}, {
+      {Index{0, 0}, 1.0},
+      {Index{1, 1}, 1.0},
+      {Index{2, 2}, 1.0}
+    }};
+
+    auto C = add_transpose(A, I);
+    auto expected = add(A, I);
+
+    for (config::size_type i = 0; i < 3; ++i) {
+      for (config::size_type j = 0; j < 3; ++j) {
+        CHECK(C(i, j) == Catch::Approx(expected(i, j)));
+      }
+    }
+  }
+
+  TEST_CASE("sparse_blas - add_transpose_symmetric_B", "[sparse_blas]")
+  {
+    // For symmetric B, add_transpose(A, B) == add(A, B)
+    Compressed_row_matrix<double> A{Shape{2, 2}, {
+      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
+      {Index{1, 0}, 3.0}, {Index{1, 1}, 4.0}
+    }};
+    Compressed_row_matrix<double> B{Shape{2, 2}, {
+      {Index{0, 0}, 5.0}, {Index{0, 1}, 6.0},
+      {Index{1, 0}, 6.0}, {Index{1, 1}, 7.0}
+    }};
+
+    auto with_transpose = add_transpose(A, B);
+    auto direct = add(A, B);
+
+    for (config::size_type i = 0; i < 2; ++i) {
+      for (config::size_type j = 0; j < 2; ++j) {
+        CHECK(with_transpose(i, j) == Catch::Approx(direct(i, j)));
+      }
+    }
+  }
+
+  TEST_CASE("sparse_blas - add_transpose_scale_zero", "[sparse_blas]")
+  {
+    // add_transpose(A, 0, B) == A (only A's pattern)
+    Compressed_row_matrix<double> A{Shape{2, 2}, {
+      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
+      {Index{1, 0}, 3.0}, {Index{1, 1}, 4.0}
+    }};
+    Compressed_row_matrix<double> B{Shape{2, 2}, {
+      {Index{0, 0}, 99.0}, {Index{0, 1}, 99.0},
+      {Index{1, 0}, 99.0}, {Index{1, 1}, 99.0}
+    }};
+
+    auto C = add_transpose(A, 0.0, B);
+
+    for (config::size_type i = 0; i < 2; ++i) {
+      for (config::size_type j = 0; j < 2; ++j) {
+        CHECK(C(i, j) == Catch::Approx(A(i, j)));
+      }
+    }
+  }
+
+  TEST_CASE("sparse_blas - add_transpose_empty_B", "[sparse_blas]")
+  {
+    Compressed_row_matrix<double> A{Shape{2, 3}, {
+      {Index{0, 0}, 1.0}, {Index{0, 2}, 2.0},
+      {Index{1, 1}, 3.0}
+    }};
+    Compressed_row_matrix<double> empty{Shape{3, 2}, {}};
+
+    auto C = add_transpose(A, 2.0, empty);
+
+    CHECK(C.shape() == Shape(2, 3));
+    CHECK(C.size() == 3);
+    CHECK(C(0, 0) == Catch::Approx(1.0));
+    CHECK(C(0, 2) == Catch::Approx(2.0));
+    CHECK(C(1, 1) == Catch::Approx(3.0));
   }
 
   // -- Phase 5: Sparse matrix-matrix multiply --

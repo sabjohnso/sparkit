@@ -198,6 +198,133 @@ namespace sparkit::data::detail {
     return add(A, T{1}, B);
   }
 
+  // C = A + s * B^T (SPARSKIT2 APLSBT)
+  //
+  // Fused transpose-add that avoids materializing the full transpose.
+  // Phase 1 builds a CSC view of B via counting sort — column i of CSC(B)
+  // equals row i of B^T.  Phase 2 merges each row of A with the
+  // corresponding column of CSC(B) using a sorted two-pointer merge,
+  // identical to the merge in add().
+  //
+  // Total cost: O(nnz(A) + nnz(B) + rows + cols).
+
+  template<typename T>
+  Compressed_row_matrix<T>
+  add_transpose(
+    Compressed_row_matrix<T> const& A,
+    T s,
+    Compressed_row_matrix<T> const& B)
+  {
+    auto rows = A.shape().row();
+    auto cols = A.shape().column();
+    auto b_rows = B.shape().row();
+    auto b_cols = B.shape().column();
+
+    // Phase 1: Build CSC representation of B via counting sort.
+    // CSC column i of B = row i of B^T.
+    auto b_nnz = static_cast<std::size_t>(B.size());
+    auto b_rp = B.row_ptr();
+    auto b_ci = B.col_ind();
+    auto b_vals = B.values();
+
+    // Count entries per column of B
+    std::vector<config::size_type> col_ptr(
+      static_cast<std::size_t>(b_cols + 1), config::size_type{0});
+    for (std::size_t k = 0; k < b_nnz; ++k) {
+      ++col_ptr[static_cast<std::size_t>(b_ci[static_cast<config::size_type>(k)] + 1)];
+    }
+
+    // Prefix sum
+    for (config::size_type j = 0; j < b_cols; ++j) {
+      col_ptr[static_cast<std::size_t>(j + 1)]
+        += col_ptr[static_cast<std::size_t>(j)];
+    }
+
+    // Place entries into CSC arrays
+    std::vector<config::size_type> row_ind(b_nnz);
+    std::vector<T> csc_vals(b_nnz);
+    // Work copy of col_ptr for placement
+    std::vector<config::size_type> work(col_ptr.begin(), col_ptr.end());
+
+    for (config::size_type i = 0; i < b_rows; ++i) {
+      for (auto j = b_rp[i]; j < b_rp[i + 1]; ++j) {
+        auto col = b_ci[j];
+        auto pos = static_cast<std::size_t>(work[static_cast<std::size_t>(col)]);
+        row_ind[pos] = i;
+        csc_vals[pos] = b_vals[j];
+        ++work[static_cast<std::size_t>(col)];
+      }
+    }
+
+    // Phase 2: Merge row-by-row.
+    // Row i of A: a_ci[a_rp[i]..a_rp[i+1]]
+    // Row i of B^T = column i of CSC(B): row_ind[col_ptr[i]..col_ptr[i+1]]
+    auto a_rp = A.row_ptr();
+    auto a_ci = A.col_ind();
+    auto a_vals = A.values();
+
+    std::vector<Index> new_indices;
+    std::vector<T> new_vals;
+
+    for (config::size_type i = 0; i < rows; ++i) {
+      auto a = a_rp[i];
+      auto a_end = a_rp[i + 1];
+
+      // Column i of CSC(B) — only valid if i < b_cols
+      auto bt_begin = (i < b_cols)
+        ? col_ptr[static_cast<std::size_t>(i)]
+        : config::size_type{0};
+      auto bt_end = (i < b_cols)
+        ? col_ptr[static_cast<std::size_t>(i + 1)]
+        : config::size_type{0};
+      auto bt = bt_begin;
+
+      while (a < a_end && bt < bt_end) {
+        auto a_col = a_ci[a];
+        auto bt_col = row_ind[static_cast<std::size_t>(bt)];
+        if (a_col < bt_col) {
+          new_indices.push_back(Index{i, a_col});
+          new_vals.push_back(a_vals[a]);
+          ++a;
+        } else if (bt_col < a_col) {
+          new_indices.push_back(Index{i, bt_col});
+          new_vals.push_back(s * csc_vals[static_cast<std::size_t>(bt)]);
+          ++bt;
+        } else {
+          new_indices.push_back(Index{i, a_col});
+          new_vals.push_back(
+            a_vals[a] + s * csc_vals[static_cast<std::size_t>(bt)]);
+          ++a;
+          ++bt;
+        }
+      }
+      while (a < a_end) {
+        new_indices.push_back(Index{i, a_ci[a]});
+        new_vals.push_back(a_vals[a]);
+        ++a;
+      }
+      while (bt < bt_end) {
+        new_indices.push_back(
+          Index{i, row_ind[static_cast<std::size_t>(bt)]});
+        new_vals.push_back(s * csc_vals[static_cast<std::size_t>(bt)]);
+        ++bt;
+      }
+    }
+
+    Compressed_row_sparsity sparsity{
+      Shape{rows, cols}, new_indices.begin(), new_indices.end()};
+    return Compressed_row_matrix<T>{std::move(sparsity), std::move(new_vals)};
+  }
+
+  template<typename T>
+  Compressed_row_matrix<T>
+  add_transpose(
+    Compressed_row_matrix<T> const& A,
+    Compressed_row_matrix<T> const& B)
+  {
+    return add_transpose(A, T{1}, B);
+  }
+
   template<typename T>
   Compressed_row_matrix<T>
   multiply(

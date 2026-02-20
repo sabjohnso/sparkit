@@ -37,6 +37,7 @@ namespace sparkit::testing {
   using sparkit::data::detail::Jagged_diagonal_matrix;
   using sparkit::data::detail::Symmetric_compressed_row_matrix;
   using sparkit::data::detail::multiply;
+  using sparkit::data::detail::multiply_transpose;
 
   // ================================================================
   // CSC SpMV
@@ -608,6 +609,378 @@ namespace sparkit::testing {
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply(csr, std::span<double const>{x});
     auto y_scsr = multiply(scsr, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y_csr) == std::ssize(y_scsr));
+    for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
+      CHECK(y_scsr[static_cast<std::size_t>(i)]
+        == Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+    }
+  }
+
+  // ================================================================
+  // CSC transpose-SpMV
+  // ================================================================
+
+  TEST_CASE("spmv - csc_transpose_known_3x3", "[spmv]")
+  {
+    // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
+    // A^T = [[2,0,5],[0,4,0],[3,0,6]]
+    // A^T*x = {2+15, 8, 3+18} = {17, 8, 21}
+    Compressed_column_matrix<double> A{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{1.0, 2.0, 3.0};
+    auto y = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y) == 3);
+    CHECK(y[0] == Catch::Approx(17.0));
+    CHECK(y[1] == Catch::Approx(8.0));
+    CHECK(y[2] == Catch::Approx(21.0));
+  }
+
+  TEST_CASE("spmv - csc_transpose_rectangular", "[spmv]")
+  {
+    // A is 2x3: [[1,0,2],[0,3,0]], x = {1,2}
+    // A^T is 3x2: A^T*x = {1, 6, 2} — output length 3
+    Compressed_column_matrix<double> A{Shape{2, 3}, {
+      {Index{0, 0}, 1.0}, {Index{0, 2}, 2.0},
+      {Index{1, 1}, 3.0}
+    }};
+
+    std::vector<double> x{1.0, 2.0};
+    auto y = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y) == 3);
+    CHECK(y[0] == Catch::Approx(1.0));
+    CHECK(y[1] == Catch::Approx(6.0));
+    CHECK(y[2] == Catch::Approx(2.0));
+  }
+
+  TEST_CASE("spmv - csc_transpose_cross_validate_with_csr", "[spmv]")
+  {
+    Compressed_row_matrix<double> csr{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+    Compressed_column_matrix<double> csc{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{7.0, 11.0, 13.0};
+    auto y_csr = multiply_transpose(csr, std::span<double const>{x});
+    auto y_csc = multiply_transpose(csc, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y_csr) == std::ssize(y_csc));
+    for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
+      CHECK(y_csc[static_cast<std::size_t>(i)]
+        == Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+    }
+  }
+
+  // ================================================================
+  // MSR transpose-SpMV
+  // ================================================================
+
+  TEST_CASE("spmv - msr_transpose_known_3x3", "[spmv]")
+  {
+    // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
+    // A^T*x = {17, 8, 21}
+    Modified_sparse_row_matrix<double> A{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{1.0, 2.0, 3.0};
+    auto y = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y) == 3);
+    CHECK(y[0] == Catch::Approx(17.0));
+    CHECK(y[1] == Catch::Approx(8.0));
+    CHECK(y[2] == Catch::Approx(21.0));
+  }
+
+  TEST_CASE("spmv - msr_transpose_cross_validate_with_csr", "[spmv]")
+  {
+    Compressed_row_matrix<double> csr{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+    Modified_sparse_row_matrix<double> msr{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{7.0, 11.0, 13.0};
+    auto y_csr = multiply_transpose(csr, std::span<double const>{x});
+    auto y_msr = multiply_transpose(msr, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y_csr) == std::ssize(y_msr));
+    for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
+      CHECK(y_msr[static_cast<std::size_t>(i)]
+        == Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+    }
+  }
+
+  // ================================================================
+  // DIA transpose-SpMV
+  // ================================================================
+
+  TEST_CASE("spmv - dia_transpose_known_3x3", "[spmv]")
+  {
+    // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
+    // A^T*x = {17, 8, 21}
+    Diagonal_matrix<double> A{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{1.0, 2.0, 3.0};
+    auto y = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y) == 3);
+    CHECK(y[0] == Catch::Approx(17.0));
+    CHECK(y[1] == Catch::Approx(8.0));
+    CHECK(y[2] == Catch::Approx(21.0));
+  }
+
+  TEST_CASE("spmv - dia_transpose_cross_validate_with_csr", "[spmv]")
+  {
+    Compressed_row_matrix<double> csr{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 1}, 1.0},
+      {Index{1, 0}, 1.0}, {Index{1, 1}, 3.0}, {Index{1, 2}, 1.0},
+      {Index{2, 1}, 1.0}, {Index{2, 2}, 4.0}
+    }};
+    Diagonal_matrix<double> dia{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 1}, 1.0},
+      {Index{1, 0}, 1.0}, {Index{1, 1}, 3.0}, {Index{1, 2}, 1.0},
+      {Index{2, 1}, 1.0}, {Index{2, 2}, 4.0}
+    }};
+
+    std::vector<double> x{7.0, 11.0, 13.0};
+    auto y_csr = multiply_transpose(csr, std::span<double const>{x});
+    auto y_dia = multiply_transpose(dia, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y_csr) == std::ssize(y_dia));
+    for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
+      CHECK(y_dia[static_cast<std::size_t>(i)]
+        == Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+    }
+  }
+
+  // ================================================================
+  // ELL transpose-SpMV
+  // ================================================================
+
+  TEST_CASE("spmv - ell_transpose_known_3x3", "[spmv]")
+  {
+    // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
+    // A^T*x = {17, 8, 21}
+    Ellpack_matrix<double> A{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{1.0, 2.0, 3.0};
+    auto y = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y) == 3);
+    CHECK(y[0] == Catch::Approx(17.0));
+    CHECK(y[1] == Catch::Approx(8.0));
+    CHECK(y[2] == Catch::Approx(21.0));
+  }
+
+  TEST_CASE("spmv - ell_transpose_rectangular", "[spmv]")
+  {
+    // A is 2x3: [[1,0,2],[0,3,0]], x = {1,2}
+    // A^T*x = {1, 6, 2} — output length 3
+    Ellpack_matrix<double> A{Shape{2, 3}, {
+      {Index{0, 0}, 1.0}, {Index{0, 2}, 2.0},
+      {Index{1, 1}, 3.0}
+    }};
+
+    std::vector<double> x{1.0, 2.0};
+    auto y = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y) == 3);
+    CHECK(y[0] == Catch::Approx(1.0));
+    CHECK(y[1] == Catch::Approx(6.0));
+    CHECK(y[2] == Catch::Approx(2.0));
+  }
+
+  TEST_CASE("spmv - ell_transpose_cross_validate_with_csr", "[spmv]")
+  {
+    Compressed_row_matrix<double> csr{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+    Ellpack_matrix<double> ell{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{7.0, 11.0, 13.0};
+    auto y_csr = multiply_transpose(csr, std::span<double const>{x});
+    auto y_ell = multiply_transpose(ell, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y_csr) == std::ssize(y_ell));
+    for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
+      CHECK(y_ell[static_cast<std::size_t>(i)]
+        == Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+    }
+  }
+
+  // ================================================================
+  // BSR transpose-SpMV
+  // ================================================================
+
+  TEST_CASE("spmv - bsr_transpose_known_4x4", "[spmv]")
+  {
+    // A = [[1,2,0,0],[3,4,0,0],[0,0,5,6],[0,0,7,8]], x = {1,2,3,4}
+    // A^T = [[1,3,0,0],[2,4,0,0],[0,0,5,7],[0,0,6,8]]
+    // A^T*x = {7, 10, 43, 50}
+    Block_sparse_row_matrix<double> A{Shape{4, 4}, 2, 2, {
+      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
+      {Index{1, 0}, 3.0}, {Index{1, 1}, 4.0},
+      {Index{2, 2}, 5.0}, {Index{2, 3}, 6.0},
+      {Index{3, 2}, 7.0}, {Index{3, 3}, 8.0}
+    }};
+
+    std::vector<double> x{1.0, 2.0, 3.0, 4.0};
+    auto y = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y) == 4);
+    CHECK(y[0] == Catch::Approx(7.0));
+    CHECK(y[1] == Catch::Approx(10.0));
+    CHECK(y[2] == Catch::Approx(43.0));
+    CHECK(y[3] == Catch::Approx(50.0));
+  }
+
+  TEST_CASE("spmv - bsr_transpose_cross_validate_with_csr", "[spmv]")
+  {
+    Compressed_row_matrix<double> csr{Shape{4, 4}, {
+      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
+      {Index{1, 0}, 3.0}, {Index{1, 1}, 4.0},
+      {Index{2, 2}, 5.0}, {Index{2, 3}, 6.0},
+      {Index{3, 2}, 7.0}, {Index{3, 3}, 8.0}
+    }};
+    Block_sparse_row_matrix<double> bsr{Shape{4, 4}, 2, 2, {
+      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
+      {Index{1, 0}, 3.0}, {Index{1, 1}, 4.0},
+      {Index{2, 2}, 5.0}, {Index{2, 3}, 6.0},
+      {Index{3, 2}, 7.0}, {Index{3, 3}, 8.0}
+    }};
+
+    std::vector<double> x{7.0, 11.0, 13.0, 17.0};
+    auto y_csr = multiply_transpose(csr, std::span<double const>{x});
+    auto y_bsr = multiply_transpose(bsr, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y_csr) == std::ssize(y_bsr));
+    for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
+      CHECK(y_bsr[static_cast<std::size_t>(i)]
+        == Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+    }
+  }
+
+  // ================================================================
+  // JAD transpose-SpMV
+  // ================================================================
+
+  TEST_CASE("spmv - jad_transpose_known_3x3", "[spmv]")
+  {
+    // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
+    // A^T*x = {17, 8, 21}
+    Jagged_diagonal_matrix<double> A{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{1.0, 2.0, 3.0};
+    auto y = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y) == 3);
+    CHECK(y[0] == Catch::Approx(17.0));
+    CHECK(y[1] == Catch::Approx(8.0));
+    CHECK(y[2] == Catch::Approx(21.0));
+  }
+
+  TEST_CASE("spmv - jad_transpose_cross_validate_with_csr", "[spmv]")
+  {
+    Compressed_row_matrix<double> csr{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+    Jagged_diagonal_matrix<double> jad{Shape{3, 3}, {
+      {Index{0, 0}, 2.0}, {Index{0, 2}, 3.0},
+      {Index{1, 1}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{7.0, 11.0, 13.0};
+    auto y_csr = multiply_transpose(csr, std::span<double const>{x});
+    auto y_jad = multiply_transpose(jad, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y_csr) == std::ssize(y_jad));
+    for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
+      CHECK(y_jad[static_cast<std::size_t>(i)]
+        == Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+    }
+  }
+
+  // ================================================================
+  // sCSR transpose-SpMV
+  // ================================================================
+
+  TEST_CASE("spmv - scsr_transpose_equals_forward", "[spmv]")
+  {
+    // For symmetric A, A^T = A, so multiply_transpose == multiply
+    Symmetric_compressed_row_matrix<double> A{Shape{3, 3}, {
+      {Index{0, 0}, 4.0}, {Index{0, 1}, 1.0},
+      {Index{1, 1}, 5.0}, {Index{1, 2}, 2.0},
+      {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{7.0, 11.0, 13.0};
+    auto y_fwd = multiply(A, std::span<double const>{x});
+    auto y_trans = multiply_transpose(A, std::span<double const>{x});
+
+    REQUIRE(std::ssize(y_fwd) == std::ssize(y_trans));
+    for (std::ptrdiff_t i = 0; i < std::ssize(y_fwd); ++i) {
+      CHECK(y_trans[static_cast<std::size_t>(i)]
+        == Catch::Approx(y_fwd[static_cast<std::size_t>(i)]));
+    }
+  }
+
+  TEST_CASE("spmv - scsr_transpose_cross_validate_with_csr", "[spmv]")
+  {
+    Compressed_row_matrix<double> csr{Shape{3, 3}, {
+      {Index{0, 0}, 4.0}, {Index{0, 1}, 1.0},
+      {Index{1, 0}, 1.0}, {Index{1, 1}, 5.0}, {Index{1, 2}, 2.0},
+      {Index{2, 1}, 2.0}, {Index{2, 2}, 6.0}
+    }};
+    Symmetric_compressed_row_matrix<double> scsr{Shape{3, 3}, {
+      {Index{0, 0}, 4.0}, {Index{0, 1}, 1.0},
+      {Index{1, 1}, 5.0}, {Index{1, 2}, 2.0},
+      {Index{2, 2}, 6.0}
+    }};
+
+    std::vector<double> x{7.0, 11.0, 13.0};
+    auto y_csr = multiply_transpose(csr, std::span<double const>{x});
+    auto y_scsr = multiply_transpose(scsr, std::span<double const>{x});
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_scsr));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {

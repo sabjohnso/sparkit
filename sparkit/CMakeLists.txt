@@ -38,7 +38,8 @@ add_library(sparkit_shared_library SHARED
   data/Symmetric_block_sparse_row_sparsity.hpp data/Symmetric_block_sparse_row_sparsity.cpp
   data/Symmetric_block_sparse_row_sparsity_Impl.hpp data/Symmetric_block_sparse_row_sparsity_Impl.cpp
   data/conversions.hpp data/conversions.cpp
-  data/matrix_market.hpp data/matrix_market.cpp)
+  data/matrix_market.hpp data/matrix_market.cpp
+  data/harwell_boeing.hpp data/harwell_boeing.cpp)
 
 set_target_properties(sparkit_shared_library
   PROPERTIES

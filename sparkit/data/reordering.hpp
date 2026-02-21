@@ -24,4 +24,7 @@ namespace sparkit::data::detail {
   std::vector<config::size_type>
   reverse_cuthill_mckee(Compressed_row_sparsity const& sp);
 
+  std::vector<config::size_type>
+  approximate_minimum_degree(Compressed_row_sparsity const& sp);
+
 } // end of namespace sparkit::data::detail

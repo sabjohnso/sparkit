@@ -8,6 +8,7 @@
 // ... Standard header files
 //
 #include <algorithm>
+#include <set>
 #include <vector>
 
 //
@@ -276,6 +277,296 @@ namespace sparkit::testing {
         CHECK(C(i, j) == Catch::Approx(A(i, j)));
       }
     }
+  }
+
+  // ================================================================
+  // approximate_minimum_degree
+  // ================================================================
+
+  using sparkit::data::detail::approximate_minimum_degree;
+  using sparkit::data::detail::inverse_permutation;
+
+  // Right-looking symbolic Cholesky on a symmetric pattern.
+  // Returns the total number of nonzeros in the lower-triangular
+  // factor L (including diagonal). Used to measure fill-in.
+  static size_type
+  symbolic_cholesky_nnz(Compressed_row_sparsity const& sp)
+  {
+    auto sym = symmetrize_pattern(sp);
+    auto n = sym.shape().row();
+    auto rp = sym.row_ptr();
+    auto ci = sym.col_ind();
+
+    // Initialize L with the lower triangle of the symmetric pattern
+    std::vector<std::set<size_type>> rows(static_cast<std::size_t>(n));
+    for (size_type i = 0; i < n; ++i) {
+      for (auto p = rp[i]; p < rp[i + 1]; ++p) {
+        if (ci[p] <= i) {
+          rows[static_cast<std::size_t>(i)].insert(ci[p]);
+        }
+      }
+    }
+
+    // Simulate elimination: when pivot k is eliminated, all pairs
+    // (i,j) with i,j > k and both in column k of L create fill.
+    for (size_type k = 0; k < n; ++k) {
+      std::vector<size_type> col_k;
+      for (size_type i = k + 1; i < n; ++i) {
+        if (rows[static_cast<std::size_t>(i)].count(k)) {
+          col_k.push_back(i);
+        }
+      }
+      for (auto i : col_k) {
+        for (auto j : col_k) {
+          if (j <= i) {
+            rows[static_cast<std::size_t>(i)].insert(j);
+          }
+        }
+      }
+    }
+
+    size_type total = 0;
+    for (size_type i = 0; i < n; ++i) {
+      total += static_cast<size_type>(rows[static_cast<std::size_t>(i)].size());
+    }
+    return total;
+  }
+
+  // -- Validation --
+
+  TEST_CASE("reordering - amd valid permutation", "[reordering]")
+  {
+    // Tridiagonal 4x4
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 1}, Index{1, 2},
+      Index{2, 1}, Index{2, 2}, Index{2, 3},
+      Index{3, 2}, Index{3, 3}
+    }};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - amd rectangular rejected", "[reordering]")
+  {
+    Compressed_row_sparsity sp{Shape{3, 4}, {
+      Index{0, 0}, Index{1, 1}, Index{2, 2}
+    }};
+
+    CHECK_THROWS(approximate_minimum_degree(sp));
+  }
+
+  // -- Small known examples --
+
+  TEST_CASE("reordering - amd diagonal matrix", "[reordering]")
+  {
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}
+    }};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - amd tridiagonal", "[reordering]")
+  {
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 1}, Index{1, 2},
+      Index{2, 1}, Index{2, 2}, Index{2, 3},
+      Index{3, 2}, Index{3, 3}
+    }};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+
+    // Tridiagonal already has minimal fill; bandwidth should stay small
+    Compressed_row_matrix<double> A{sp, [](auto, auto) { return 1.0; }};
+    auto B = dperm(A, perm);
+    auto [lo, hi] = bandwidth(B);
+    CHECK(lo <= 2);
+    CHECK(hi <= 2);
+  }
+
+  TEST_CASE("reordering - amd arrow matrix", "[reordering]")
+  {
+    // Node 0 is the hub, connected to all others
+    Compressed_row_sparsity sp{Shape{5, 5}, {
+      Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
+      Index{1, 0}, Index{1, 1},
+      Index{2, 0}, Index{2, 2},
+      Index{3, 0}, Index{3, 3},
+      Index{4, 0}, Index{4, 4}
+    }};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 5);
+    CHECK(is_valid_permutation(perm));
+
+    // The hub node (degree 4) should be among the last eliminated
+    CHECK(perm[0] >= 3);
+  }
+
+  TEST_CASE("reordering - amd path graph", "[reordering]")
+  {
+    // Path: 0-1-2-3-4
+    Compressed_row_sparsity sp{Shape{5, 5}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 1}, Index{1, 2},
+      Index{2, 1}, Index{2, 2}, Index{2, 3},
+      Index{3, 2}, Index{3, 3}, Index{3, 4},
+      Index{4, 3}, Index{4, 4}
+    }};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 5);
+    CHECK(is_valid_permutation(perm));
+
+    // An endpoint (degree 1) should be eliminated first
+    CHECK((perm[0] == 0 || perm[4] == 0));
+  }
+
+  // -- Properties --
+
+  TEST_CASE("reordering - amd disconnected components", "[reordering]")
+  {
+    // Two disconnected components: {0,1} and {2,3}
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 1},
+      Index{2, 2}, Index{2, 3},
+      Index{3, 2}, Index{3, 3}
+    }};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - amd fill reduction", "[reordering]")
+  {
+    // Arrow matrix: natural ordering creates massive fill
+    Compressed_row_sparsity sp{Shape{5, 5}, {
+      Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
+      Index{1, 0}, Index{1, 1},
+      Index{2, 0}, Index{2, 2},
+      Index{3, 0}, Index{3, 3},
+      Index{4, 0}, Index{4, 4}
+    }};
+
+    auto natural_fill = symbolic_cholesky_nnz(sp);
+
+    auto perm = approximate_minimum_degree(sp);
+    auto reordered = dperm(sp, perm);
+    auto amd_fill = symbolic_cholesky_nnz(reordered);
+
+    CHECK(amd_fill <= natural_fill);
+  }
+
+  TEST_CASE("reordering - amd symmetric input", "[reordering]")
+  {
+    // Already-symmetric 3x3 tridiagonal
+    Compressed_row_sparsity sp{Shape{3, 3}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 1}, Index{1, 2},
+      Index{2, 1}, Index{2, 2}
+    }};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 3);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  // -- Comparison --
+
+  TEST_CASE("reordering - amd vs rcm arrow", "[reordering]")
+  {
+    // Arrow matrix: AMD should produce less or equal fill than RCM
+    Compressed_row_sparsity sp{Shape{5, 5}, {
+      Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
+      Index{1, 0}, Index{1, 1},
+      Index{2, 0}, Index{2, 2},
+      Index{3, 0}, Index{3, 3},
+      Index{4, 0}, Index{4, 4}
+    }};
+
+    auto amd_perm = approximate_minimum_degree(sp);
+    auto rcm_perm = reverse_cuthill_mckee(sp);
+
+    auto amd_reordered = dperm(sp, amd_perm);
+    auto rcm_reordered = dperm(sp, rcm_perm);
+
+    auto amd_fill = symbolic_cholesky_nnz(amd_reordered);
+    auto rcm_fill = symbolic_cholesky_nnz(rcm_reordered);
+
+    CHECK(amd_fill <= rcm_fill);
+  }
+
+  TEST_CASE("reordering - amd round trip values", "[reordering]")
+  {
+    Compressed_row_matrix<double> A{Shape{4, 4}, {
+      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
+      {Index{1, 0}, 3.0}, {Index{1, 1}, 4.0}, {Index{1, 2}, 5.0},
+      {Index{2, 1}, 6.0}, {Index{2, 2}, 7.0}, {Index{2, 3}, 8.0},
+      {Index{3, 2}, 9.0}, {Index{3, 3}, 10.0}
+    }};
+
+    auto perm = approximate_minimum_degree(A.sparsity());
+    auto B = dperm(A, perm);
+
+    CHECK(B.size() == A.size());
+
+    auto inv = inverse_permutation(perm);
+    auto C = dperm(B, inv);
+
+    for (size_type i = 0; i < 4; ++i) {
+      for (size_type j = 0; j < 4; ++j) {
+        CHECK(C(i, j) == Catch::Approx(A(i, j)));
+      }
+    }
+  }
+
+  // -- Edge cases --
+
+  TEST_CASE("reordering - amd single node", "[reordering]")
+  {
+    // Minimal 2x2 diagonal matrix
+    Compressed_row_sparsity sp{Shape{2, 2}, {
+      Index{0, 0}, Index{1, 1}
+    }};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 2);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - amd dense block", "[reordering]")
+  {
+    // Fully connected 4x4
+    std::vector<Index> indices;
+    for (size_type i = 0; i < 4; ++i) {
+      for (size_type j = 0; j < 4; ++j) {
+        indices.push_back(Index{i, j});
+      }
+    }
+    Compressed_row_sparsity sp{Shape{4, 4}, indices.begin(), indices.end()};
+
+    auto perm = approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
   }
 
 } // end of namespace sparkit::testing

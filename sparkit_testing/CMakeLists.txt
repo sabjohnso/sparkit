@@ -7,6 +7,7 @@ macro(sparkit_add_test test_name)
   target_link_libraries(${exe_name} PRIVATE
     sparkit::header
     sparkit::shared
+    nlohmann_json::nlohmann_json
     Catch2::Catch2WithMain)
   set_target_properties(${exe_name}
     PROPERTIES

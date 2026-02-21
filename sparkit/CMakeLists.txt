@@ -47,7 +47,9 @@ set_target_properties(sparkit_shared_library
   PROPERTIES
     CXX_STANDARD ${sparkit_CXX_STANDARD}
     EXPORT_NAME shared)
-target_link_libraries(sparkit_shared_library PUBLIC sparkit::header)
+target_link_libraries(sparkit_shared_library
+  PUBLIC sparkit::header
+  PRIVATE nlohmann_json::nlohmann_json)
 add_library(sparkit::shared ALIAS sparkit_shared_library)
 
 install(TARGETS sparkit_header sparkit_shared_library

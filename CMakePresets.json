@@ -15,7 +15,6 @@
                 "CMAKE_CXX_FLAGS_RELEASE" : "-g -DNDEBUG -O3",
 		"CMAKE_CXX_FLAGS_RELWITHDEBINFO" : "-fsanitize=undefined -fsanitize=address -g -O3",
 		"CMAKE_EXPORT_COMPILE_COMMANDS" : "ON",
-                "lbmbench_BUILD_EXAMPLES" : "OFF",
                 "nlohmann_json_GIT_TAG" : "v3.10.0",
                 "nlohmann_json_FORCE_DOWNLOAD" : true,
                 "nlohmann_json_schema_validator_FORCE_DOWNLOAD" : true

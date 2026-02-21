@@ -80,12 +80,23 @@ All implementation types live in `detail` namespaces. Public headers
 
 ### Build System
 
-- **CMake 3.12+** with Ninja Multi-Config generator
+- **CMake 3.30+** with Ninja Multi-Config generator
 - **CMakePresets.json** for standardized configuration
 - Strict warnings: `-Wall -Wextra -pedantic -Werror`
 - Sanitizer builds: ASan + UBSan via `sanitizing-cache.cmake`
-- Dependencies fetched via CMake: `nlohmann/json`, Google Test
-- `cmake_utilities` git submodule for shared CMake infrastructure
+- Dependencies fetched via CMake: `nlohmann/json`, Catch2
+- `cmake_utilities` git submodule (bootstrap) for shared CMake infrastructure
+
+### CI
+
+- **GitHub Actions** with two workflows:
+  - `ci.yml`: Build and test across GCC 12/13 and Clang 16/17/18
+  - `pre-commit.yml`: Enforce code formatting via `clang-format`
+- Triggers on pushes to `main` and all pull requests
+- **Pre-commit**: Uses `mirrors-clang-format` v20.1.7 with `.clang-format`
+  in the repo root. Run `pre-commit run --all-files` locally to check.
+- CI passes `-Dnlohmann_json_FORCE_DOWNLOAD=ON -Dnlohmann_json_GIT_TAG=v3.10.0`
+  since nlohmann/json is not pre-installed on runners
 
 ### Storage Formats (Current and Planned)
 

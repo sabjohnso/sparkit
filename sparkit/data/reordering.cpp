@@ -17,8 +17,7 @@ namespace sparkit::data::detail {
   using size_type = config::size_type;
 
   Compressed_row_sparsity
-  symmetrize_pattern(Compressed_row_sparsity const& sp)
-  {
+  symmetrize_pattern(Compressed_row_sparsity const& sp) {
     auto rp = sp.row_ptr();
     auto ci = sp.col_ind();
     auto nrow = sp.shape().row();
@@ -30,9 +29,7 @@ namespace sparkit::data::detail {
     for (size_type row = 0; row < nrow; ++row) {
       for (auto j = rp[row]; j < rp[row + 1]; ++j) {
         indices.push_back(Index{row, ci[j]});
-        if (row != ci[j]) {
-          indices.push_back(Index{ci[j], row});
-        }
+        if (row != ci[j]) { indices.push_back(Index{ci[j], row}); }
       }
     }
 
@@ -41,8 +38,7 @@ namespace sparkit::data::detail {
   }
 
   std::vector<size_type>
-  adjacency_degree(Compressed_row_sparsity const& sp)
-  {
+  adjacency_degree(Compressed_row_sparsity const& sp) {
     auto rp = sp.row_ptr();
     auto ci = sp.col_ind();
     auto nrow = sp.shape().row();
@@ -51,9 +47,7 @@ namespace sparkit::data::detail {
     for (size_type row = 0; row < nrow; ++row) {
       size_type count = 0;
       for (auto j = rp[row]; j < rp[row + 1]; ++j) {
-        if (ci[j] != row) {
-          ++count;
-        }
+        if (ci[j] != row) { ++count; }
       }
       deg[static_cast<std::size_t>(row)] = count;
     }
@@ -62,12 +56,9 @@ namespace sparkit::data::detail {
 
   // BFS from a given start node. Returns the eccentricity (max level)
   // and the last level set. Operates on the given symmetric pattern.
-  static
-  std::pair<size_type, std::vector<size_type>>
-  bfs_levels(Compressed_row_sparsity const& sp,
-             size_type start,
-             std::vector<size_type> const& deg)
-  {
+  static std::pair<size_type, std::vector<size_type>>
+  bfs_levels(Compressed_row_sparsity const& sp, size_type start,
+             std::vector<size_type> const& deg) {
     auto rp = sp.row_ptr();
     auto ci = sp.col_ind();
     auto nrow = sp.shape().row();
@@ -90,9 +81,7 @@ namespace sparkit::data::detail {
         max_level = node_level;
         last_level.clear();
       }
-      if (node_level == max_level) {
-        last_level.push_back(node);
-      }
+      if (node_level == max_level) { last_level.push_back(node); }
 
       // Visit neighbors sorted by degree (for determinism)
       std::vector<size_type> neighbors;
@@ -102,10 +91,10 @@ namespace sparkit::data::detail {
         }
       }
       std::sort(neighbors.begin(), neighbors.end(),
-        [&deg](size_type a, size_type b) {
-          return deg[static_cast<std::size_t>(a)]
-               < deg[static_cast<std::size_t>(b)];
-        });
+                [&deg](size_type a, size_type b) {
+                  return deg[static_cast<std::size_t>(a)] <
+                         deg[static_cast<std::size_t>(b)];
+                });
 
       for (auto nbr : neighbors) {
         if (level[static_cast<std::size_t>(nbr)] == -1) {
@@ -119,8 +108,7 @@ namespace sparkit::data::detail {
   }
 
   size_type
-  pseudo_peripheral_node(Compressed_row_sparsity const& sp)
-  {
+  pseudo_peripheral_node(Compressed_row_sparsity const& sp) {
     auto sym = symmetrize_pattern(sp);
     auto deg = adjacency_degree(sym);
     auto nrow = sp.shape().row();
@@ -151,9 +139,7 @@ namespace sparkit::data::detail {
       }
 
       auto [new_ecc, new_last] = bfs_levels(sym, candidate, deg);
-      if (new_ecc <= eccentricity) {
-        return start;
-      }
+      if (new_ecc <= eccentricity) { return start; }
 
       start = candidate;
       eccentricity = new_ecc;
@@ -162,8 +148,7 @@ namespace sparkit::data::detail {
   }
 
   std::vector<size_type>
-  reverse_cuthill_mckee(Compressed_row_sparsity const& sp)
-  {
+  reverse_cuthill_mckee(Compressed_row_sparsity const& sp) {
     auto sym = symmetrize_pattern(sp);
     auto deg = adjacency_degree(sym);
     auto rp = sym.row_ptr();
@@ -200,8 +185,8 @@ namespace sparkit::data::detail {
       visited[static_cast<std::size_t>(start)] = true;
       ordering.push_back(start);
 
-      for (std::size_t head = ordering.size() - 1;
-           head < ordering.size(); ++head) {
+      for (std::size_t head = ordering.size() - 1; head < ordering.size();
+           ++head) {
         auto node = ordering[head];
 
         // Gather unvisited neighbors
@@ -214,10 +199,10 @@ namespace sparkit::data::detail {
 
         // Sort by increasing degree
         std::sort(neighbors.begin(), neighbors.end(),
-          [&deg](size_type a, size_type b) {
-            return deg[static_cast<std::size_t>(a)]
-                 < deg[static_cast<std::size_t>(b)];
-          });
+                  [&deg](size_type a, size_type b) {
+                    return deg[static_cast<std::size_t>(a)] <
+                           deg[static_cast<std::size_t>(b)];
+                  });
 
         for (auto nbr : neighbors) {
           if (!visited[static_cast<std::size_t>(nbr)]) {
@@ -236,7 +221,7 @@ namespace sparkit::data::detail {
     std::vector<size_type> perm(static_cast<std::size_t>(nrow));
     for (std::size_t new_pos = 0; new_pos < ordering.size(); ++new_pos) {
       perm[static_cast<std::size_t>(ordering[new_pos])] =
-        static_cast<size_type>(new_pos);
+          static_cast<size_type>(new_pos);
     }
 
     return perm;
@@ -256,8 +241,7 @@ namespace sparkit::data::detail {
 
     enum class Amd_status : char { variable, element, absorbed };
 
-    struct Amd_state
-    {
+    struct Amd_state {
       size_type n;
 
       // Flat adjacency storage with per-node head/length
@@ -290,27 +274,23 @@ namespace sparkit::data::detail {
     constexpr size_type none = -1;
 
     void
-    mark(Amd_state& s, size_type i)
-    {
+    mark(Amd_state& s, size_type i) {
       s.marker[static_cast<std::size_t>(i)] = s.marker_gen;
     }
 
     bool
-    is_marked(Amd_state const& s, size_type i)
-    {
+    is_marked(Amd_state const& s, size_type i) {
       return s.marker[static_cast<std::size_t>(i)] == s.marker_gen;
     }
 
     void
-    next_generation(Amd_state& s)
-    {
+    next_generation(Amd_state& s) {
       ++s.marker_gen;
     }
 
     // Remove node from its degree bucket
     void
-    bucket_remove(Amd_state& s, size_type node)
-    {
+    bucket_remove(Amd_state& s, size_type node) {
       auto prev = s.bucket_prev[static_cast<std::size_t>(node)];
       auto next = s.bucket_next[static_cast<std::size_t>(node)];
 
@@ -331,8 +311,7 @@ namespace sparkit::data::detail {
 
     // Insert node into the bucket for its current degree
     void
-    bucket_insert(Amd_state& s, size_type node)
-    {
+    bucket_insert(Amd_state& s, size_type node) {
       auto d = s.degree[static_cast<std::size_t>(node)];
       auto old_head = s.bucket_head[static_cast<std::size_t>(d)];
 
@@ -345,28 +324,23 @@ namespace sparkit::data::detail {
 
       s.bucket_head[static_cast<std::size_t>(d)] = node;
 
-      if (d < s.min_degree) {
-        s.min_degree = d;
-      }
+      if (d < s.min_degree) { s.min_degree = d; }
     }
 
     // Ensure adj has room for additional entries
     void
-    ensure_adj_capacity(Amd_state& s, size_type needed)
-    {
+    ensure_adj_capacity(Amd_state& s, size_type needed) {
       auto required = s.adj_capacity + needed;
       if (static_cast<std::size_t>(required) > s.adj.size()) {
-        auto new_cap = std::max(
-          static_cast<std::size_t>(required),
-          s.adj.size() * 2);
+        auto new_cap =
+            std::max(static_cast<std::size_t>(required), s.adj.size() * 2);
         s.adj.resize(new_cap, none);
       }
     }
 
     // Allocate a contiguous block in adj[], returns the start index
     size_type
-    alloc_adj(Amd_state& s, size_type count)
-    {
+    alloc_adj(Amd_state& s, size_type count) {
       ensure_adj_capacity(s, count);
       auto start = s.adj_capacity;
       s.adj_capacity += count;
@@ -376,8 +350,7 @@ namespace sparkit::data::detail {
     // Set node's adjacency list to the given entries
     void
     set_adj(Amd_state& s, size_type node,
-            std::vector<size_type> const& entries)
-    {
+            std::vector<size_type> const& entries) {
       auto count = static_cast<size_type>(entries.size());
       if (count == 0) {
         s.head[static_cast<std::size_t>(node)] = 0;
@@ -395,16 +368,15 @@ namespace sparkit::data::detail {
       }
 
       for (size_type k = 0; k < count; ++k) {
-        s.adj[static_cast<std::size_t>(start + k)] = entries[
-          static_cast<std::size_t>(k)];
+        s.adj[static_cast<std::size_t>(start + k)] =
+            entries[static_cast<std::size_t>(k)];
       }
       s.head[static_cast<std::size_t>(node)] = start;
       s.len[static_cast<std::size_t>(node)] = count;
     }
 
     Amd_state
-    amd_initialize(Compressed_row_sparsity const& sym)
-    {
+    amd_initialize(Compressed_row_sparsity const& sym) {
       auto n = sym.shape().row();
       auto rp = sym.row_ptr();
       auto ci = sym.col_ind();
@@ -447,13 +419,12 @@ namespace sparkit::data::detail {
       s.degree.resize(un);
       s.weight.assign(un, 1);
       s.representative.resize(un);
-      std::iota(s.representative.begin(), s.representative.end(),
-                size_type{0});
+      std::iota(s.representative.begin(), s.representative.end(), size_type{0});
 
       // Initialize degrees = adjacency degree
       for (size_type i = 0; i < n; ++i) {
         s.degree[static_cast<std::size_t>(i)] =
-          s.len[static_cast<std::size_t>(i)];
+            s.len[static_cast<std::size_t>(i)];
       }
 
       // Degree buckets
@@ -477,8 +448,7 @@ namespace sparkit::data::detail {
 
     // Select the pivot: lowest-index node in the minimum degree bucket
     size_type
-    amd_select_pivot(Amd_state& s)
-    {
+    amd_select_pivot(Amd_state& s) {
       while (s.min_degree < s.n &&
              s.bucket_head[static_cast<std::size_t>(s.min_degree)] == none) {
         ++s.min_degree;
@@ -488,8 +458,7 @@ namespace sparkit::data::detail {
       // Find lowest-index node in this bucket for determinism
       auto best = s.bucket_head[static_cast<std::size_t>(s.min_degree)];
       for (auto cur = s.bucket_next[static_cast<std::size_t>(best)];
-           cur != none;
-           cur = s.bucket_next[static_cast<std::size_t>(cur)]) {
+           cur != none; cur = s.bucket_next[static_cast<std::size_t>(cur)]) {
         if (cur < best) best = cur;
       }
       return best;
@@ -499,8 +468,7 @@ namespace sparkit::data::detail {
     // variable neighbors reachable through the quotient graph),
     // set element's adjacency to the reach, and return affected set.
     std::vector<size_type>
-    amd_eliminate(Amd_state& s, size_type pivot)
-    {
+    amd_eliminate(Amd_state& s, size_type pivot) {
       bucket_remove(s, pivot);
       s.status[static_cast<std::size_t>(pivot)] = Amd_status::element;
 
@@ -540,8 +508,8 @@ namespace sparkit::data::detail {
           for (size_type j = 0; j < e_len; ++j) {
             auto v = s.adj[static_cast<std::size_t>(e_head + j)];
             if (v == none) continue;
-            if (s.status[static_cast<std::size_t>(v)] !=
-                Amd_status::variable) continue;
+            if (s.status[static_cast<std::size_t>(v)] != Amd_status::variable)
+              continue;
             if (is_marked(s, v)) continue;
             mark(s, v);
             reach.push_back(v);
@@ -561,8 +529,8 @@ namespace sparkit::data::detail {
         for (size_type j = 0; j < e_len && subset; ++j) {
           auto v = s.adj[static_cast<std::size_t>(e_head + j)];
           if (v == none) continue;
-          if (s.status[static_cast<std::size_t>(v)] !=
-              Amd_status::variable) continue;
+          if (s.status[static_cast<std::size_t>(v)] != Amd_status::variable)
+            continue;
           if (!is_marked(s, v)) subset = false;
         }
         if (subset) {
@@ -579,8 +547,7 @@ namespace sparkit::data::detail {
     // then compute exact external degree.
     void
     amd_update_degrees(Amd_state& s, size_type pivot,
-                       std::vector<size_type> const& affected)
-    {
+                       std::vector<size_type> const& affected) {
       for (auto v : affected) {
         auto v_head = s.head[static_cast<std::size_t>(v)];
         auto v_len = s.len[static_cast<std::size_t>(v)];
@@ -608,9 +575,7 @@ namespace sparkit::data::detail {
           }
         }
 
-        if (!has_pivot) {
-          new_adj.push_back(pivot);
-        }
+        if (!has_pivot) { new_adj.push_back(pivot); }
 
         set_adj(s, v, new_adj);
 
@@ -640,8 +605,8 @@ namespace sparkit::data::detail {
             for (size_type j = 0; j < e_len; ++j) {
               auto u = s.adj[static_cast<std::size_t>(e_head + j)];
               if (u == none) continue;
-              if (s.status[static_cast<std::size_t>(u)] !=
-                  Amd_status::variable) continue;
+              if (s.status[static_cast<std::size_t>(u)] != Amd_status::variable)
+                continue;
               if (is_marked(s, u)) continue;
               mark(s, u);
               ext_degree += s.weight[static_cast<std::size_t>(u)];
@@ -663,8 +628,7 @@ namespace sparkit::data::detail {
     // identical adjacency are merged into a single representative.
     void
     amd_detect_supervariables(Amd_state& s,
-                              std::vector<size_type> const& affected)
-    {
+                              std::vector<size_type> const& affected) {
       if (affected.size() < 2) return;
 
       // Hash adjacency lists to find candidates
@@ -673,8 +637,9 @@ namespace sparkit::data::detail {
         auto l = s.len[static_cast<std::size_t>(v)];
         std::size_t hash = static_cast<std::size_t>(l);
         for (size_type k = 0; k < l; ++k) {
-          hash ^= static_cast<std::size_t>(
-            s.adj[static_cast<std::size_t>(h + k)]) * 2654435761u;
+          hash ^=
+              static_cast<std::size_t>(s.adj[static_cast<std::size_t>(h + k)]) *
+              2654435761u;
         }
         return hash;
       };
@@ -686,8 +651,10 @@ namespace sparkit::data::detail {
         if (s.status[static_cast<std::size_t>(v)] != Amd_status::variable) {
           continue;
         }
-        auto key = (static_cast<std::size_t>(
-          s.degree[static_cast<std::size_t>(v)]) << 32) | hash_adj(v);
+        auto key =
+            (static_cast<std::size_t>(s.degree[static_cast<std::size_t>(v)])
+             << 32) |
+            hash_adj(v);
         keyed.push_back({key, v});
       }
       std::sort(keyed.begin(), keyed.end());
@@ -699,11 +666,10 @@ namespace sparkit::data::detail {
         }
 
         for (std::size_t j = i + 1;
-             j < keyed.size() && keyed[j].first == keyed[i].first;
-             ++j) {
+             j < keyed.size() && keyed[j].first == keyed[i].first; ++j) {
           auto vj = keyed[j].second;
-          if (s.status[static_cast<std::size_t>(vj)] !=
-              Amd_status::variable) continue;
+          if (s.status[static_cast<std::size_t>(vj)] != Amd_status::variable)
+            continue;
 
           // Full comparison of adjacency lists
           auto hi = s.head[static_cast<std::size_t>(vi)];
@@ -727,7 +693,7 @@ namespace sparkit::data::detail {
             s.status[static_cast<std::size_t>(vj)] = Amd_status::absorbed;
             s.representative[static_cast<std::size_t>(vj)] = vi;
             s.weight[static_cast<std::size_t>(vi)] +=
-              s.weight[static_cast<std::size_t>(vj)];
+                s.weight[static_cast<std::size_t>(vj)];
           }
         }
       }
@@ -735,8 +701,7 @@ namespace sparkit::data::detail {
 
     // Convert elimination order to perm[old] = new
     std::vector<size_type>
-    amd_build_permutation(Amd_state const& s)
-    {
+    amd_build_permutation(Amd_state const& s) {
       std::vector<size_type> perm(static_cast<std::size_t>(s.n), none);
 
       // order[pos] = supervariable representative.
@@ -762,13 +727,12 @@ namespace sparkit::data::detail {
   } // end of anonymous namespace
 
   std::vector<size_type>
-  approximate_minimum_degree(Compressed_row_sparsity const& sp)
-  {
+  approximate_minimum_degree(Compressed_row_sparsity const& sp) {
     auto nrow = sp.shape().row();
     auto ncol = sp.shape().column();
     if (nrow != ncol) {
       throw std::invalid_argument(
-        "approximate_minimum_degree: matrix must be square");
+          "approximate_minimum_degree: matrix must be square");
     }
 
     auto sym = symmetrize_pattern(sp);
@@ -804,8 +768,7 @@ namespace sparkit::data::detail {
   //   containing j, then for each such row find all columns — those
   //   are j's neighbors in A^T*A. A marker array avoids duplicates.
   static Compressed_row_sparsity
-  form_ata_pattern(Compressed_row_sparsity const& sp)
-  {
+  form_ata_pattern(Compressed_row_sparsity const& sp) {
     auto nrow = sp.shape().row();
     auto ncol = sp.shape().column();
     auto rp = sp.row_ptr();
@@ -823,8 +786,8 @@ namespace sparkit::data::detail {
     std::vector<size_type> col_ptr(un + 1, 0);
     for (size_type j = 0; j < ncol; ++j) {
       col_ptr[static_cast<std::size_t>(j + 1)] =
-        col_ptr[static_cast<std::size_t>(j)] +
-        col_count[static_cast<std::size_t>(j)];
+          col_ptr[static_cast<std::size_t>(j)] +
+          col_count[static_cast<std::size_t>(j)];
     }
 
     auto total_entries = col_ptr[un];
@@ -834,8 +797,8 @@ namespace sparkit::data::detail {
     for (size_type i = 0; i < nrow; ++i) {
       for (auto p = rp[i]; p < rp[i + 1]; ++p) {
         auto j = ci[p];
-        row_ind[static_cast<std::size_t>(col_pos[
-          static_cast<std::size_t>(j)]++)] = i;
+        row_ind[static_cast<std::size_t>(
+            col_pos[static_cast<std::size_t>(j)]++)] = i;
       }
     }
 
@@ -864,13 +827,12 @@ namespace sparkit::data::detail {
       }
     }
 
-    return Compressed_row_sparsity{
-      Shape{ncol, ncol}, indices.begin(), indices.end()};
+    return Compressed_row_sparsity{Shape{ncol, ncol}, indices.begin(),
+                                   indices.end()};
   }
 
   std::vector<size_type>
-  column_approximate_minimum_degree(Compressed_row_sparsity const& sp)
-  {
+  column_approximate_minimum_degree(Compressed_row_sparsity const& sp) {
     auto ata = form_ata_pattern(sp);
     return approximate_minimum_degree(ata);
   }

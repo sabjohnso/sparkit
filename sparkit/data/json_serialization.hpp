@@ -14,10 +14,10 @@
 // ... sparkit header files
 //
 #include <sparkit/config.hpp>
-#include <sparkit/data/Coordinate_matrix.hpp>
-#include <sparkit/data/Coordinate_sparsity.hpp>
 #include <sparkit/data/Compressed_row_matrix.hpp>
 #include <sparkit/data/Compressed_row_sparsity.hpp>
+#include <sparkit/data/Coordinate_matrix.hpp>
+#include <sparkit/data/Coordinate_sparsity.hpp>
 #include <sparkit/data/Entry.hpp>
 
 // adl_serializer specializations for non-default-constructible types.
@@ -27,40 +27,32 @@
 
 namespace nlohmann {
 
-  template<>
-  struct adl_serializer<sparkit::data::detail::Index>
-  {
-    static
-    sparkit::data::detail::Index
-    from_json(json const& j)
-    {
+  template <>
+  struct adl_serializer<sparkit::data::detail::Index> {
+    static sparkit::data::detail::Index
+    from_json(json const& j) {
       return sparkit::data::detail::Index{
-        j[0].get<sparkit::config::size_type>(),
-        j[1].get<sparkit::config::size_type>()};
+          j[0].get<sparkit::config::size_type>(),
+          j[1].get<sparkit::config::size_type>()};
     }
 
     static void
-    to_json(json& j, sparkit::data::detail::Index const& idx)
-    {
+    to_json(json& j, sparkit::data::detail::Index const& idx) {
       j = {idx.row(), idx.column()};
     }
   };
 
-  template<typename T>
-  struct adl_serializer<sparkit::data::detail::Entry<T>>
-  {
-    static
-    sparkit::data::detail::Entry<T>
-    from_json(json const& j)
-    {
+  template <typename T>
+  struct adl_serializer<sparkit::data::detail::Entry<T>> {
+    static sparkit::data::detail::Entry<T>
+    from_json(json const& j) {
       return sparkit::data::detail::Entry<T>{
-        j.at("index").get<sparkit::data::detail::Index>(),
-        j.at("value").get<T>()};
+          j.at("index").get<sparkit::data::detail::Index>(),
+          j.at("value").get<T>()};
     }
 
     static void
-    to_json(json& j, sparkit::data::detail::Entry<T> const& e)
-    {
+    to_json(json& j, sparkit::data::detail::Entry<T> const& e) {
       j = {{"index", e.index}, {"value", e.value}};
     }
   };
@@ -71,20 +63,16 @@ namespace sparkit::data::detail {
 
   // -- Coordinate_sparsity --
 
-  inline
-  nlohmann::json
-  coordinate_sparsity_to_json(Coordinate_sparsity const& sp)
-  {
+  inline nlohmann::json
+  coordinate_sparsity_to_json(Coordinate_sparsity const& sp) {
     nlohmann::json j;
     j["shape"] = sp.shape();
     j["indices"] = sp.indices();
     return j;
   }
 
-  inline
-  Coordinate_sparsity
-  coordinate_sparsity_from_json(nlohmann::json const& j)
-  {
+  inline Coordinate_sparsity
+  coordinate_sparsity_from_json(nlohmann::json const& j) {
     auto shape = j.at("shape").get<Shape>();
     auto indices = j.at("indices").get<std::vector<Index>>();
     return Coordinate_sparsity{shape, indices.begin(), indices.end()};
@@ -92,10 +80,8 @@ namespace sparkit::data::detail {
 
   // -- Compressed_row_sparsity --
 
-  inline
-  nlohmann::json
-  compressed_row_sparsity_to_json(Compressed_row_sparsity const& sp)
-  {
+  inline nlohmann::json
+  compressed_row_sparsity_to_json(Compressed_row_sparsity const& sp) {
     nlohmann::json j;
     j["shape"] = sp.shape();
 
@@ -108,10 +94,8 @@ namespace sparkit::data::detail {
     return j;
   }
 
-  inline
-  Compressed_row_sparsity
-  compressed_row_sparsity_from_json(nlohmann::json const& j)
-  {
+  inline Compressed_row_sparsity
+  compressed_row_sparsity_from_json(nlohmann::json const& j) {
     auto shape = j.at("shape").get<Shape>();
     auto col_ind = j.at("col_ind").get<std::vector<config::size_type>>();
     auto row_ptr = j.at("row_ptr").get<std::vector<config::size_type>>();
@@ -132,10 +116,9 @@ namespace sparkit::data::detail {
 
   // -- Coordinate_matrix<T> --
 
-  template<typename T>
+  template <typename T>
   nlohmann::json
-  coordinate_matrix_to_json(Coordinate_matrix<T> const& mat)
-  {
+  coordinate_matrix_to_json(Coordinate_matrix<T> const& mat) {
     nlohmann::json j;
     j["shape"] = mat.shape();
 
@@ -149,10 +132,9 @@ namespace sparkit::data::detail {
     return j;
   }
 
-  template<typename T>
+  template <typename T>
   Coordinate_matrix<T>
-  coordinate_matrix_from_json(nlohmann::json const& j)
-  {
+  coordinate_matrix_from_json(nlohmann::json const& j) {
     auto shape = j.at("shape").get<Shape>();
     auto entries = j.at("entries").get<std::vector<Entry<T>>>();
     return Coordinate_matrix<T>{shape, entries.begin(), entries.end()};
@@ -160,10 +142,9 @@ namespace sparkit::data::detail {
 
   // -- Compressed_row_matrix<T> --
 
-  template<typename T>
+  template <typename T>
   nlohmann::json
-  compressed_row_matrix_to_json(Compressed_row_matrix<T> const& mat)
-  {
+  compressed_row_matrix_to_json(Compressed_row_matrix<T> const& mat) {
     nlohmann::json j;
     j["shape"] = mat.shape();
 
@@ -179,10 +160,9 @@ namespace sparkit::data::detail {
     return j;
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  compressed_row_matrix_from_json(nlohmann::json const& j)
-  {
+  compressed_row_matrix_from_json(nlohmann::json const& j) {
     auto shape = j.at("shape").get<Shape>();
     auto row_ptr = j.at("row_ptr").get<std::vector<config::size_type>>();
     auto col_ind = j.at("col_ind").get<std::vector<config::size_type>>();

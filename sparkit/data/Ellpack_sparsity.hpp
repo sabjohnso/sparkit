@@ -14,8 +14,7 @@
 #include <sparkit/data/Index.hpp>
 #include <sparkit/data/Shape.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Immutable ELLPACK/ITPACK (ELL) sparsity pattern.
@@ -27,17 +26,15 @@ namespace sparkit::data::detail
    *
    * @see Compressed_row_sparsity
    */
-  class Ellpack_sparsity final
-  {
+  class Ellpack_sparsity final {
   public:
     using size_type = config::size_type;
 
     Ellpack_sparsity(Shape shape, std::initializer_list<Index> const& input);
 
-    template<typename Iter>
+    template <typename Iter>
     Ellpack_sparsity(Shape shape, Iter first, Iter last)
-      : Ellpack_sparsity(shape, std::vector<Index>(first, last))
-    {}
+        : Ellpack_sparsity(shape, std::vector<Index>(first, last)) {}
 
     Ellpack_sparsity(Ellpack_sparsity const& input);
     Ellpack_sparsity(Ellpack_sparsity&& input);

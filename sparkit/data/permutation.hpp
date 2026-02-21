@@ -38,11 +38,10 @@ namespace sparkit::data::detail {
 
   // -- Matrix permutations (template, header-only) --
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
   rperm(Compressed_row_matrix<T> const& A,
-        std::span<config::size_type const> perm)
-  {
+        std::span<config::size_type const> perm) {
     auto inv = inverse_permutation(perm);
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
@@ -66,11 +65,10 @@ namespace sparkit::data::detail {
     return Compressed_row_matrix<T>{std::move(sp), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
   cperm(Compressed_row_matrix<T> const& A,
-        std::span<config::size_type const> perm)
-  {
+        std::span<config::size_type const> perm) {
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
     auto sv = A.values();
@@ -91,7 +89,7 @@ namespace sparkit::data::detail {
 
       // Sort by new column index
       std::sort(row_entries.begin(), row_entries.end(),
-        [](auto const& a, auto const& b) { return a.first < b.first; });
+                [](auto const& a, auto const& b) { return a.first < b.first; });
 
       for (auto const& [col, val] : row_entries) {
         indices.push_back(Index{row, col});
@@ -103,11 +101,10 @@ namespace sparkit::data::detail {
     return Compressed_row_matrix<T>{std::move(sp), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
   dperm(Compressed_row_matrix<T> const& A,
-        std::span<config::size_type const> perm)
-  {
+        std::span<config::size_type const> perm) {
     auto inv = inverse_permutation(perm);
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
@@ -131,7 +128,7 @@ namespace sparkit::data::detail {
 
       // Sort by new column index
       std::sort(row_entries.begin(), row_entries.end(),
-        [](auto const& a, auto const& b) { return a.first < b.first; });
+                [](auto const& a, auto const& b) { return a.first < b.first; });
 
       for (auto const& [col, val] : row_entries) {
         indices.push_back(Index{new_row, col});

@@ -20,20 +20,20 @@ namespace sparkit::testing {
 
   using sparkit::data::detail::Compressed_column_sparsity;
   using sparkit::data::detail::Compressed_row_sparsity;
-  using sparkit::data::detail::Shape;
   using sparkit::data::detail::Index;
+  using sparkit::data::detail::Shape;
 
   // -- CSC construction --
 
-  TEST_CASE("compressed_column_sparsity - construction_from_initializer_list", "[compressed_column_sparsity]")
-  {
+  TEST_CASE("compressed_column_sparsity - construction_from_initializer_list",
+            "[compressed_column_sparsity]") {
     Compressed_column_sparsity csc{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
     CHECK(csc.shape() == Shape(4, 5));
     CHECK(csc.size() == 2);
   }
 
-  TEST_CASE("compressed_column_sparsity - construction_empty", "[compressed_column_sparsity]")
-  {
+  TEST_CASE("compressed_column_sparsity - construction_empty",
+            "[compressed_column_sparsity]") {
     Compressed_column_sparsity csc{Shape{3, 3}, {}};
     CHECK(csc.shape() == Shape(3, 3));
     CHECK(csc.size() == 0);
@@ -41,11 +41,11 @@ namespace sparkit::testing {
 
   // -- CSC structure accessors --
 
-  TEST_CASE("compressed_column_sparsity - col_ptr_and_row_ind_structure", "[compressed_column_sparsity]")
-  {
+  TEST_CASE("compressed_column_sparsity - col_ptr_and_row_ind_structure",
+            "[compressed_column_sparsity]") {
     // 6x5 matrix with entries at (2,2), (4,2), (5,3)
     Compressed_column_sparsity csc{Shape{6, 5},
-      {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
+                                   {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
 
     auto cp = csc.col_ptr();
     auto ri = csc.row_ind();
@@ -71,11 +71,11 @@ namespace sparkit::testing {
     CHECK(ri[2] == 5);
   }
 
-  TEST_CASE("compressed_column_sparsity - row_ind_sorted_within_columns", "[compressed_column_sparsity]")
-  {
+  TEST_CASE("compressed_column_sparsity - row_ind_sorted_within_columns",
+            "[compressed_column_sparsity]") {
     // Indices given out of order within a column
     Compressed_column_sparsity csc{Shape{6, 4},
-      {Index{5, 2}, Index{2, 2}, Index{4, 2}}};
+                                   {Index{5, 2}, Index{2, 2}, Index{4, 2}}};
 
     auto ri = csc.row_ind();
     REQUIRE(std::ssize(ri) == 3);
@@ -84,20 +84,20 @@ namespace sparkit::testing {
     CHECK(ri[2] == 5);
   }
 
-  TEST_CASE("compressed_column_sparsity - duplicate_indices_are_collapsed", "[compressed_column_sparsity]")
-  {
+  TEST_CASE("compressed_column_sparsity - duplicate_indices_are_collapsed",
+            "[compressed_column_sparsity]") {
     Compressed_column_sparsity csc{Shape{5, 4},
-      {Index{2, 3}, Index{2, 3}, Index{3, 3}}};
+                                   {Index{2, 3}, Index{2, 3}, Index{3, 3}}};
 
     CHECK(csc.size() == 2);
 
     auto cp = csc.col_ptr();
-    CHECK(cp[3] == 0);  // columns 0-2 empty
-    CHECK(cp[4] == 2);  // column 3 has 2 unique entries
+    CHECK(cp[3] == 0); // columns 0-2 empty
+    CHECK(cp[4] == 2); // column 3 has 2 unique entries
   }
 
-  TEST_CASE("compressed_column_sparsity - col_ptr_empty_matrix", "[compressed_column_sparsity]")
-  {
+  TEST_CASE("compressed_column_sparsity - col_ptr_empty_matrix",
+            "[compressed_column_sparsity]") {
     Compressed_column_sparsity csc{Shape{3, 3}, {}};
 
     auto cp = csc.col_ptr();
@@ -109,10 +109,10 @@ namespace sparkit::testing {
     CHECK(std::ssize(csc.row_ind()) == 0);
   }
 
-  TEST_CASE("compressed_column_sparsity - single_column_multiple_entries", "[compressed_column_sparsity]")
-  {
-    Compressed_column_sparsity csc{Shape{8, 4},
-      {Index{7, 2}, Index{3, 2}, Index{2, 2}, Index{5, 2}}};
+  TEST_CASE("compressed_column_sparsity - single_column_multiple_entries",
+            "[compressed_column_sparsity]") {
+    Compressed_column_sparsity csc{
+        Shape{8, 4}, {Index{7, 2}, Index{3, 2}, Index{2, 2}, Index{5, 2}}};
 
     CHECK(csc.size() == 4);
 
@@ -132,8 +132,8 @@ namespace sparkit::testing {
 
   // -- Iterator range constructor --
 
-  TEST_CASE("compressed_column_sparsity - construction_from_iterator_range", "[compressed_column_sparsity]")
-  {
+  TEST_CASE("compressed_column_sparsity - construction_from_iterator_range",
+            "[compressed_column_sparsity]") {
     std::vector<Index> indices{Index{3, 2}, Index{2, 4}, Index{2, 2}};
     Compressed_column_sparsity csc{Shape{5, 6}, begin(indices), end(indices)};
 
@@ -150,9 +150,10 @@ namespace sparkit::testing {
 
   // -- Copy/move semantics --
 
-  TEST_CASE("compressed_column_sparsity - copy_construction", "[compressed_column_sparsity]")
-  {
-    Compressed_column_sparsity original{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
+  TEST_CASE("compressed_column_sparsity - copy_construction",
+            "[compressed_column_sparsity]") {
+    Compressed_column_sparsity original{Shape{4, 5},
+                                        {Index{2, 3}, Index{3, 4}}};
     Compressed_column_sparsity copy{original};
 
     CHECK(copy.shape() == original.shape());
@@ -169,9 +170,10 @@ namespace sparkit::testing {
     CHECK(copy_ri.data() != orig_ri.data());
   }
 
-  TEST_CASE("compressed_column_sparsity - move_construction", "[compressed_column_sparsity]")
-  {
-    Compressed_column_sparsity original{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
+  TEST_CASE("compressed_column_sparsity - move_construction",
+            "[compressed_column_sparsity]") {
+    Compressed_column_sparsity original{Shape{4, 5},
+                                        {Index{2, 3}, Index{3, 4}}};
     auto original_size = original.size();
     auto original_shape = original.shape();
 
@@ -181,9 +183,10 @@ namespace sparkit::testing {
     CHECK(moved.size() == original_size);
   }
 
-  TEST_CASE("compressed_column_sparsity - copy_assignment", "[compressed_column_sparsity]")
-  {
-    Compressed_column_sparsity original{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
+  TEST_CASE("compressed_column_sparsity - copy_assignment",
+            "[compressed_column_sparsity]") {
+    Compressed_column_sparsity original{Shape{4, 5},
+                                        {Index{2, 3}, Index{3, 4}}};
     Compressed_column_sparsity target{Shape{3, 3}, {}};
 
     target = original;
@@ -201,9 +204,10 @@ namespace sparkit::testing {
     CHECK(tgt_ri.data() != orig_ri.data());
   }
 
-  TEST_CASE("compressed_column_sparsity - move_assignment", "[compressed_column_sparsity]")
-  {
-    Compressed_column_sparsity original{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
+  TEST_CASE("compressed_column_sparsity - move_assignment",
+            "[compressed_column_sparsity]") {
+    Compressed_column_sparsity original{Shape{4, 5},
+                                        {Index{2, 3}, Index{3, 4}}};
     auto original_size = original.size();
     auto original_shape = original.shape();
 
@@ -216,11 +220,10 @@ namespace sparkit::testing {
 
   // -- CSR to CSC conversion --
 
-  TEST_CASE("conversions - csr_to_csc_basic", "[conversions]")
-  {
+  TEST_CASE("conversions - csr_to_csc_basic", "[conversions]") {
     // 5x6 matrix with entries at (2,2), (2,4), (3,5)
     Compressed_row_sparsity csr{Shape{5, 6},
-      {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
+                                {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
 
     auto csc = sparkit::data::detail::to_compressed_column(csr);
 
@@ -232,20 +235,19 @@ namespace sparkit::testing {
     CHECK(cp[0] == 0);
     CHECK(cp[1] == 0);
     CHECK(cp[2] == 0);
-    CHECK(cp[3] == 1);  // column 2 has 1 entry (row 2)
-    CHECK(cp[4] == 1);  // column 3 has 0 entries
-    CHECK(cp[5] == 2);  // column 4 has 1 entry (row 2)
-    CHECK(cp[6] == 3);  // column 5 has 1 entry (row 3)
+    CHECK(cp[3] == 1); // column 2 has 1 entry (row 2)
+    CHECK(cp[4] == 1); // column 3 has 0 entries
+    CHECK(cp[5] == 2); // column 4 has 1 entry (row 2)
+    CHECK(cp[6] == 3); // column 5 has 1 entry (row 3)
 
     auto ri = csc.row_ind();
     REQUIRE(std::ssize(ri) == 3);
-    CHECK(ri[0] == 2);  // col 2, row 2
-    CHECK(ri[1] == 2);  // col 4, row 2
-    CHECK(ri[2] == 3);  // col 5, row 3
+    CHECK(ri[0] == 2); // col 2, row 2
+    CHECK(ri[1] == 2); // col 4, row 2
+    CHECK(ri[2] == 3); // col 5, row 3
   }
 
-  TEST_CASE("conversions - csr_to_csc_empty", "[conversions]")
-  {
+  TEST_CASE("conversions - csr_to_csc_empty", "[conversions]") {
     Compressed_row_sparsity csr{Shape{3, 3}, {}};
     auto csc = sparkit::data::detail::to_compressed_column(csr);
 
@@ -254,11 +256,10 @@ namespace sparkit::testing {
     CHECK(std::ssize(csc.row_ind()) == 0);
   }
 
-  TEST_CASE("conversions - csc_to_csr_basic", "[conversions]")
-  {
+  TEST_CASE("conversions - csc_to_csr_basic", "[conversions]") {
     // Build CSC directly, then convert back to CSR
     Compressed_column_sparsity csc{Shape{5, 6},
-      {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
+                                   {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(csc);
 
@@ -270,8 +271,8 @@ namespace sparkit::testing {
     CHECK(rp[0] == 0);
     CHECK(rp[1] == 0);
     CHECK(rp[2] == 0);
-    CHECK(rp[3] == 2);  // row 2 has 2 entries
-    CHECK(rp[4] == 3);  // row 3 has 1 entry
+    CHECK(rp[3] == 2); // row 2 has 2 entries
+    CHECK(rp[4] == 3); // row 3 has 1 entry
     CHECK(rp[5] == 3);
 
     auto ci = csr.col_ind();
@@ -283,11 +284,11 @@ namespace sparkit::testing {
 
   // -- CSR <-> CSC roundtrip --
 
-  TEST_CASE("conversions - csr_csc_roundtrip", "[conversions]")
-  {
+  TEST_CASE("conversions - csr_csc_roundtrip", "[conversions]") {
     Compressed_row_sparsity original{Shape{5, 6},
-      {Index{0, 1}, Index{1, 0}, Index{1, 3}, Index{2, 2},
-       Index{2, 4}, Index{3, 5}, Index{4, 0}}};
+                                     {Index{0, 1}, Index{1, 0}, Index{1, 3},
+                                      Index{2, 2}, Index{2, 4}, Index{3, 5},
+                                      Index{4, 0}}};
 
     auto csc = sparkit::data::detail::to_compressed_column(original);
     auto roundtrip = sparkit::data::detail::to_compressed_row(csc);

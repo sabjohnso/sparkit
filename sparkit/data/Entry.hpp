@@ -8,9 +8,8 @@
 
 namespace sparkit::data::detail {
 
-  template<typename T = config::value_type>
-  struct Entry
-  {
+  template <typename T = config::value_type>
+  struct Entry {
     Index index;
     T value;
   };

@@ -11,11 +11,9 @@
 //
 #include <sparkit/data/Symmetric_compressed_row_sparsity.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
-  class Symmetric_compressed_row_sparsity::Impl
-  {
+  class Symmetric_compressed_row_sparsity::Impl {
   public:
     Impl(Shape shape, std::vector<Index> indices);
 

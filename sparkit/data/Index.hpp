@@ -11,8 +11,7 @@ namespace sparkit::data::detail {
   /**
    * @brief A type describing a matrix index: the number of rows and columns
    */
-  class Index final
-  {
+  class Index final {
   public:
     using size_type = config::size_type;
 
@@ -39,17 +38,11 @@ namespace sparkit::data::detail {
   void
   from_json(const json& j, Index& index);
 
-
-
   struct IndexHash {
     size_type
-    operator ()(Index index) const {
+    operator()(Index index) const {
       return (index.row() << 32) ^ index.column();
     }
   };
-
-
-
-
 
 } // namespace sparkit::data::detail

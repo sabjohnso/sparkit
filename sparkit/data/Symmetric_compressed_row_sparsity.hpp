@@ -14,8 +14,7 @@
 #include <sparkit/data/Index.hpp>
 #include <sparkit/data/Shape.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Immutable symmetric compressed sparse row (sCSR) sparsity pattern.
@@ -29,8 +28,7 @@ namespace sparkit::data::detail
    *
    * @see Compressed_row_sparsity
    */
-  class Symmetric_compressed_row_sparsity final
-  {
+  class Symmetric_compressed_row_sparsity final {
   public:
     using size_type = config::size_type;
 
@@ -43,18 +41,17 @@ namespace sparkit::data::detail
      * @param input  Nonzero positions (from either triangle).
      */
     Symmetric_compressed_row_sparsity(
-      Shape shape,
-      std::initializer_list<Index> const& input);
+        Shape shape, std::initializer_list<Index> const& input);
 
-    template<typename Iter>
+    template <typename Iter>
     Symmetric_compressed_row_sparsity(Shape shape, Iter first, Iter last)
-      : Symmetric_compressed_row_sparsity(shape, std::vector<Index>(first, last))
-    {}
+        : Symmetric_compressed_row_sparsity(shape,
+                                            std::vector<Index>(first, last)) {}
 
     Symmetric_compressed_row_sparsity(
-      Symmetric_compressed_row_sparsity const& input);
+        Symmetric_compressed_row_sparsity const& input);
     Symmetric_compressed_row_sparsity(
-      Symmetric_compressed_row_sparsity&& input);
+        Symmetric_compressed_row_sparsity&& input);
 
     Symmetric_compressed_row_sparsity&
     operator=(Symmetric_compressed_row_sparsity const& input);
@@ -88,8 +85,7 @@ namespace sparkit::data::detail
     col_ind() const;
 
   private:
-    Symmetric_compressed_row_sparsity(
-      Shape shape, std::vector<Index> indices);
+    Symmetric_compressed_row_sparsity(Shape shape, std::vector<Index> indices);
 
     class Impl;
     Impl* pimpl;

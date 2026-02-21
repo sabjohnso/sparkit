@@ -11,8 +11,7 @@
 //
 #include <sparkit/data/Compressed_column_sparsity.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Hidden implementation of Compressed_column_sparsity.
@@ -26,8 +25,7 @@ namespace sparkit::data::detail
    * @note Implicitly copyable (compiler-generated copy is correct
    *       because all members are value types / vectors).
    */
-  class Compressed_column_sparsity::Impl
-  {
+  class Compressed_column_sparsity::Impl {
   public:
     /**
      * @brief Construct the CSC arrays from a shape and a collection of indices.
@@ -55,9 +53,10 @@ namespace sparkit::data::detail
     row_ind() const;
 
   private:
-    Shape shape_;                      ///< Matrix dimensions.
-    std::vector<size_type> col_ptr_;   ///< Column offsets, length shape_.column()+1.
-    std::vector<size_type> row_ind_;   ///< Row indices, length nnz.
+    Shape shape_; ///< Matrix dimensions.
+    std::vector<size_type>
+        col_ptr_; ///< Column offsets, length shape_.column()+1.
+    std::vector<size_type> row_ind_; ///< Row indices, length nnz.
 
   }; // end of class Compressed_column_sparsity::Impl
 

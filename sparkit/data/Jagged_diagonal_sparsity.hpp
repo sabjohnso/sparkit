@@ -14,8 +14,7 @@
 #include <sparkit/data/Index.hpp>
 #include <sparkit/data/Shape.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Immutable jagged diagonal (JAD) sparsity pattern.
@@ -30,17 +29,16 @@ namespace sparkit::data::detail
    *
    * @see Compressed_row_sparsity
    */
-  class Jagged_diagonal_sparsity final
-  {
+  class Jagged_diagonal_sparsity final {
   public:
     using size_type = config::size_type;
 
-    Jagged_diagonal_sparsity(Shape shape, std::initializer_list<Index> const& input);
+    Jagged_diagonal_sparsity(Shape shape,
+                             std::initializer_list<Index> const& input);
 
-    template<typename Iter>
+    template <typename Iter>
     Jagged_diagonal_sparsity(Shape shape, Iter first, Iter last)
-      : Jagged_diagonal_sparsity(shape, std::vector<Index>(first, last))
-    {}
+        : Jagged_diagonal_sparsity(shape, std::vector<Index>(first, last)) {}
 
     Jagged_diagonal_sparsity(Jagged_diagonal_sparsity const& input);
     Jagged_diagonal_sparsity(Jagged_diagonal_sparsity&& input);

@@ -1,8 +1,8 @@
 //
 // ... Test header files
 //
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 //
 // ... Standard header files
@@ -21,19 +21,18 @@
 
 namespace sparkit::testing {
 
+  using nlohmann::json;
+  using sparkit::data::detail::Compressed_row_matrix;
+  using sparkit::data::detail::Compressed_row_sparsity;
+  using sparkit::data::detail::Coordinate_matrix;
+  using sparkit::data::detail::Coordinate_sparsity;
   using sparkit::data::detail::Entry;
   using sparkit::data::detail::Index;
   using sparkit::data::detail::Shape;
-  using sparkit::data::detail::Coordinate_sparsity;
-  using sparkit::data::detail::Coordinate_matrix;
-  using sparkit::data::detail::Compressed_row_sparsity;
-  using sparkit::data::detail::Compressed_row_matrix;
-  using nlohmann::json;
 
   // -- Entry --
 
-  TEST_CASE("json_serialization - entry_to_json", "[json_serialization]")
-  {
+  TEST_CASE("json_serialization - entry_to_json", "[json_serialization]") {
     Entry<double> e{Index{2, 3}, 4.5};
     json j = e;
 
@@ -42,8 +41,7 @@ namespace sparkit::testing {
     CHECK(j["value"] == Catch::Approx(4.5));
   }
 
-  TEST_CASE("json_serialization - entry_from_json", "[json_serialization]")
-  {
+  TEST_CASE("json_serialization - entry_from_json", "[json_serialization]") {
     json j = {{"index", {1, 4}}, {"value", 7.0}};
     auto e = j.get<Entry<double>>();
 
@@ -52,8 +50,7 @@ namespace sparkit::testing {
     CHECK(e.value == Catch::Approx(7.0));
   }
 
-  TEST_CASE("json_serialization - entry_round_trip", "[json_serialization]")
-  {
+  TEST_CASE("json_serialization - entry_round_trip", "[json_serialization]") {
     Entry<double> original{Index{5, 8}, 3.14};
     json j = original;
     auto result = j.get<Entry<double>>();
@@ -64,11 +61,10 @@ namespace sparkit::testing {
 
   // -- Coordinate_sparsity --
 
-  TEST_CASE("json_serialization - coordinate_sparsity_to_json", "[json_serialization]")
-  {
-    Coordinate_sparsity sp{Shape{3, 4}, {
-      Index{0, 1}, Index{1, 2}, Index{2, 0}
-    }};
+  TEST_CASE("json_serialization - coordinate_sparsity_to_json",
+            "[json_serialization]") {
+    Coordinate_sparsity sp{Shape{3, 4},
+                           {Index{0, 1}, Index{1, 2}, Index{2, 0}}};
 
     json j = sparkit::data::detail::coordinate_sparsity_to_json(sp);
 
@@ -77,11 +73,10 @@ namespace sparkit::testing {
     CHECK(j["indices"].size() == 3);
   }
 
-  TEST_CASE("json_serialization - coordinate_sparsity_round_trip", "[json_serialization]")
-  {
-    Coordinate_sparsity original{Shape{4, 5}, {
-      Index{0, 0}, Index{1, 3}, Index{2, 1}, Index{3, 4}
-    }};
+  TEST_CASE("json_serialization - coordinate_sparsity_round_trip",
+            "[json_serialization]") {
+    Coordinate_sparsity original{
+        Shape{4, 5}, {Index{0, 0}, Index{1, 3}, Index{2, 1}, Index{3, 4}}};
 
     json j = sparkit::data::detail::coordinate_sparsity_to_json(original);
     auto result = sparkit::data::detail::coordinate_sparsity_from_json(j);
@@ -95,8 +90,8 @@ namespace sparkit::testing {
 
     // Sort both for comparison since COO order may vary
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.row() < b.row()
-        || (a.row() == b.row() && a.column() < b.column());
+      return a.row() < b.row() ||
+             (a.row() == b.row() && a.column() < b.column());
     };
     std::sort(orig_indices.begin(), orig_indices.end(), by_row_col);
     std::sort(res_indices.begin(), res_indices.end(), by_row_col);
@@ -108,25 +103,23 @@ namespace sparkit::testing {
 
   // -- Compressed_row_sparsity --
 
-  TEST_CASE("json_serialization - compressed_row_sparsity_to_json", "[json_serialization]")
-  {
-    Compressed_row_sparsity sp{Shape{3, 4}, {
-      Index{0, 1}, Index{1, 2}, Index{2, 0}
-    }};
+  TEST_CASE("json_serialization - compressed_row_sparsity_to_json",
+            "[json_serialization]") {
+    Compressed_row_sparsity sp{Shape{3, 4},
+                               {Index{0, 1}, Index{1, 2}, Index{2, 0}}};
 
     json j = sparkit::data::detail::compressed_row_sparsity_to_json(sp);
 
     CHECK(j["shape"][0] == 3);
     CHECK(j["shape"][1] == 4);
-    CHECK(j["row_ptr"].size() == 4);  // nrow + 1
+    CHECK(j["row_ptr"].size() == 4); // nrow + 1
     CHECK(j["col_ind"].size() == 3);
   }
 
-  TEST_CASE("json_serialization - compressed_row_sparsity_round_trip", "[json_serialization]")
-  {
-    Compressed_row_sparsity original{Shape{3, 4}, {
-      Index{0, 1}, Index{0, 3}, Index{1, 2}, Index{2, 0}
-    }};
+  TEST_CASE("json_serialization - compressed_row_sparsity_round_trip",
+            "[json_serialization]") {
+    Compressed_row_sparsity original{
+        Shape{3, 4}, {Index{0, 1}, Index{0, 3}, Index{1, 2}, Index{2, 0}}};
 
     json j = sparkit::data::detail::compressed_row_sparsity_to_json(original);
     auto result = sparkit::data::detail::compressed_row_sparsity_from_json(j);
@@ -151,12 +144,10 @@ namespace sparkit::testing {
 
   // -- Coordinate_matrix --
 
-  TEST_CASE("json_serialization - coordinate_matrix_to_json", "[json_serialization]")
-  {
-    Coordinate_matrix<double> mat{Shape{3, 4}, {
-      {Index{0, 1}, 1.5},
-      {Index{2, 3}, 2.7}
-    }};
+  TEST_CASE("json_serialization - coordinate_matrix_to_json",
+            "[json_serialization]") {
+    Coordinate_matrix<double> mat{Shape{3, 4},
+                                  {{Index{0, 1}, 1.5}, {Index{2, 3}, 2.7}}};
 
     json j = sparkit::data::detail::coordinate_matrix_to_json(mat);
 
@@ -165,14 +156,13 @@ namespace sparkit::testing {
     CHECK(j["entries"].size() == 2);
   }
 
-  TEST_CASE("json_serialization - coordinate_matrix_round_trip", "[json_serialization]")
-  {
-    Coordinate_matrix<double> original{Shape{4, 5}, {
-      {Index{0, 0}, 1.0},
-      {Index{1, 3}, 2.5},
-      {Index{2, 1}, 3.7},
-      {Index{3, 4}, 4.2}
-    }};
+  TEST_CASE("json_serialization - coordinate_matrix_round_trip",
+            "[json_serialization]") {
+    Coordinate_matrix<double> original{Shape{4, 5},
+                                       {{Index{0, 0}, 1.0},
+                                        {Index{1, 3}, 2.5},
+                                        {Index{2, 1}, 3.7},
+                                        {Index{3, 4}, 4.2}}};
 
     json j = sparkit::data::detail::coordinate_matrix_to_json(original);
     auto result = sparkit::data::detail::coordinate_matrix_from_json<double>(j);
@@ -187,8 +177,8 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("json_serialization - coordinate_matrix_empty_round_trip", "[json_serialization]")
-  {
+  TEST_CASE("json_serialization - coordinate_matrix_empty_round_trip",
+            "[json_serialization]") {
     Coordinate_matrix<double> original{Shape{3, 3}};
 
     json j = sparkit::data::detail::coordinate_matrix_to_json(original);
@@ -200,35 +190,33 @@ namespace sparkit::testing {
 
   // -- Compressed_row_matrix --
 
-  TEST_CASE("json_serialization - compressed_row_matrix_to_json", "[json_serialization]")
-  {
-    Compressed_row_matrix<double> mat{Shape{3, 4}, {
-      {Index{0, 1}, 1.5},
-      {Index{1, 2}, 2.7},
-      {Index{2, 0}, 3.9}
-    }};
+  TEST_CASE("json_serialization - compressed_row_matrix_to_json",
+            "[json_serialization]") {
+    Compressed_row_matrix<double> mat{
+        Shape{3, 4},
+        {{Index{0, 1}, 1.5}, {Index{1, 2}, 2.7}, {Index{2, 0}, 3.9}}};
 
     json j = sparkit::data::detail::compressed_row_matrix_to_json(mat);
 
     CHECK(j["shape"][0] == 3);
     CHECK(j["shape"][1] == 4);
-    CHECK(j["row_ptr"].size() == 4);  // nrow + 1
+    CHECK(j["row_ptr"].size() == 4); // nrow + 1
     CHECK(j["col_ind"].size() == 3);
     CHECK(j["values"].size() == 3);
   }
 
-  TEST_CASE("json_serialization - compressed_row_matrix_round_trip", "[json_serialization]")
-  {
-    Compressed_row_matrix<double> original{Shape{4, 5}, {
-      {Index{0, 0}, 1.0},
-      {Index{0, 3}, 2.0},
-      {Index{1, 1}, 3.0},
-      {Index{2, 4}, 4.0},
-      {Index{3, 2}, 5.0}
-    }};
+  TEST_CASE("json_serialization - compressed_row_matrix_round_trip",
+            "[json_serialization]") {
+    Compressed_row_matrix<double> original{Shape{4, 5},
+                                           {{Index{0, 0}, 1.0},
+                                            {Index{0, 3}, 2.0},
+                                            {Index{1, 1}, 3.0},
+                                            {Index{2, 4}, 4.0},
+                                            {Index{3, 2}, 5.0}}};
 
     json j = sparkit::data::detail::compressed_row_matrix_to_json(original);
-    auto result = sparkit::data::detail::compressed_row_matrix_from_json<double>(j);
+    auto result =
+        sparkit::data::detail::compressed_row_matrix_from_json<double>(j);
 
     CHECK(result.shape() == original.shape());
     CHECK(result.size() == original.size());
@@ -240,13 +228,14 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("json_serialization - compressed_row_matrix_empty_round_trip", "[json_serialization]")
-  {
+  TEST_CASE("json_serialization - compressed_row_matrix_empty_round_trip",
+            "[json_serialization]") {
     Compressed_row_sparsity sp{Shape{3, 3}, {}};
     Compressed_row_matrix<double> original{sp, {}};
 
     json j = sparkit::data::detail::compressed_row_matrix_to_json(original);
-    auto result = sparkit::data::detail::compressed_row_matrix_from_json<double>(j);
+    auto result =
+        sparkit::data::detail::compressed_row_matrix_from_json<double>(j);
 
     CHECK(result.shape() == original.shape());
     CHECK(result.size() == 0);

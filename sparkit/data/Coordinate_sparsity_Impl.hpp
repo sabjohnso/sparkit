@@ -9,20 +9,19 @@
 //
 // ... sparkit header files
 //
-#include <sparkit/data/Index.hpp>
 #include <sparkit/data/Coordinate_sparsity.hpp>
+#include <sparkit/data/Index.hpp>
 
-namespace sparkit::data::detail{
+namespace sparkit::data::detail {
 
-  class Coordinate_sparsity::Impl
-  {
+  class Coordinate_sparsity::Impl {
   public:
     Impl(Shape shape);
 
     Impl(const Impl& input);
 
     Impl&
-    operator =(const Impl& input);
+    operator=(const Impl& input);
 
     void
     add(Index index);
@@ -40,10 +39,8 @@ namespace sparkit::data::detail{
     indices() const;
 
   private:
-
     void
     copy_nonzeros(const Impl& input);
-
 
     Shape shape_;
     std::unordered_set<Index, IndexHash> nonzeros_;

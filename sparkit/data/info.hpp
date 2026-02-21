@@ -21,13 +21,11 @@ namespace sparkit::data::detail {
   //
   // Reference: Neumaier, A. (1974). "Rundungsfehleranalyse einiger
   // Verfahren zur Summation endlicher Summen."
-  template<typename T>
-  class Neumaier_sum final
-  {
+  template <typename T>
+  class Neumaier_sum final {
   public:
     void
-    add(T val)
-    {
+    add(T val) {
       auto t = sum_ + val;
       if (std::abs(sum_) >= std::abs(val)) {
         compensation_ += (sum_ - t) + val;
@@ -38,8 +36,7 @@ namespace sparkit::data::detail {
     }
 
     T
-    result() const
-    {
+    result() const {
       return sum_ + compensation_;
     }
 
@@ -48,10 +45,9 @@ namespace sparkit::data::detail {
     T compensation_{0};
   };
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  row_norms_1(Compressed_row_matrix<T> const& A)
-  {
+  row_norms_1(Compressed_row_matrix<T> const& A) {
     auto rows = A.shape().row();
     auto rp = A.row_ptr();
     auto vals = A.values();
@@ -67,10 +63,9 @@ namespace sparkit::data::detail {
     return norms;
   }
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  row_norms_inf(Compressed_row_matrix<T> const& A)
-  {
+  row_norms_inf(Compressed_row_matrix<T> const& A) {
     auto rows = A.shape().row();
     auto rp = A.row_ptr();
     auto vals = A.values();
@@ -86,10 +81,9 @@ namespace sparkit::data::detail {
     return norms;
   }
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  column_norms_1(Compressed_row_matrix<T> const& A)
-  {
+  column_norms_1(Compressed_row_matrix<T> const& A) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto rp = A.row_ptr();
@@ -111,10 +105,9 @@ namespace sparkit::data::detail {
     return norms;
   }
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  column_norms_inf(Compressed_row_matrix<T> const& A)
-  {
+  column_norms_inf(Compressed_row_matrix<T> const& A) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto rp = A.row_ptr();
@@ -134,15 +127,12 @@ namespace sparkit::data::detail {
   // Scaled Frobenius norm: avoids overflow/underflow in squaring
   // by dividing all values by the maximum absolute value first.
   // Uses Neumaier summation for the sum of scaled squares.
-  template<typename T>
+  template <typename T>
   T
-  frobenius_norm(Compressed_row_matrix<T> const& A)
-  {
+  frobenius_norm(Compressed_row_matrix<T> const& A) {
     auto vals = A.values();
 
-    if (vals.empty()) {
-      return T{0};
-    }
+    if (vals.empty()) { return T{0}; }
 
     // Find scale = max |a_ij|
     T scale{0};
@@ -150,9 +140,7 @@ namespace sparkit::data::detail {
       scale = std::max(scale, std::abs(v));
     }
 
-    if (scale == T{0}) {
-      return T{0};
-    }
+    if (scale == T{0}) { return T{0}; }
 
     // Sum (a_ij / scale)^2 with compensated summation
     Neumaier_sum<T> acc;
@@ -164,26 +152,23 @@ namespace sparkit::data::detail {
     return scale * std::sqrt(acc.result());
   }
 
-  template<typename T>
+  template <typename T>
   T
-  norm_1(Compressed_row_matrix<T> const& A)
-  {
+  norm_1(Compressed_row_matrix<T> const& A) {
     auto cn = column_norms_1(A);
     return *std::max_element(cn.begin(), cn.end());
   }
 
-  template<typename T>
+  template <typename T>
   T
-  norm_inf(Compressed_row_matrix<T> const& A)
-  {
+  norm_inf(Compressed_row_matrix<T> const& A) {
     auto rn = row_norms_1(A);
     return *std::max_element(rn.begin(), rn.end());
   }
 
-  template<typename T>
+  template <typename T>
   std::pair<config::size_type, config::size_type>
-  bandwidth(Compressed_row_matrix<T> const& A)
-  {
+  bandwidth(Compressed_row_matrix<T> const& A) {
     auto rows = A.shape().row();
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
@@ -194,21 +179,16 @@ namespace sparkit::data::detail {
     for (config::size_type i = 0; i < rows; ++i) {
       for (auto j = rp[i]; j < rp[i + 1]; ++j) {
         auto col = ci[j];
-        if (i >= col) {
-          lower = std::max(lower, i - col);
-        }
-        if (col >= i) {
-          upper = std::max(upper, col - i);
-        }
+        if (i >= col) { lower = std::max(lower, i - col); }
+        if (col >= i) { upper = std::max(upper, col - i); }
       }
     }
     return {lower, upper};
   }
 
-  template<typename T>
+  template <typename T>
   config::size_type
-  diagonal_occupancy(Compressed_row_matrix<T> const& A)
-  {
+  diagonal_occupancy(Compressed_row_matrix<T> const& A) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto diag_len = std::min(rows, cols);
@@ -219,17 +199,14 @@ namespace sparkit::data::detail {
     for (config::size_type i = 0; i < diag_len; ++i) {
       auto begin = ci.begin() + rp[i];
       auto end = ci.begin() + rp[i + 1];
-      if (std::binary_search(begin, end, i)) {
-        ++count;
-      }
+      if (std::binary_search(begin, end, i)) { ++count; }
     }
     return count;
   }
 
-  template<typename T>
+  template <typename T>
   std::vector<bool>
-  diagonal_positions(Compressed_row_matrix<T> const& A)
-  {
+  diagonal_positions(Compressed_row_matrix<T> const& A) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto diag_len = std::min(rows, cols);
@@ -247,18 +224,15 @@ namespace sparkit::data::detail {
     return pos;
   }
 
-  template<typename T>
+  template <typename T>
   std::pair<config::size_type, config::size_type>
-  detect_block_size(Compressed_row_matrix<T> const& A)
-  {
+  detect_block_size(Compressed_row_matrix<T> const& A) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
 
-    if (A.size() == 0) {
-      return {1, 1};
-    }
+    if (A.size() == 0) { return {1, 1}; }
 
     // Try decreasing block sizes from the largest dividing both dimensions.
     for (auto br = rows; br >= 2; --br) {
@@ -277,8 +251,10 @@ namespace sparkit::data::detail {
             auto block_row_start = (i / br) * br;
             auto block_col_start = (col / bc) * bc;
 
-            for (auto bi = block_row_start; bi < block_row_start + br && valid; ++bi) {
-              for (auto bj = block_col_start; bj < block_col_start + bc && valid; ++bj) {
+            for (auto bi = block_row_start; bi < block_row_start + br && valid;
+                 ++bi) {
+              for (auto bj = block_col_start;
+                   bj < block_col_start + bc && valid; ++bj) {
                 auto row_begin = ci.begin() + rp[bi];
                 auto row_end = ci.begin() + rp[bi + 1];
                 if (!std::binary_search(row_begin, row_end, bj)) {
@@ -289,9 +265,7 @@ namespace sparkit::data::detail {
           }
         }
 
-        if (valid) {
-          return {br, bc};
-        }
+        if (valid) { return {br, bc}; }
       }
     }
 

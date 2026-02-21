@@ -11,8 +11,7 @@
 //
 #include <sparkit/data/Diagonal_sparsity.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Hidden implementation of Diagonal_sparsity.
@@ -20,8 +19,7 @@ namespace sparkit::data::detail
    * Stores sorted unique diagonal offsets and computes total size
    * (number of valid positions on all stored diagonals).
    */
-  class Diagonal_sparsity::Impl
-  {
+  class Diagonal_sparsity::Impl {
   public:
     Impl(Shape shape, std::vector<size_type> offsets);
 

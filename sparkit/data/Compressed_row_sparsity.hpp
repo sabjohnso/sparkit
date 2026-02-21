@@ -14,8 +14,7 @@
 #include <sparkit/data/Index.hpp>
 #include <sparkit/data/Shape.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Immutable compressed sparse row (CSR) sparsity pattern.
@@ -36,8 +35,7 @@ namespace sparkit::data::detail
    *
    * @see Coordinate_sparsity
    */
-  class Compressed_row_sparsity final
-  {
+  class Compressed_row_sparsity final {
   public:
     using size_type = config::size_type;
 
@@ -49,7 +47,8 @@ namespace sparkit::data::detail
      * @param shape  Matrix dimensions.
      * @param input  Nonzero positions.
      */
-    Compressed_row_sparsity(Shape shape, std::initializer_list<Index> const& input);
+    Compressed_row_sparsity(Shape shape,
+                            std::initializer_list<Index> const& input);
 
     /**
      * @brief Construct from a shape and an iterator range of indices.
@@ -61,10 +60,9 @@ namespace sparkit::data::detail
      * @param first  Beginning of the index range.
      * @param last   End of the index range.
      */
-    template<typename Iter>
+    template <typename Iter>
     Compressed_row_sparsity(Shape shape, Iter first, Iter last)
-      : Compressed_row_sparsity(shape, std::vector<Index>(first, last))
-    {}
+        : Compressed_row_sparsity(shape, std::vector<Index>(first, last)) {}
 
     Compressed_row_sparsity(Compressed_row_sparsity const& input);
     Compressed_row_sparsity(Compressed_row_sparsity&& input);

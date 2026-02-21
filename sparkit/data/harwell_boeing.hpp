@@ -21,13 +21,12 @@
 #include <sparkit/config.hpp>
 #include <sparkit/data/Compressed_column_matrix.hpp>
 #include <sparkit/data/Compressed_row_matrix.hpp>
-#include <sparkit/data/Entry.hpp>
 #include <sparkit/data/conversions.hpp>
+#include <sparkit/data/Entry.hpp>
 
 namespace sparkit::data::detail {
 
-  struct Hb_header
-  {
+  struct Hb_header {
     std::string title;
     std::string key;
     config::size_type totcrd{};
@@ -35,9 +34,9 @@ namespace sparkit::data::detail {
     config::size_type indcrd{};
     config::size_type valcrd{};
     config::size_type rhscrd{};
-    char value_type{};   // R/C/P
-    char structure{};    // U/S/H/Z/R
-    char assembly{};     // A/E
+    char value_type{}; // R/C/P
+    char structure{};  // U/S/H/Z/R
+    char assembly{};   // A/E
     config::size_type nrow{};
     config::size_type ncol{};
     config::size_type nnzero{};
@@ -48,10 +47,9 @@ namespace sparkit::data::detail {
     std::string rhsfmt;
   };
 
-  struct Fortran_format
-  {
+  struct Fortran_format {
     config::size_type repeat{};
-    char              type{};     // I/F/E/D/G
+    char type{}; // I/F/E/D/G
     config::size_type width{};
     config::size_type decimals{}; // 0 for integer
   };
@@ -66,20 +64,15 @@ namespace sparkit::data::detail {
   parse_fortran_format(std::string const& fmt);
 
   std::vector<config::size_type>
-  read_fortran_integers(
-    std::istream& is,
-    Fortran_format const& fmt,
-    config::size_type count);
+  read_fortran_integers(std::istream& is, Fortran_format const& fmt,
+                        config::size_type count);
 
   // -- Template functions --
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  read_fortran_reals(
-    std::istream& is,
-    Fortran_format const& fmt,
-    config::size_type count)
-  {
+  read_fortran_reals(std::istream& is, Fortran_format const& fmt,
+                     config::size_type count) {
     using size_type = config::size_type;
 
     std::vector<T> result;
@@ -93,26 +86,22 @@ namespace sparkit::data::detail {
     while (read_so_far < count) {
       if (!std::getline(is, line)) {
         throw std::runtime_error(
-          "harwell boeing: unexpected end of input reading reals");
+            "harwell boeing: unexpected end of input reading reals");
       }
 
-      size_type fields_on_line =
-        std::min(fields_per_line, count - read_so_far);
+      size_type fields_on_line = std::min(fields_per_line, count - read_so_far);
 
       for (size_type i = 0; i < fields_on_line; ++i) {
         auto start = static_cast<std::size_t>(i * field_width);
         if (start >= line.size()) break;
 
-        auto len = std::min(
-          static_cast<std::size_t>(field_width),
-          line.size() - start);
+        auto len = std::min(static_cast<std::size_t>(field_width),
+                            line.size() - start);
         std::string field = line.substr(start, len);
 
         // Replace D/d exponent with E for std::stod
         for (auto& ch : field) {
-          if (ch == 'D' || ch == 'd') {
-            ch = 'E';
-          }
+          if (ch == 'D' || ch == 'd') { ch = 'E'; }
         }
 
         result.push_back(static_cast<T>(std::stod(field)));
@@ -123,22 +112,21 @@ namespace sparkit::data::detail {
     return result;
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_column_matrix<T>
-  read_harwell_boeing(std::istream& is)
-  {
+  read_harwell_boeing(std::istream& is) {
     using size_type = config::size_type;
 
     auto header = parse_hb_header(is);
 
     if (header.value_type == 'C') {
       throw std::runtime_error(
-        "harwell boeing: complex value type is not yet supported");
+          "harwell boeing: complex value type is not yet supported");
     }
 
     if (header.assembly == 'E') {
       throw std::runtime_error(
-        "harwell boeing: elemental assembly is not yet supported");
+          "harwell boeing: elemental assembly is not yet supported");
     }
 
     bool const is_pattern = (header.value_type == 'P');
@@ -184,17 +172,15 @@ namespace sparkit::data::detail {
           auto row = row_ind[static_cast<std::size_t>(j)];
           auto val = values[static_cast<std::size_t>(j)];
           entries.push_back(Entry<T>{Index{row, col}, val});
-          if (row != col) {
-            entries.push_back(Entry<T>{Index{col, row}, val});
-          }
+          if (row != col) { entries.push_back(Entry<T>{Index{col, row}, val}); }
         }
       }
 
       // Sort by (column, row) for CSC construction
       auto by_col_row = [](auto const& a, auto const& b) {
-        return a.index.column() < b.index.column()
-          || (a.index.column() == b.index.column()
-              && a.index.row() < b.index.row());
+        return a.index.column() < b.index.column() ||
+               (a.index.column() == b.index.column() &&
+                a.index.row() < b.index.row());
       };
       std::sort(entries.begin(), entries.end(), by_col_row);
 
@@ -208,10 +194,10 @@ namespace sparkit::data::detail {
         expanded_values.push_back(e.value);
       }
 
-      Compressed_column_sparsity sparsity{
-        Shape{header.nrow, header.ncol}, indices.begin(), indices.end()};
-      return Compressed_column_matrix<T>{
-        std::move(sparsity), std::move(expanded_values)};
+      Compressed_column_sparsity sparsity{Shape{header.nrow, header.ncol},
+                                          indices.begin(), indices.end()};
+      return Compressed_column_matrix<T>{std::move(sparsity),
+                                         std::move(expanded_values)};
     }
 
     // Build CSC directly from raw arrays
@@ -221,35 +207,29 @@ namespace sparkit::data::detail {
     for (size_type col = 0; col < header.ncol; ++col) {
       for (auto j = col_ptr[static_cast<std::size_t>(col)];
            j < col_ptr[static_cast<std::size_t>(col + 1)]; ++j) {
-        indices.push_back(Index{
-          row_ind[static_cast<std::size_t>(j)], col});
+        indices.push_back(Index{row_ind[static_cast<std::size_t>(j)], col});
       }
     }
 
-    Compressed_column_sparsity sparsity{
-      Shape{header.nrow, header.ncol}, indices.begin(), indices.end()};
-    return Compressed_column_matrix<T>{
-      std::move(sparsity), std::move(values)};
+    Compressed_column_sparsity sparsity{Shape{header.nrow, header.ncol},
+                                        indices.begin(), indices.end()};
+    return Compressed_column_matrix<T>{std::move(sparsity), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_column_matrix<T>
-  read_harwell_boeing(std::filesystem::path const& path)
-  {
+  read_harwell_boeing(std::filesystem::path const& path) {
     std::ifstream file{path};
     if (!file) {
-      throw std::runtime_error(
-        "harwell boeing: cannot open file: " + path.string());
+      throw std::runtime_error("harwell boeing: cannot open file: " +
+                               path.string());
     }
     return read_harwell_boeing<T>(file);
   }
 
-  template<typename T>
+  template <typename T>
   void
-  write_harwell_boeing(
-    std::ostream& os,
-    Compressed_row_matrix<T> const& A)
-  {
+  write_harwell_boeing(std::ostream& os, Compressed_row_matrix<T> const& A) {
     using size_type = config::size_type;
 
     // Convert CSR -> CSC
@@ -296,39 +276,31 @@ namespace sparkit::data::detail {
     // Write column pointers (1-based, 8I10)
     for (size_type i = 0; i <= ncol; ++i) {
       os << std::setw(10) << (cp[i] + 1);
-      if ((i + 1) % 8 == 0 || i == ncol) {
-        os << '\n';
-      }
+      if ((i + 1) % 8 == 0 || i == ncol) { os << '\n'; }
     }
 
     // Write row indices (1-based, 8I10)
     for (size_type i = 0; i < nnz; ++i) {
       os << std::setw(10) << (ri[i] + 1);
-      if ((i + 1) % 8 == 0 || i == nnz - 1) {
-        os << '\n';
-      }
+      if ((i + 1) % 8 == 0 || i == nnz - 1) { os << '\n'; }
     }
 
     // Write values (3E26.18)
     os << std::scientific << std::setprecision(18);
     for (size_type i = 0; i < nnz; ++i) {
       os << std::setw(26) << sv[i];
-      if ((i + 1) % 3 == 0 || i == nnz - 1) {
-        os << '\n';
-      }
+      if ((i + 1) % 3 == 0 || i == nnz - 1) { os << '\n'; }
     }
   }
 
-  template<typename T>
+  template <typename T>
   void
-  write_harwell_boeing(
-    std::filesystem::path const& path,
-    Compressed_row_matrix<T> const& A)
-  {
+  write_harwell_boeing(std::filesystem::path const& path,
+                       Compressed_row_matrix<T> const& A) {
     std::ofstream file{path};
     if (!file) {
-      throw std::runtime_error(
-        "harwell boeing: cannot open file: " + path.string());
+      throw std::runtime_error("harwell boeing: cannot open file: " +
+                               path.string());
     }
     write_harwell_boeing(file, A);
   }

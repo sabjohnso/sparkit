@@ -17,9 +17,8 @@
 
 namespace sparkit::data::detail {
 
-  template<typename T = config::value_type>
-  class Diagonal_matrix final
-  {
+  template <typename T = config::value_type>
+  class Diagonal_matrix final {
   public:
     using size_type = config::size_type;
 
@@ -30,45 +29,33 @@ namespace sparkit::data::detail {
      * sorted offset order), values for all valid positions on that
      * diagonal are stored contiguously.
      */
-    Diagonal_matrix(
-      Diagonal_sparsity sparsity,
-      std::vector<T> values)
-      : sparsity_(std::move(sparsity))
-      , values_(std::move(values))
-    {}
+    Diagonal_matrix(Diagonal_sparsity sparsity, std::vector<T> values)
+        : sparsity_(std::move(sparsity)), values_(std::move(values)) {}
 
     /**
      * @brief Construct from a shape and an entry list.
      */
-    Diagonal_matrix(
-      Shape shape,
-      std::initializer_list<Entry<T>> const& input)
-      : Diagonal_matrix(from_entries(shape, input))
-    {}
+    Diagonal_matrix(Shape shape, std::initializer_list<Entry<T>> const& input)
+        : Diagonal_matrix(from_entries(shape, input)) {}
 
     size_type
-    size() const
-    {
+    size() const {
       return sparsity_.size();
     }
 
     Shape
-    shape() const
-    {
+    shape() const {
       return sparsity_.shape();
     }
 
     T
-    operator()(size_type row, size_type col) const
-    {
+    operator()(size_type row, size_type col) const {
       auto offset = col - row;
       auto off = sparsity_.offsets();
 
       // Binary search for the offset
       auto it = std::lower_bound(off.begin(), off.end(), offset);
-      if (it == off.end() || *it != offset) {
-        return T{0};
-      }
+      if (it == off.end() || *it != offset) { return T{0}; }
 
       // Compute position in values array
       auto diag_idx = static_cast<std::size_t>(std::distance(off.begin(), it));
@@ -88,49 +75,41 @@ namespace sparkit::data::detail {
       // Index within this diagonal
       size_type within;
       if (offset >= 0) {
-        within = row;  // row is the index along super/main diagonal
+        within = row; // row is the index along super/main diagonal
       } else {
-        within = col;  // col is the index along sub-diagonal
+        within = col; // col is the index along sub-diagonal
       }
 
       return values_[static_cast<std::size_t>(pos + within)];
     }
 
     std::span<T const>
-    values() const
-    {
+    values() const {
       return {values_.data(), values_.size()};
     }
 
     Diagonal_sparsity const&
-    sparsity() const
-    {
+    sparsity() const {
       return sparsity_;
     }
 
   private:
-
-    static
-    Diagonal_matrix
-    from_entries(
-      Shape shape,
-      std::initializer_list<Entry<T>> const& input)
-    {
+    static Diagonal_matrix
+    from_entries(Shape shape, std::initializer_list<Entry<T>> const& input) {
       std::vector<Entry<T>> sorted(input.begin(), input.end());
 
       auto by_row_col = [](auto const& a, auto const& b) {
-        return a.index.row() < b.index.row()
-          || (a.index.row() == b.index.row()
-              && a.index.column() < b.index.column());
+        return a.index.row() < b.index.row() ||
+               (a.index.row() == b.index.row() &&
+                a.index.column() < b.index.column());
       };
       std::sort(sorted.begin(), sorted.end(), by_row_col);
 
       auto same_index = [](auto const& a, auto const& b) {
         return a.index == b.index;
       };
-      sorted.erase(
-        std::unique(sorted.begin(), sorted.end(), same_index),
-        sorted.end());
+      sorted.erase(std::unique(sorted.begin(), sorted.end(), same_index),
+                   sorted.end());
 
       // Build sparsity from indices
       std::vector<Index> indices;
@@ -151,7 +130,8 @@ namespace sparkit::data::detail {
       for (auto const& entry : sorted) {
         auto offset = entry.index.column() - entry.index.row();
         auto it = std::lower_bound(off.begin(), off.end(), offset);
-        auto diag_idx = static_cast<std::size_t>(std::distance(off.begin(), it));
+        auto diag_idx =
+            static_cast<std::size_t>(std::distance(off.begin(), it));
 
         size_type pos = 0;
         for (std::size_t d = 0; d < diag_idx; ++d) {

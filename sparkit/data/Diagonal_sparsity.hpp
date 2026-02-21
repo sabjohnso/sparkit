@@ -14,8 +14,7 @@
 #include <sparkit/data/Index.hpp>
 #include <sparkit/data/Shape.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Immutable diagonal (DIA) sparsity pattern.
@@ -28,15 +27,15 @@ namespace sparkit::data::detail
    *
    * @see Compressed_row_sparsity
    */
-  class Diagonal_sparsity final
-  {
+  class Diagonal_sparsity final {
   public:
     using size_type = config::size_type;
 
     /**
      * @brief Construct from a shape and a list of diagonal offsets.
      */
-    Diagonal_sparsity(Shape shape, std::initializer_list<size_type> const& offsets);
+    Diagonal_sparsity(Shape shape,
+                      std::initializer_list<size_type> const& offsets);
 
     /**
      * @brief Construct from a shape and an initializer list of indices.
@@ -45,10 +44,9 @@ namespace sparkit::data::detail
      */
     Diagonal_sparsity(Shape shape, std::initializer_list<Index> const& input);
 
-    template<typename Iter>
+    template <typename Iter>
     Diagonal_sparsity(Shape shape, Iter first, Iter last)
-      : Diagonal_sparsity(shape, std::vector<Index>(first, last))
-    {}
+        : Diagonal_sparsity(shape, std::vector<Index>(first, last)) {}
 
     Diagonal_sparsity(Diagonal_sparsity const& input);
     Diagonal_sparsity(Diagonal_sparsity&& input);

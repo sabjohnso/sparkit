@@ -14,8 +14,7 @@
 
 namespace sparkit::data::detail {
 
-  class Symmetric_coordinate_sparsity::Impl
-  {
+  class Symmetric_coordinate_sparsity::Impl {
   public:
     Impl(Shape shape);
 

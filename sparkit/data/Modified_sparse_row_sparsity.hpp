@@ -14,8 +14,7 @@
 #include <sparkit/data/Index.hpp>
 #include <sparkit/data/Shape.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Immutable modified sparse row (MSR) sparsity pattern.
@@ -28,17 +27,17 @@ namespace sparkit::data::detail
    *
    * @see Compressed_row_sparsity
    */
-  class Modified_sparse_row_sparsity final
-  {
+  class Modified_sparse_row_sparsity final {
   public:
     using size_type = config::size_type;
 
-    Modified_sparse_row_sparsity(Shape shape, std::initializer_list<Index> const& input);
+    Modified_sparse_row_sparsity(Shape shape,
+                                 std::initializer_list<Index> const& input);
 
-    template<typename Iter>
+    template <typename Iter>
     Modified_sparse_row_sparsity(Shape shape, Iter first, Iter last)
-      : Modified_sparse_row_sparsity(shape, std::vector<Index>(first, last))
-    {}
+        : Modified_sparse_row_sparsity(shape, std::vector<Index>(first, last)) {
+    }
 
     Modified_sparse_row_sparsity(Modified_sparse_row_sparsity const& input);
     Modified_sparse_row_sparsity(Modified_sparse_row_sparsity&& input);

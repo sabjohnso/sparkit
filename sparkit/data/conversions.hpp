@@ -10,28 +10,28 @@
 //
 // ... sparkit header files
 //
-#include <sparkit/data/Coordinate_matrix.hpp>
-#include <sparkit/data/Coordinate_sparsity.hpp>
+#include <sparkit/data/Block_sparse_row_matrix.hpp>
+#include <sparkit/data/Block_sparse_row_sparsity.hpp>
 #include <sparkit/data/Compressed_column_matrix.hpp>
 #include <sparkit/data/Compressed_column_sparsity.hpp>
 #include <sparkit/data/Compressed_row_matrix.hpp>
 #include <sparkit/data/Compressed_row_sparsity.hpp>
-#include <sparkit/data/Modified_sparse_row_matrix.hpp>
-#include <sparkit/data/Modified_sparse_row_sparsity.hpp>
+#include <sparkit/data/Coordinate_matrix.hpp>
+#include <sparkit/data/Coordinate_sparsity.hpp>
 #include <sparkit/data/Diagonal_matrix.hpp>
 #include <sparkit/data/Diagonal_sparsity.hpp>
 #include <sparkit/data/Ellpack_matrix.hpp>
 #include <sparkit/data/Ellpack_sparsity.hpp>
-#include <sparkit/data/Block_sparse_row_matrix.hpp>
-#include <sparkit/data/Block_sparse_row_sparsity.hpp>
 #include <sparkit/data/Jagged_diagonal_matrix.hpp>
 #include <sparkit/data/Jagged_diagonal_sparsity.hpp>
+#include <sparkit/data/Modified_sparse_row_matrix.hpp>
+#include <sparkit/data/Modified_sparse_row_sparsity.hpp>
+#include <sparkit/data/Symmetric_block_sparse_row_matrix.hpp>
+#include <sparkit/data/Symmetric_block_sparse_row_sparsity.hpp>
 #include <sparkit/data/Symmetric_compressed_row_matrix.hpp>
 #include <sparkit/data/Symmetric_compressed_row_sparsity.hpp>
 #include <sparkit/data/Symmetric_coordinate_matrix.hpp>
 #include <sparkit/data/Symmetric_coordinate_sparsity.hpp>
-#include <sparkit/data/Symmetric_block_sparse_row_matrix.hpp>
-#include <sparkit/data/Symmetric_block_sparse_row_sparsity.hpp>
 
 namespace sparkit::data::detail {
 
@@ -40,16 +40,15 @@ namespace sparkit::data::detail {
   Compressed_row_sparsity
   to_compressed_row(Coordinate_sparsity const& coo);
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Coordinate_matrix<T> const& coo)
-  {
+  to_compressed_row(Coordinate_matrix<T> const& coo) {
     auto entries = coo.entries();
 
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.first.row() < b.first.row()
-        || (a.first.row() == b.first.row()
-            && a.first.column() < b.first.column());
+      return a.first.row() < b.first.row() ||
+             (a.first.row() == b.first.row() &&
+              a.first.column() < b.first.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -63,8 +62,8 @@ namespace sparkit::data::detail {
       values.push_back(value);
     }
 
-    Compressed_row_sparsity sparsity{
-      coo.shape(), indices.begin(), indices.end()};
+    Compressed_row_sparsity sparsity{coo.shape(), indices.begin(),
+                                     indices.end()};
 
     return Compressed_row_matrix<T>{std::move(sparsity), std::move(values)};
   }
@@ -79,10 +78,9 @@ namespace sparkit::data::detail {
 
   // -- CSR <-> CSC matrix --
 
-  template<typename T>
+  template <typename T>
   Compressed_column_matrix<T>
-  to_compressed_column(Compressed_row_matrix<T> const& csr)
-  {
+  to_compressed_column(Compressed_row_matrix<T> const& csr) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto sv = csr.values();
@@ -132,10 +130,9 @@ namespace sparkit::data::detail {
     return Compressed_column_matrix<T>{std::move(sparsity), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Compressed_column_matrix<T> const& csc)
-  {
+  to_compressed_row(Compressed_column_matrix<T> const& csc) {
     auto cp = csc.col_ptr();
     auto ri = csc.row_ind();
     auto sv = csc.values();
@@ -195,10 +192,9 @@ namespace sparkit::data::detail {
 
   // -- CSR <-> MSR matrix --
 
-  template<typename T>
+  template <typename T>
   Modified_sparse_row_matrix<T>
-  to_modified_sparse_row(Compressed_row_matrix<T> const& csr)
-  {
+  to_modified_sparse_row(Compressed_row_matrix<T> const& csr) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto sv = csr.values();
@@ -215,7 +211,8 @@ namespace sparkit::data::detail {
       }
     }
 
-    Modified_sparse_row_sparsity sparsity{shape, indices.begin(), indices.end()};
+    Modified_sparse_row_sparsity sparsity{shape, indices.begin(),
+                                          indices.end()};
 
     // Fill diagonal
     std::vector<T> diagonal(static_cast<std::size_t>(diag_len), T{0});
@@ -234,9 +231,7 @@ namespace sparkit::data::detail {
 
     for (size_type row = 0; row < nrow; ++row) {
       for (auto j = rp[row]; j < rp[row + 1]; ++j) {
-        if (ci[j] == row && row < diag_len) {
-          continue;
-        }
+        if (ci[j] == row && row < diag_len) { continue; }
         // Find in off-diagonal col_ind
         for (auto k = od_rp[row]; k < od_rp[row + 1]; ++k) {
           if (od_ci[k] == ci[j]) {
@@ -248,13 +243,12 @@ namespace sparkit::data::detail {
     }
 
     return Modified_sparse_row_matrix<T>{
-      std::move(sparsity), std::move(diagonal), std::move(off_diag)};
+        std::move(sparsity), std::move(diagonal), std::move(off_diag)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Modified_sparse_row_matrix<T> const& msr)
-  {
+  to_compressed_row(Modified_sparse_row_matrix<T> const& msr) {
     auto shape = msr.shape();
     auto nrow = shape.row();
     auto const& sp = msr.sparsity();
@@ -273,16 +267,15 @@ namespace sparkit::data::detail {
       }
       // Off-diagonal
       for (auto j = od_rp[row]; j < od_rp[row + 1]; ++j) {
-        entries.push_back({Index{row, od_ci[j]},
-          msr(row, od_ci[j])});
+        entries.push_back({Index{row, od_ci[j]}, msr(row, od_ci[j])});
       }
     }
 
     // Sort entries by (row, col) to match CSR constructor ordering
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.index.row() < b.index.row()
-        || (a.index.row() == b.index.row()
-            && a.index.column() < b.index.column());
+      return a.index.row() < b.index.row() ||
+             (a.index.row() == b.index.row() &&
+              a.index.column() < b.index.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -310,10 +303,9 @@ namespace sparkit::data::detail {
 
   // -- CSR <-> DIA matrix --
 
-  template<typename T>
+  template <typename T>
   Diagonal_matrix<T>
-  to_diagonal(Compressed_row_matrix<T> const& csr)
-  {
+  to_diagonal(Compressed_row_matrix<T> const& csr) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto sv = csr.values();
@@ -358,17 +350,17 @@ namespace sparkit::data::detail {
         }
       }
 
-      size_type within = (offset >= 0) ? entry.index.row() : entry.index.column();
+      size_type within =
+          (offset >= 0) ? entry.index.row() : entry.index.column();
       values[static_cast<std::size_t>(pos + within)] = entry.value;
     }
 
     return Diagonal_matrix<T>{std::move(sparsity), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Diagonal_matrix<T> const& dia)
-  {
+  to_compressed_row(Diagonal_matrix<T> const& dia) {
     auto shape = dia.shape();
     auto nrow = shape.row();
     auto ncol = shape.column();
@@ -398,9 +390,9 @@ namespace sparkit::data::detail {
 
     // Sort by (row, col)
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.index.row() < b.index.row()
-        || (a.index.row() == b.index.row()
-            && a.index.column() < b.index.column());
+      return a.index.row() < b.index.row() ||
+             (a.index.row() == b.index.row() &&
+              a.index.column() < b.index.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -428,10 +420,9 @@ namespace sparkit::data::detail {
 
   // -- CSR <-> ELL matrix --
 
-  template<typename T>
+  template <typename T>
   Ellpack_matrix<T>
-  to_ellpack(Compressed_row_matrix<T> const& csr)
-  {
+  to_ellpack(Compressed_row_matrix<T> const& csr) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto sv = csr.values();
@@ -455,14 +446,14 @@ namespace sparkit::data::detail {
     Ellpack_sparsity sparsity{shape, indices.begin(), indices.end()};
 
     auto max_nnz = sparsity.max_nnz_per_row();
-    std::vector<T> values(
-      static_cast<std::size_t>(nrow * max_nnz), T{0});
+    std::vector<T> values(static_cast<std::size_t>(nrow * max_nnz), T{0});
 
     auto ell_ci = sparsity.col_ind();
     for (auto const& entry : entries) {
       auto base = static_cast<std::size_t>(entry.index.row() * max_nnz);
       for (size_type k = 0; k < max_nnz; ++k) {
-        if (ell_ci[base + static_cast<std::size_t>(k)] == entry.index.column()) {
+        if (ell_ci[base + static_cast<std::size_t>(k)] ==
+            entry.index.column()) {
           values[base + static_cast<std::size_t>(k)] = entry.value;
           break;
         }
@@ -472,10 +463,9 @@ namespace sparkit::data::detail {
     return Ellpack_matrix<T>{std::move(sparsity), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Ellpack_matrix<T> const& ell)
-  {
+  to_compressed_row(Ellpack_matrix<T> const& ell) {
     auto shape = ell.shape();
     auto nrow = shape.row();
     auto max_nnz = ell.sparsity().max_nnz_per_row();
@@ -494,9 +484,9 @@ namespace sparkit::data::detail {
     }
 
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.index.row() < b.index.row()
-        || (a.index.row() == b.index.row()
-            && a.index.column() < b.index.column());
+      return a.index.row() < b.index.row() ||
+             (a.index.row() == b.index.row() &&
+              a.index.column() < b.index.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -517,19 +507,18 @@ namespace sparkit::data::detail {
   // -- CSR <-> BSR sparsity --
 
   Block_sparse_row_sparsity
-  to_block_sparse_row(Compressed_row_sparsity const& csr,
-                      size_type block_rows, size_type block_cols);
+  to_block_sparse_row(Compressed_row_sparsity const& csr, size_type block_rows,
+                      size_type block_cols);
 
   Compressed_row_sparsity
   to_compressed_row(Block_sparse_row_sparsity const& bsr);
 
   // -- CSR <-> BSR matrix --
 
-  template<typename T>
+  template <typename T>
   Block_sparse_row_matrix<T>
-  to_block_sparse_row(Compressed_row_matrix<T> const& csr,
-                      size_type block_rows, size_type block_cols)
-  {
+  to_block_sparse_row(Compressed_row_matrix<T> const& csr, size_type block_rows,
+                      size_type block_cols) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto sv = csr.values();
@@ -551,12 +540,12 @@ namespace sparkit::data::detail {
       indices.push_back(e.index);
     }
 
-    Block_sparse_row_sparsity sparsity{
-      shape, block_rows, block_cols, indices.begin(), indices.end()};
+    Block_sparse_row_sparsity sparsity{shape, block_rows, block_cols,
+                                       indices.begin(), indices.end()};
 
     auto num_blocks = sparsity.num_blocks();
     std::vector<T> values(
-      static_cast<std::size_t>(num_blocks * block_rows * block_cols), T{0});
+        static_cast<std::size_t>(num_blocks * block_rows * block_cols), T{0});
 
     auto bsr_rp = sparsity.row_ptr();
     auto bsr_ci = sparsity.col_ind();
@@ -569,8 +558,8 @@ namespace sparkit::data::detail {
 
       for (auto j = bsr_rp[br_idx]; j < bsr_rp[br_idx + 1]; ++j) {
         if (bsr_ci[j] == bc_idx) {
-          auto offset = j * block_rows * block_cols
-                      + local_row * block_cols + local_col;
+          auto offset =
+              j * block_rows * block_cols + local_row * block_cols + local_col;
           values[static_cast<std::size_t>(offset)] = entry.value;
           break;
         }
@@ -580,10 +569,9 @@ namespace sparkit::data::detail {
     return Block_sparse_row_matrix<T>{std::move(sparsity), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Block_sparse_row_matrix<T> const& bsr)
-  {
+  to_compressed_row(Block_sparse_row_matrix<T> const& bsr) {
     auto shape = bsr.shape();
     auto nrow = shape.row();
     auto ncol = shape.column();
@@ -612,9 +600,9 @@ namespace sparkit::data::detail {
     }
 
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.index.row() < b.index.row()
-        || (a.index.row() == b.index.row()
-            && a.index.column() < b.index.column());
+      return a.index.row() < b.index.row() ||
+             (a.index.row() == b.index.row() &&
+              a.index.column() < b.index.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -642,10 +630,9 @@ namespace sparkit::data::detail {
 
   // -- CSR <-> JAD matrix --
 
-  template<typename T>
+  template <typename T>
   Jagged_diagonal_matrix<T>
-  to_jagged_diagonal(Compressed_row_matrix<T> const& csr)
-  {
+  to_jagged_diagonal(Compressed_row_matrix<T> const& csr) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto sv = csr.values();
@@ -672,7 +659,8 @@ namespace sparkit::data::detail {
     // Build per-row value lists (sorted by column, matching CSR order)
     std::vector<std::vector<T>> row_vals(static_cast<std::size_t>(nrow));
     for (auto const& entry : entries) {
-      row_vals[static_cast<std::size_t>(entry.index.row())].push_back(entry.value);
+      row_vals[static_cast<std::size_t>(entry.index.row())].push_back(
+          entry.value);
     }
 
     // Fill values in jagged diagonal order
@@ -686,18 +674,18 @@ namespace sparkit::data::detail {
       auto width = jd[k + 1] - jd[k];
       for (size_type i = 0; i < width; ++i) {
         auto orig_row = pm[i];
-        values[static_cast<std::size_t>(jd[k] + i)]
-          = row_vals[static_cast<std::size_t>(orig_row)][static_cast<std::size_t>(k)];
+        values[static_cast<std::size_t>(jd[k] + i)] =
+            row_vals[static_cast<std::size_t>(orig_row)]
+                    [static_cast<std::size_t>(k)];
       }
     }
 
     return Jagged_diagonal_matrix<T>{std::move(sparsity), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Jagged_diagonal_matrix<T> const& jad)
-  {
+  to_compressed_row(Jagged_diagonal_matrix<T> const& jad) {
     auto shape = jad.shape();
     auto const& sp = jad.sparsity();
     auto pm = sp.perm();
@@ -713,16 +701,15 @@ namespace sparkit::data::detail {
       for (size_type i = 0; i < width; ++i) {
         auto orig_row = pm[i];
         auto pos = jd[k] + i;
-        entries.push_back({
-          Index{orig_row, jad_ci[pos]},
-          jad(orig_row, jad_ci[pos])});
+        entries.push_back(
+            {Index{orig_row, jad_ci[pos]}, jad(orig_row, jad_ci[pos])});
       }
     }
 
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.index.row() < b.index.row()
-        || (a.index.row() == b.index.row()
-            && a.index.column() < b.index.column());
+      return a.index.row() < b.index.row() ||
+             (a.index.row() == b.index.row() &&
+              a.index.column() < b.index.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -750,10 +737,9 @@ namespace sparkit::data::detail {
 
   // -- CSR <-> sCSR matrix --
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Symmetric_compressed_row_matrix<T> const& scsr)
-  {
+  to_compressed_row(Symmetric_compressed_row_matrix<T> const& scsr) {
     auto rp = scsr.row_ptr();
     auto ci = scsr.col_ind();
     auto sv = scsr.values();
@@ -770,16 +756,14 @@ namespace sparkit::data::detail {
         auto col = ci[j];
         auto val = sv[j];
         entries.push_back({Index{row, col}, val});
-        if (row != col) {
-          entries.push_back({Index{col, row}, val});
-        }
+        if (row != col) { entries.push_back({Index{col, row}, val}); }
       }
     }
 
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.index.row() < b.index.row()
-        || (a.index.row() == b.index.row()
-            && a.index.column() < b.index.column());
+      return a.index.row() < b.index.row() ||
+             (a.index.row() == b.index.row() &&
+              a.index.column() < b.index.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -797,10 +781,9 @@ namespace sparkit::data::detail {
     return Compressed_row_matrix<T>{std::move(sparsity), std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Symmetric_compressed_row_matrix<T>
-  to_symmetric_compressed_row(Compressed_row_matrix<T> const& csr)
-  {
+  to_symmetric_compressed_row(Compressed_row_matrix<T> const& csr) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto sv = csr.values();
@@ -813,16 +796,14 @@ namespace sparkit::data::detail {
 
     for (size_type row = 0; row < nrow; ++row) {
       for (auto j = rp[row]; j < rp[row + 1]; ++j) {
-        if (row >= ci[j]) {
-          entries.push_back({Index{row, ci[j]}, sv[j]});
-        }
+        if (row >= ci[j]) { entries.push_back({Index{row, ci[j]}, sv[j]}); }
       }
     }
 
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.index.row() < b.index.row()
-        || (a.index.row() == b.index.row()
-            && a.index.column() < b.index.column());
+      return a.index.row() < b.index.row() ||
+             (a.index.row() == b.index.row() &&
+              a.index.column() < b.index.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -836,10 +817,10 @@ namespace sparkit::data::detail {
       values.push_back(e.value);
     }
 
-    Symmetric_compressed_row_sparsity sparsity{
-      shape, indices.begin(), indices.end()};
-    return Symmetric_compressed_row_matrix<T>{
-      std::move(sparsity), std::move(values)};
+    Symmetric_compressed_row_sparsity sparsity{shape, indices.begin(),
+                                               indices.end()};
+    return Symmetric_compressed_row_matrix<T>{std::move(sparsity),
+                                              std::move(values)};
   }
 
   // -- sCOO -> sCSR sparsity --
@@ -854,16 +835,15 @@ namespace sparkit::data::detail {
 
   // -- sCOO -> sCSR matrix --
 
-  template<typename T>
+  template <typename T>
   Symmetric_compressed_row_matrix<T>
-  to_symmetric_compressed_row(Symmetric_coordinate_matrix<T> const& scoo)
-  {
+  to_symmetric_compressed_row(Symmetric_coordinate_matrix<T> const& scoo) {
     auto entries = scoo.entries();
 
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.first.row() < b.first.row()
-        || (a.first.row() == b.first.row()
-            && a.first.column() < b.first.column());
+      return a.first.row() < b.first.row() ||
+             (a.first.row() == b.first.row() &&
+              a.first.column() < b.first.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -877,19 +857,18 @@ namespace sparkit::data::detail {
       values.push_back(value);
     }
 
-    Symmetric_compressed_row_sparsity sparsity{
-      scoo.shape(), indices.begin(), indices.end()};
+    Symmetric_compressed_row_sparsity sparsity{scoo.shape(), indices.begin(),
+                                               indices.end()};
 
-    return Symmetric_compressed_row_matrix<T>{
-      std::move(sparsity), std::move(values)};
+    return Symmetric_compressed_row_matrix<T>{std::move(sparsity),
+                                              std::move(values)};
   }
 
   // -- sCOO -> CSR matrix --
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Symmetric_coordinate_matrix<T> const& scoo)
-  {
+  to_compressed_row(Symmetric_coordinate_matrix<T> const& scoo) {
     // Route through sCSR as intermediate
     auto scsr = to_symmetric_compressed_row(scoo);
     return to_compressed_row(scsr);
@@ -898,21 +877,18 @@ namespace sparkit::data::detail {
   // -- CSR <-> sBSR sparsity --
 
   Symmetric_block_sparse_row_sparsity
-  to_symmetric_block_sparse_row(
-    Compressed_row_sparsity const& csr,
-    size_type block_rows, size_type block_cols);
+  to_symmetric_block_sparse_row(Compressed_row_sparsity const& csr,
+                                size_type block_rows, size_type block_cols);
 
   Compressed_row_sparsity
   to_compressed_row(Symmetric_block_sparse_row_sparsity const& sbsr);
 
   // -- CSR <-> sBSR matrix --
 
-  template<typename T>
+  template <typename T>
   Symmetric_block_sparse_row_matrix<T>
-  to_symmetric_block_sparse_row(
-    Compressed_row_matrix<T> const& csr,
-    size_type block_rows, size_type block_cols)
-  {
+  to_symmetric_block_sparse_row(Compressed_row_matrix<T> const& csr,
+                                size_type block_rows, size_type block_cols) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto sv = csr.values();
@@ -946,11 +922,11 @@ namespace sparkit::data::detail {
     }
 
     Symmetric_block_sparse_row_sparsity sparsity{
-      shape, block_rows, block_cols, indices.begin(), indices.end()};
+        shape, block_rows, block_cols, indices.begin(), indices.end()};
 
     auto num_blocks = sparsity.num_blocks();
     std::vector<T> values(
-      static_cast<std::size_t>(num_blocks * block_rows * block_cols), T{0});
+        static_cast<std::size_t>(num_blocks * block_rows * block_cols), T{0});
 
     auto sbsr_rp = sparsity.row_ptr();
     auto sbsr_ci = sparsity.col_ind();
@@ -963,22 +939,21 @@ namespace sparkit::data::detail {
 
       for (auto j = sbsr_rp[br_idx]; j < sbsr_rp[br_idx + 1]; ++j) {
         if (sbsr_ci[j] == bc_idx) {
-          auto offset = j * block_rows * block_cols
-                      + local_row * block_cols + local_col;
+          auto offset =
+              j * block_rows * block_cols + local_row * block_cols + local_col;
           values[static_cast<std::size_t>(offset)] = entry.value;
           break;
         }
       }
     }
 
-    return Symmetric_block_sparse_row_matrix<T>{
-      std::move(sparsity), std::move(values)};
+    return Symmetric_block_sparse_row_matrix<T>{std::move(sparsity),
+                                                std::move(values)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  to_compressed_row(Symmetric_block_sparse_row_matrix<T> const& sbsr)
-  {
+  to_compressed_row(Symmetric_block_sparse_row_matrix<T> const& sbsr) {
     auto shape = sbsr.shape();
     auto nrow = shape.row();
     auto ncol = shape.column();
@@ -1011,9 +986,9 @@ namespace sparkit::data::detail {
     }
 
     auto by_row_col = [](auto const& a, auto const& b) {
-      return a.index.row() < b.index.row()
-        || (a.index.row() == b.index.row()
-            && a.index.column() < b.index.column());
+      return a.index.row() < b.index.row() ||
+             (a.index.row() == b.index.row() &&
+              a.index.column() < b.index.column());
     };
     std::sort(entries.begin(), entries.end(), by_row_col);
 
@@ -1021,9 +996,8 @@ namespace sparkit::data::detail {
     auto same_index = [](auto const& a, auto const& b) {
       return a.index == b.index;
     };
-    entries.erase(
-      std::unique(entries.begin(), entries.end(), same_index),
-      entries.end());
+    entries.erase(std::unique(entries.begin(), entries.end(), same_index),
+                  entries.end());
 
     std::vector<Index> indices;
     std::vector<T> values;

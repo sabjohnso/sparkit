@@ -11,11 +11,9 @@
 //
 #include <sparkit/data/Jagged_diagonal_sparsity.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
-  class Jagged_diagonal_sparsity::Impl
-  {
+  class Jagged_diagonal_sparsity::Impl {
   public:
     Impl(Shape shape, std::vector<Index> indices);
 

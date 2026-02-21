@@ -5,21 +5,17 @@
 //
 #include <algorithm>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
-  Compressed_column_sparsity::Impl::Impl(Shape shape, std::vector<Index> indices)
-    : shape_(shape)
-    , col_ptr_(static_cast<std::size_t>(shape.column() + 1), 0)
-    , row_ind_()
-  {
+  Compressed_column_sparsity::Impl::Impl(Shape shape,
+                                         std::vector<Index> indices)
+      : shape_(shape),
+        col_ptr_(static_cast<std::size_t>(shape.column() + 1), 0), row_ind_() {
     // Sort by (column, row)
-    std::sort(begin(indices), end(indices),
-      [](Index const& a, Index const& b) {
-        return a.column() != b.column()
-          ? a.column() < b.column()
-          : a.row() < b.row();
-      });
+    std::sort(begin(indices), end(indices), [](Index const& a, Index const& b) {
+      return a.column() != b.column() ? a.column() < b.column()
+                                      : a.row() < b.row();
+    });
 
     // Remove duplicates
     auto last = std::unique(begin(indices), end(indices));
@@ -42,18 +38,23 @@ namespace sparkit::data::detail
   }
 
   Shape
-  Compressed_column_sparsity::Impl::shape() const { return shape_; }
+  Compressed_column_sparsity::Impl::shape() const {
+    return shape_;
+  }
 
   size_type
-  Compressed_column_sparsity::Impl::size() const
-  {
+  Compressed_column_sparsity::Impl::size() const {
     return static_cast<size_type>(row_ind_.size());
   }
 
   std::span<size_type const>
-  Compressed_column_sparsity::Impl::col_ptr() const { return col_ptr_; }
+  Compressed_column_sparsity::Impl::col_ptr() const {
+    return col_ptr_;
+  }
 
   std::span<size_type const>
-  Compressed_column_sparsity::Impl::row_ind() const { return row_ind_; }
+  Compressed_column_sparsity::Impl::row_ind() const {
+    return row_ind_;
+  }
 
 } // end of namespace sparkit::data::detail

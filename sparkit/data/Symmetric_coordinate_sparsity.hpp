@@ -25,27 +25,22 @@ namespace sparkit::data::detail {
    *
    * @see Coordinate_sparsity
    */
-  class Symmetric_coordinate_sparsity
-  {
+  class Symmetric_coordinate_sparsity {
   public:
     using size_type = config::size_type;
 
-    template<typename Iter>
+    template <typename Iter>
     Symmetric_coordinate_sparsity(Shape shape, Iter first, Iter last)
-      : pimpl(nullptr)
-    {
+        : pimpl(nullptr) {
       init(shape);
-      std::for_each(first, last, [this](Index index){ add(index); });
+      std::for_each(first, last, [this](Index index) { add(index); });
     }
 
-    Symmetric_coordinate_sparsity(
-      Shape shape,
-      std::initializer_list<Index> const& input);
+    Symmetric_coordinate_sparsity(Shape shape,
+                                  std::initializer_list<Index> const& input);
 
-    Symmetric_coordinate_sparsity(
-      Symmetric_coordinate_sparsity const& input);
-    Symmetric_coordinate_sparsity(
-      Symmetric_coordinate_sparsity&& input);
+    Symmetric_coordinate_sparsity(Symmetric_coordinate_sparsity const& input);
+    Symmetric_coordinate_sparsity(Symmetric_coordinate_sparsity&& input);
 
     Symmetric_coordinate_sparsity&
     operator=(Symmetric_coordinate_sparsity const& input);

@@ -8,22 +8,16 @@
 namespace sparkit::data::detail {
 
   Symmetric_coordinate_sparsity::Impl::Impl(Shape shape)
-    : shape_(shape)
-    , nonzeros_{}
-  {}
+      : shape_(shape), nonzeros_{} {}
 
   Symmetric_coordinate_sparsity::Impl::Impl(Impl const& input)
-    : shape_(input.shape_)
-  {
-    std::copy(
-      begin(input.nonzeros_),
-      end(input.nonzeros_),
-      std::inserter(nonzeros_, end(nonzeros_)));
+      : shape_(input.shape_) {
+    std::copy(begin(input.nonzeros_), end(input.nonzeros_),
+              std::inserter(nonzeros_, end(nonzeros_)));
   }
 
   Symmetric_coordinate_sparsity::Impl&
-  Symmetric_coordinate_sparsity::Impl::operator=(Impl const& input)
-  {
+  Symmetric_coordinate_sparsity::Impl::operator=(Impl const& input) {
     shape_ = input.shape_;
     nonzeros_.clear();
     std::copy(begin(input.nonzeros_), end(input.nonzeros_),
@@ -32,8 +26,7 @@ namespace sparkit::data::detail {
   }
 
   void
-  Symmetric_coordinate_sparsity::Impl::add(Index index)
-  {
+  Symmetric_coordinate_sparsity::Impl::add(Index index) {
     // Normalize to lower triangle
     if (index.row() < index.column()) {
       index = Index{index.column(), index.row()};
@@ -42,8 +35,7 @@ namespace sparkit::data::detail {
   }
 
   void
-  Symmetric_coordinate_sparsity::Impl::remove(Index index)
-  {
+  Symmetric_coordinate_sparsity::Impl::remove(Index index) {
     // Normalize to lower triangle
     if (index.row() < index.column()) {
       index = Index{index.column(), index.row()};
@@ -52,17 +44,17 @@ namespace sparkit::data::detail {
   }
 
   Shape
-  Symmetric_coordinate_sparsity::Impl::shape() const { return shape_; }
+  Symmetric_coordinate_sparsity::Impl::shape() const {
+    return shape_;
+  }
 
   size_type
-  Symmetric_coordinate_sparsity::Impl::size() const
-  {
+  Symmetric_coordinate_sparsity::Impl::size() const {
     return static_cast<size_type>(nonzeros_.size());
   }
 
   std::vector<Index>
-  Symmetric_coordinate_sparsity::Impl::indices() const
-  {
+  Symmetric_coordinate_sparsity::Impl::indices() const {
     return {begin(nonzeros_), end(nonzeros_)};
   }
 

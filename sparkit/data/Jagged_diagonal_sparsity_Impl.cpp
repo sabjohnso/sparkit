@@ -6,25 +6,16 @@
 #include <algorithm>
 #include <numeric>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   Jagged_diagonal_sparsity::Impl::Impl(Shape shape, std::vector<Index> indices)
-    : shape_(shape)
-    , total_size_(0)
-    , perm_()
-    , jdiag_()
-    , col_ind_()
-  {
+      : shape_(shape), total_size_(0), perm_(), jdiag_(), col_ind_() {
     auto nrow = shape.row();
 
     // Sort by (row, column) and deduplicate
-    std::sort(begin(indices), end(indices),
-      [](Index const& a, Index const& b) {
-        return a.row() != b.row()
-          ? a.row() < b.row()
-          : a.column() < b.column();
-      });
+    std::sort(begin(indices), end(indices), [](Index const& a, Index const& b) {
+      return a.row() != b.row() ? a.row() < b.row() : a.column() < b.column();
+    });
     auto last = std::unique(begin(indices), end(indices));
     indices.erase(last, end(indices));
 
@@ -46,12 +37,11 @@ namespace sparkit::data::detail
     // deprecated std::get_temporary_buffer)
     perm_.resize(static_cast<std::size_t>(nrow));
     std::iota(perm_.begin(), perm_.end(), size_type{0});
-    std::sort(perm_.begin(), perm_.end(),
-      [&](size_type a, size_type b) {
-        auto na = nnz_per_row[static_cast<std::size_t>(a)];
-        auto nb = nnz_per_row[static_cast<std::size_t>(b)];
-        return na != nb ? na > nb : a < b;
-      });
+    std::sort(perm_.begin(), perm_.end(), [&](size_type a, size_type b) {
+      auto na = nnz_per_row[static_cast<std::size_t>(a)];
+      auto nb = nnz_per_row[static_cast<std::size_t>(b)];
+      return na != nb ? na > nb : a < b;
+    });
 
     // Find max nnz per row
     auto max_nnz = nnz_per_row[static_cast<std::size_t>(perm_[0])];
@@ -68,15 +58,17 @@ namespace sparkit::data::detail
         if (nnz_per_row[static_cast<std::size_t>(perm_[i])] >= k + 1) {
           ++width;
         } else {
-          break;  // perm is sorted by decreasing nnz
+          break; // perm is sorted by decreasing nnz
         }
       }
-      jdiag_[static_cast<std::size_t>(k + 1)] = jdiag_[static_cast<std::size_t>(k)] + width;
+      jdiag_[static_cast<std::size_t>(k + 1)] =
+          jdiag_[static_cast<std::size_t>(k)] + width;
     }
 
     // Build CSR-like row pointers and sorted column indices per row
     // for efficient filling of col_ind in JD order
-    std::vector<std::vector<size_type>> row_cols(static_cast<std::size_t>(nrow));
+    std::vector<std::vector<size_type>> row_cols(
+        static_cast<std::size_t>(nrow));
     for (auto const& idx : indices) {
       row_cols[static_cast<std::size_t>(idx.row())].push_back(idx.column());
     }
@@ -84,29 +76,41 @@ namespace sparkit::data::detail
     // Fill col_ind in jagged diagonal order
     col_ind_.resize(static_cast<std::size_t>(total_size_));
     for (size_type k = 0; k < max_nnz; ++k) {
-      auto width = jdiag_[static_cast<std::size_t>(k + 1)]
-                 - jdiag_[static_cast<std::size_t>(k)];
+      auto width = jdiag_[static_cast<std::size_t>(k + 1)] -
+                   jdiag_[static_cast<std::size_t>(k)];
       for (size_type i = 0; i < width; ++i) {
         auto orig_row = perm_[static_cast<std::size_t>(i)];
-        col_ind_[static_cast<std::size_t>(jdiag_[static_cast<std::size_t>(k)] + i)]
-          = row_cols[static_cast<std::size_t>(orig_row)][static_cast<std::size_t>(k)];
+        col_ind_[static_cast<std::size_t>(jdiag_[static_cast<std::size_t>(k)] +
+                                          i)] =
+            row_cols[static_cast<std::size_t>(orig_row)]
+                    [static_cast<std::size_t>(k)];
       }
     }
   }
 
   Shape
-  Jagged_diagonal_sparsity::Impl::shape() const { return shape_; }
+  Jagged_diagonal_sparsity::Impl::shape() const {
+    return shape_;
+  }
 
   size_type
-  Jagged_diagonal_sparsity::Impl::size() const { return total_size_; }
+  Jagged_diagonal_sparsity::Impl::size() const {
+    return total_size_;
+  }
 
   std::span<size_type const>
-  Jagged_diagonal_sparsity::Impl::perm() const { return perm_; }
+  Jagged_diagonal_sparsity::Impl::perm() const {
+    return perm_;
+  }
 
   std::span<size_type const>
-  Jagged_diagonal_sparsity::Impl::jdiag() const { return jdiag_; }
+  Jagged_diagonal_sparsity::Impl::jdiag() const {
+    return jdiag_;
+  }
 
   std::span<size_type const>
-  Jagged_diagonal_sparsity::Impl::col_ind() const { return col_ind_; }
+  Jagged_diagonal_sparsity::Impl::col_ind() const {
+    return col_ind_;
+  }
 
 } // end of namespace sparkit::data::detail

@@ -11,11 +11,9 @@
 //
 #include <sparkit/data/Ellpack_sparsity.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
-  class Ellpack_sparsity::Impl
-  {
+  class Ellpack_sparsity::Impl {
   public:
     Impl(Shape shape, std::vector<Index> indices);
 

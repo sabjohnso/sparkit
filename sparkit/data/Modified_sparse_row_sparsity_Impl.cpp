@@ -5,24 +5,20 @@
 //
 #include <algorithm>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
-  Modified_sparse_row_sparsity::Impl::Impl(Shape shape, std::vector<Index> indices)
-    : shape_(shape)
-    , total_size_(0)
-    , has_diagonal_(static_cast<std::size_t>(
-        std::min(shape.row(), shape.column())), false)
-    , off_diagonal_row_ptr_(static_cast<std::size_t>(shape.row() + 1), 0)
-    , off_diagonal_col_ind_()
-  {
+  Modified_sparse_row_sparsity::Impl::Impl(Shape shape,
+                                           std::vector<Index> indices)
+      : shape_(shape), total_size_(0),
+        has_diagonal_(
+            static_cast<std::size_t>(std::min(shape.row(), shape.column())),
+            false),
+        off_diagonal_row_ptr_(static_cast<std::size_t>(shape.row() + 1), 0),
+        off_diagonal_col_ind_() {
     // Sort by (row, column)
-    std::sort(begin(indices), end(indices),
-      [](Index const& a, Index const& b) {
-        return a.row() != b.row()
-          ? a.row() < b.row()
-          : a.column() < b.column();
-      });
+    std::sort(begin(indices), end(indices), [](Index const& a, Index const& b) {
+      return a.row() != b.row() ? a.row() < b.row() : a.column() < b.column();
+    });
 
     // Remove duplicates
     auto last = std::unique(begin(indices), end(indices));
@@ -56,7 +52,7 @@ namespace sparkit::data::detail
 
     for (auto const& idx : indices) {
       if (idx.row() == idx.column() && idx.row() < diag_len) {
-        continue;  // skip diagonal
+        continue; // skip diagonal
       }
       auto dest = work[static_cast<std::size_t>(idx.row())]++;
       off_diagonal_col_ind_[static_cast<std::size_t>(dest)] = idx.column();
@@ -64,32 +60,32 @@ namespace sparkit::data::detail
   }
 
   Shape
-  Modified_sparse_row_sparsity::Impl::shape() const { return shape_; }
+  Modified_sparse_row_sparsity::Impl::shape() const {
+    return shape_;
+  }
 
   size_type
-  Modified_sparse_row_sparsity::Impl::size() const { return total_size_; }
+  Modified_sparse_row_sparsity::Impl::size() const {
+    return total_size_;
+  }
 
   bool
-  Modified_sparse_row_sparsity::Impl::has_diagonal(size_type i) const
-  {
+  Modified_sparse_row_sparsity::Impl::has_diagonal(size_type i) const {
     return has_diagonal_[static_cast<std::size_t>(i)];
   }
 
   size_type
-  Modified_sparse_row_sparsity::Impl::diagonal_length() const
-  {
+  Modified_sparse_row_sparsity::Impl::diagonal_length() const {
     return static_cast<size_type>(has_diagonal_.size());
   }
 
   std::span<size_type const>
-  Modified_sparse_row_sparsity::Impl::off_diagonal_row_ptr() const
-  {
+  Modified_sparse_row_sparsity::Impl::off_diagonal_row_ptr() const {
     return off_diagonal_row_ptr_;
   }
 
   std::span<size_type const>
-  Modified_sparse_row_sparsity::Impl::off_diagonal_col_ind() const
-  {
+  Modified_sparse_row_sparsity::Impl::off_diagonal_col_ind() const {
     return off_diagonal_col_ind_;
   }
 

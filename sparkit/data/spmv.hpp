@@ -11,12 +11,12 @@
 // ... sparkit header files
 //
 #include <sparkit/config.hpp>
+#include <sparkit/data/Block_sparse_row_matrix.hpp>
 #include <sparkit/data/Compressed_column_matrix.hpp>
-#include <sparkit/data/Modified_sparse_row_matrix.hpp>
 #include <sparkit/data/Diagonal_matrix.hpp>
 #include <sparkit/data/Ellpack_matrix.hpp>
-#include <sparkit/data/Block_sparse_row_matrix.hpp>
 #include <sparkit/data/Jagged_diagonal_matrix.hpp>
+#include <sparkit/data/Modified_sparse_row_matrix.hpp>
 #include <sparkit/data/Symmetric_compressed_row_matrix.hpp>
 
 namespace sparkit::data::detail {
@@ -25,10 +25,9 @@ namespace sparkit::data::detail {
   // CSC — column-wise scatter
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply(Compressed_column_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply(Compressed_column_matrix<T> const& A, std::span<T const> x) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto cp = A.col_ptr();
@@ -49,10 +48,9 @@ namespace sparkit::data::detail {
   // MSR — diagonal + off-diagonal
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply(Modified_sparse_row_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply(Modified_sparse_row_matrix<T> const& A, std::span<T const> x) {
     auto rows = A.shape().row();
     auto diag = A.diagonal();
     auto diag_len = A.sparsity().diagonal_length();
@@ -82,10 +80,9 @@ namespace sparkit::data::detail {
   // DIA — diagonal-by-diagonal (SPARSKIT2 AMUXD)
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply(Diagonal_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply(Diagonal_matrix<T> const& A, std::span<T const> x) {
     auto nrow = A.shape().row();
     auto ncol = A.shape().column();
     auto offsets = A.sparsity().offsets();
@@ -117,10 +114,9 @@ namespace sparkit::data::detail {
   // ELL — row-by-row padded (SPARSKIT2 AMUXE)
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply(Ellpack_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply(Ellpack_matrix<T> const& A, std::span<T const> x) {
     auto nrow = A.shape().row();
     auto max_nnz = A.sparsity().max_nnz_per_row();
     auto ci = A.sparsity().col_ind();
@@ -147,10 +143,9 @@ namespace sparkit::data::detail {
   // BSR — block-level CSR with dense block multiply
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply(Block_sparse_row_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply(Block_sparse_row_matrix<T> const& A, std::span<T const> x) {
     auto nrow = A.shape().row();
     auto br = A.sparsity().block_rows();
     auto bc = A.sparsity().block_cols();
@@ -168,8 +163,8 @@ namespace sparkit::data::detail {
         for (config::size_type r = 0; r < br; ++r) {
           T sum{0};
           for (config::size_type c = 0; c < bc; ++c) {
-            sum += vals[block_base + static_cast<std::size_t>(r * bc + c)]
-                 * x[J * bc + c];
+            sum += vals[block_base + static_cast<std::size_t>(r * bc + c)] *
+                   x[J * bc + c];
           }
           y[static_cast<std::size_t>(I * br + r)] += sum;
         }
@@ -182,10 +177,9 @@ namespace sparkit::data::detail {
   // JAD — jagged diagonal with permutation (SPARSKIT2 AMUXJ)
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply(Jagged_diagonal_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply(Jagged_diagonal_matrix<T> const& A, std::span<T const> x) {
     auto nrow = A.shape().row();
     auto pm = A.sparsity().perm();
     auto jd = A.sparsity().jdiag();
@@ -209,10 +203,9 @@ namespace sparkit::data::detail {
   // sCSR — symmetric lower-triangle with scatter
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply(Symmetric_compressed_row_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply(Symmetric_compressed_row_matrix<T> const& A, std::span<T const> x) {
     auto nrow = A.shape().row();
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
@@ -240,10 +233,10 @@ namespace sparkit::data::detail {
   // CSC — transpose: column-gather (dual of column-scatter)
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply_transpose(Compressed_column_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply_transpose(Compressed_column_matrix<T> const& A,
+                     std::span<T const> x) {
     auto cols = A.shape().column();
     auto cp = A.col_ptr();
     auto ri = A.row_ind();
@@ -264,10 +257,10 @@ namespace sparkit::data::detail {
   // MSR — transpose: diagonal + off-diagonal scatter
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply_transpose(Modified_sparse_row_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply_transpose(Modified_sparse_row_matrix<T> const& A,
+                     std::span<T const> x) {
     auto cols = A.shape().column();
     auto diag = A.diagonal();
     auto diag_len = A.sparsity().diagonal_length();
@@ -298,10 +291,9 @@ namespace sparkit::data::detail {
   // DIA — transpose: swap row/col roles
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply_transpose(Diagonal_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply_transpose(Diagonal_matrix<T> const& A, std::span<T const> x) {
     auto nrow = A.shape().row();
     auto ncol = A.shape().column();
     auto offsets = A.sparsity().offsets();
@@ -333,10 +325,9 @@ namespace sparkit::data::detail {
   // ELL — transpose: row-scatter (dual of row-gather)
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply_transpose(Ellpack_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply_transpose(Ellpack_matrix<T> const& A, std::span<T const> x) {
     auto nrow = A.shape().row();
     auto ncol = A.shape().column();
     auto max_nnz = A.sparsity().max_nnz_per_row();
@@ -362,10 +353,10 @@ namespace sparkit::data::detail {
   // BSR — transpose: transpose the dense block contribution
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply_transpose(Block_sparse_row_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply_transpose(Block_sparse_row_matrix<T> const& A,
+                     std::span<T const> x) {
     auto ncol = A.shape().column();
     auto nrow = A.shape().row();
     auto br = A.sparsity().block_rows();
@@ -383,9 +374,9 @@ namespace sparkit::data::detail {
         auto block_base = static_cast<std::size_t>(bj * br * bc);
         for (config::size_type r = 0; r < br; ++r) {
           for (config::size_type c = 0; c < bc; ++c) {
-            y[static_cast<std::size_t>(J * bc + c)]
-              += vals[block_base + static_cast<std::size_t>(r * bc + c)]
-               * x[I * br + r];
+            y[static_cast<std::size_t>(J * bc + c)] +=
+                vals[block_base + static_cast<std::size_t>(r * bc + c)] *
+                x[I * br + r];
           }
         }
       }
@@ -397,10 +388,9 @@ namespace sparkit::data::detail {
   // JAD — transpose: gather from x[perm], scatter into y[col]
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply_transpose(Jagged_diagonal_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply_transpose(Jagged_diagonal_matrix<T> const& A, std::span<T const> x) {
     auto ncol = A.shape().column();
     auto pm = A.sparsity().perm();
     auto jd = A.sparsity().jdiag();
@@ -424,10 +414,10 @@ namespace sparkit::data::detail {
   // sCSR — transpose: A^T = A for symmetric matrices
   // ================================================================
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply_transpose(Symmetric_compressed_row_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply_transpose(Symmetric_compressed_row_matrix<T> const& A,
+                     std::span<T const> x) {
     return multiply(A, x);
   }
 

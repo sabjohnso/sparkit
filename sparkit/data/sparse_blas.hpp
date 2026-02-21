@@ -14,10 +14,9 @@
 
 namespace sparkit::data::detail {
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply(Compressed_row_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply(Compressed_row_matrix<T> const& A, std::span<T const> x) {
     auto rows = A.shape().row();
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
@@ -34,10 +33,9 @@ namespace sparkit::data::detail {
     return y;
   }
 
-  template<typename T>
+  template <typename T>
   std::vector<T>
-  multiply_transpose(Compressed_row_matrix<T> const& A, std::span<T const> x)
-  {
+  multiply_transpose(Compressed_row_matrix<T> const& A, std::span<T const> x) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto rp = A.row_ptr();
@@ -53,12 +51,10 @@ namespace sparkit::data::detail {
     return y;
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  multiply_left_diagonal(
-    Compressed_row_matrix<T> const& A,
-    std::span<T const> d)
-  {
+  multiply_left_diagonal(Compressed_row_matrix<T> const& A,
+                         std::span<T const> d) {
     auto rp = A.row_ptr();
     auto vals = A.values();
     auto rows = A.shape().row();
@@ -72,12 +68,10 @@ namespace sparkit::data::detail {
     return Compressed_row_matrix<T>{A.sparsity(), std::move(new_vals)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  multiply_right_diagonal(
-    Compressed_row_matrix<T> const& A,
-    std::span<T const> d)
-  {
+  multiply_right_diagonal(Compressed_row_matrix<T> const& A,
+                          std::span<T const> d) {
     auto ci = A.col_ind();
     auto vals = A.values();
 
@@ -88,12 +82,9 @@ namespace sparkit::data::detail {
     return Compressed_row_matrix<T>{A.sparsity(), std::move(new_vals)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  add_diagonal(
-    Compressed_row_matrix<T> const& A,
-    std::span<T const> d)
-  {
+  add_diagonal(Compressed_row_matrix<T> const& A, std::span<T const> d) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto rp = A.row_ptr();
@@ -127,18 +118,15 @@ namespace sparkit::data::detail {
       }
     }
 
-    Compressed_row_sparsity sparsity{
-      A.shape(), new_indices.begin(), new_indices.end()};
+    Compressed_row_sparsity sparsity{A.shape(), new_indices.begin(),
+                                     new_indices.end()};
     return Compressed_row_matrix<T>{std::move(sparsity), std::move(new_vals)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  add(
-    Compressed_row_matrix<T> const& A,
-    T s,
-    Compressed_row_matrix<T> const& B)
-  {
+  add(Compressed_row_matrix<T> const& A, T s,
+      Compressed_row_matrix<T> const& B) {
     auto rows = A.shape().row();
     auto a_rp = A.row_ptr();
     auto a_ci = A.col_ind();
@@ -184,17 +172,14 @@ namespace sparkit::data::detail {
       }
     }
 
-    Compressed_row_sparsity sparsity{
-      A.shape(), new_indices.begin(), new_indices.end()};
+    Compressed_row_sparsity sparsity{A.shape(), new_indices.begin(),
+                                     new_indices.end()};
     return Compressed_row_matrix<T>{std::move(sparsity), std::move(new_vals)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  add(
-    Compressed_row_matrix<T> const& A,
-    Compressed_row_matrix<T> const& B)
-  {
+  add(Compressed_row_matrix<T> const& A, Compressed_row_matrix<T> const& B) {
     return add(A, T{1}, B);
   }
 
@@ -208,13 +193,10 @@ namespace sparkit::data::detail {
   //
   // Total cost: O(nnz(A) + nnz(B) + rows + cols).
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  add_transpose(
-    Compressed_row_matrix<T> const& A,
-    T s,
-    Compressed_row_matrix<T> const& B)
-  {
+  add_transpose(Compressed_row_matrix<T> const& A, T s,
+                Compressed_row_matrix<T> const& B) {
     auto rows = A.shape().row();
     auto cols = A.shape().column();
     auto b_rows = B.shape().row();
@@ -228,16 +210,17 @@ namespace sparkit::data::detail {
     auto b_vals = B.values();
 
     // Count entries per column of B
-    std::vector<config::size_type> col_ptr(
-      static_cast<std::size_t>(b_cols + 1), config::size_type{0});
+    std::vector<config::size_type> col_ptr(static_cast<std::size_t>(b_cols + 1),
+                                           config::size_type{0});
     for (std::size_t k = 0; k < b_nnz; ++k) {
-      ++col_ptr[static_cast<std::size_t>(b_ci[static_cast<config::size_type>(k)] + 1)];
+      ++col_ptr[static_cast<std::size_t>(
+          b_ci[static_cast<config::size_type>(k)] + 1)];
     }
 
     // Prefix sum
     for (config::size_type j = 0; j < b_cols; ++j) {
-      col_ptr[static_cast<std::size_t>(j + 1)]
-        += col_ptr[static_cast<std::size_t>(j)];
+      col_ptr[static_cast<std::size_t>(j + 1)] +=
+          col_ptr[static_cast<std::size_t>(j)];
     }
 
     // Place entries into CSC arrays
@@ -249,7 +232,8 @@ namespace sparkit::data::detail {
     for (config::size_type i = 0; i < b_rows; ++i) {
       for (auto j = b_rp[i]; j < b_rp[i + 1]; ++j) {
         auto col = b_ci[j];
-        auto pos = static_cast<std::size_t>(work[static_cast<std::size_t>(col)]);
+        auto pos =
+            static_cast<std::size_t>(work[static_cast<std::size_t>(col)]);
         row_ind[pos] = i;
         csc_vals[pos] = b_vals[j];
         ++work[static_cast<std::size_t>(col)];
@@ -271,12 +255,10 @@ namespace sparkit::data::detail {
       auto a_end = a_rp[i + 1];
 
       // Column i of CSC(B) — only valid if i < b_cols
-      auto bt_begin = (i < b_cols)
-        ? col_ptr[static_cast<std::size_t>(i)]
-        : config::size_type{0};
-      auto bt_end = (i < b_cols)
-        ? col_ptr[static_cast<std::size_t>(i + 1)]
-        : config::size_type{0};
+      auto bt_begin = (i < b_cols) ? col_ptr[static_cast<std::size_t>(i)]
+                                   : config::size_type{0};
+      auto bt_end = (i < b_cols) ? col_ptr[static_cast<std::size_t>(i + 1)]
+                                 : config::size_type{0};
       auto bt = bt_begin;
 
       while (a < a_end && bt < bt_end) {
@@ -292,8 +274,8 @@ namespace sparkit::data::detail {
           ++bt;
         } else {
           new_indices.push_back(Index{i, a_col});
-          new_vals.push_back(
-            a_vals[a] + s * csc_vals[static_cast<std::size_t>(bt)]);
+          new_vals.push_back(a_vals[a] +
+                             s * csc_vals[static_cast<std::size_t>(bt)]);
           ++a;
           ++bt;
         }
@@ -304,33 +286,28 @@ namespace sparkit::data::detail {
         ++a;
       }
       while (bt < bt_end) {
-        new_indices.push_back(
-          Index{i, row_ind[static_cast<std::size_t>(bt)]});
+        new_indices.push_back(Index{i, row_ind[static_cast<std::size_t>(bt)]});
         new_vals.push_back(s * csc_vals[static_cast<std::size_t>(bt)]);
         ++bt;
       }
     }
 
-    Compressed_row_sparsity sparsity{
-      Shape{rows, cols}, new_indices.begin(), new_indices.end()};
+    Compressed_row_sparsity sparsity{Shape{rows, cols}, new_indices.begin(),
+                                     new_indices.end()};
     return Compressed_row_matrix<T>{std::move(sparsity), std::move(new_vals)};
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  add_transpose(
-    Compressed_row_matrix<T> const& A,
-    Compressed_row_matrix<T> const& B)
-  {
+  add_transpose(Compressed_row_matrix<T> const& A,
+                Compressed_row_matrix<T> const& B) {
     return add_transpose(A, T{1}, B);
   }
 
-  template<typename T>
+  template <typename T>
   Compressed_row_matrix<T>
-  multiply(
-    Compressed_row_matrix<T> const& A,
-    Compressed_row_matrix<T> const& B)
-  {
+  multiply(Compressed_row_matrix<T> const& A,
+           Compressed_row_matrix<T> const& B) {
     auto a_rows = A.shape().row();
     auto b_cols = B.shape().column();
     auto a_rp = A.row_ptr();
@@ -374,8 +351,8 @@ namespace sparkit::data::detail {
       }
     }
 
-    Compressed_row_sparsity sparsity{
-      Shape{a_rows, b_cols}, new_indices.begin(), new_indices.end()};
+    Compressed_row_sparsity sparsity{Shape{a_rows, b_cols}, new_indices.begin(),
+                                     new_indices.end()};
     return Compressed_row_matrix<T>{std::move(sparsity), std::move(new_vals)};
   }
 

@@ -1,8 +1,8 @@
 //
 // ... Test header files
 //
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 //
 // ... Standard header files
@@ -12,49 +12,51 @@
 //
 // ... sparkit header files
 //
-#include <sparkit/data/Symmetric_compressed_row_matrix.hpp>
 #include <sparkit/data/Compressed_row_matrix.hpp>
 #include <sparkit/data/conversions.hpp>
+#include <sparkit/data/Symmetric_compressed_row_matrix.hpp>
 
 namespace sparkit::testing {
 
-  using sparkit::data::detail::Symmetric_compressed_row_sparsity;
-  using sparkit::data::detail::Symmetric_compressed_row_matrix;
   using sparkit::data::detail::Compressed_row_matrix;
-  using sparkit::data::detail::Shape;
-  using sparkit::data::detail::Index;
   using sparkit::data::detail::Entry;
+  using sparkit::data::detail::Index;
+  using sparkit::data::detail::Shape;
+  using sparkit::data::detail::Symmetric_compressed_row_matrix;
+  using sparkit::data::detail::Symmetric_compressed_row_sparsity;
 
   // -- sCSR matrix core --
 
   TEST_CASE("symmetric_compressed_row_matrix - construction_from_entries",
-            "[symmetric_compressed_row_matrix]")
-  {
+            "[symmetric_compressed_row_matrix]") {
     // 4x4 symmetric tridiagonal:
     // [[1, 2, 0, 0],
     //  [2, 3, 4, 0],
     //  [0, 4, 5, 6],
     //  [0, 0, 6, 7]]
-    Symmetric_compressed_row_matrix<double> mat{Shape{4, 4}, {
-      {Index{0, 0}, 1.0},
-      {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0},
-      {Index{2, 1}, 4.0}, {Index{2, 2}, 5.0},
-      {Index{3, 2}, 6.0}, {Index{3, 3}, 7.0}
-    }};
+    Symmetric_compressed_row_matrix<double> mat{Shape{4, 4},
+                                                {{Index{0, 0}, 1.0},
+                                                 {Index{1, 0}, 2.0},
+                                                 {Index{1, 1}, 3.0},
+                                                 {Index{2, 1}, 4.0},
+                                                 {Index{2, 2}, 5.0},
+                                                 {Index{3, 2}, 6.0},
+                                                 {Index{3, 3}, 7.0}}};
 
     CHECK(mat.shape() == Shape(4, 4));
     CHECK(mat.size() == 7);
   }
 
   TEST_CASE("symmetric_compressed_row_matrix - element_access_lower_triangle",
-            "[symmetric_compressed_row_matrix]")
-  {
-    Symmetric_compressed_row_matrix<double> mat{Shape{4, 4}, {
-      {Index{0, 0}, 1.0},
-      {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0},
-      {Index{2, 1}, 4.0}, {Index{2, 2}, 5.0},
-      {Index{3, 2}, 6.0}, {Index{3, 3}, 7.0}
-    }};
+            "[symmetric_compressed_row_matrix]") {
+    Symmetric_compressed_row_matrix<double> mat{Shape{4, 4},
+                                                {{Index{0, 0}, 1.0},
+                                                 {Index{1, 0}, 2.0},
+                                                 {Index{1, 1}, 3.0},
+                                                 {Index{2, 1}, 4.0},
+                                                 {Index{2, 2}, 5.0},
+                                                 {Index{3, 2}, 6.0},
+                                                 {Index{3, 3}, 7.0}}};
 
     // Lower triangle stored directly
     CHECK(mat(0, 0) == Catch::Approx(1.0));
@@ -67,14 +69,15 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("symmetric_compressed_row_matrix - element_access_upper_triangle",
-            "[symmetric_compressed_row_matrix]")
-  {
-    Symmetric_compressed_row_matrix<double> mat{Shape{4, 4}, {
-      {Index{0, 0}, 1.0},
-      {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0},
-      {Index{2, 1}, 4.0}, {Index{2, 2}, 5.0},
-      {Index{3, 2}, 6.0}, {Index{3, 3}, 7.0}
-    }};
+            "[symmetric_compressed_row_matrix]") {
+    Symmetric_compressed_row_matrix<double> mat{Shape{4, 4},
+                                                {{Index{0, 0}, 1.0},
+                                                 {Index{1, 0}, 2.0},
+                                                 {Index{1, 1}, 3.0},
+                                                 {Index{2, 1}, 4.0},
+                                                 {Index{2, 2}, 5.0},
+                                                 {Index{3, 2}, 6.0},
+                                                 {Index{3, 3}, 7.0}}};
 
     // Upper triangle via symmetry: A(i,j) = A(j,i)
     CHECK(mat(0, 1) == Catch::Approx(2.0));
@@ -83,14 +86,15 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("symmetric_compressed_row_matrix - element_access_zeros",
-            "[symmetric_compressed_row_matrix]")
-  {
-    Symmetric_compressed_row_matrix<double> mat{Shape{4, 4}, {
-      {Index{0, 0}, 1.0},
-      {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0},
-      {Index{2, 1}, 4.0}, {Index{2, 2}, 5.0},
-      {Index{3, 2}, 6.0}, {Index{3, 3}, 7.0}
-    }};
+            "[symmetric_compressed_row_matrix]") {
+    Symmetric_compressed_row_matrix<double> mat{Shape{4, 4},
+                                                {{Index{0, 0}, 1.0},
+                                                 {Index{1, 0}, 2.0},
+                                                 {Index{1, 1}, 3.0},
+                                                 {Index{2, 1}, 4.0},
+                                                 {Index{2, 2}, 5.0},
+                                                 {Index{3, 2}, 6.0},
+                                                 {Index{3, 3}, 7.0}}};
 
     // Structural zeros
     CHECK(mat(0, 2) == Catch::Approx(0.0));
@@ -101,14 +105,14 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("symmetric_compressed_row_matrix - construction_from_upper_entries",
-            "[symmetric_compressed_row_matrix]")
-  {
+            "[symmetric_compressed_row_matrix]") {
     // Provide upper-triangle entries — should be normalized
-    Symmetric_compressed_row_matrix<double> mat{Shape{3, 3}, {
-      {Index{0, 0}, 1.0},
-      {Index{0, 1}, 2.0}, {Index{1, 1}, 3.0},
-      {Index{0, 2}, 4.0}, {Index{2, 2}, 5.0}
-    }};
+    Symmetric_compressed_row_matrix<double> mat{Shape{3, 3},
+                                                {{Index{0, 0}, 1.0},
+                                                 {Index{0, 1}, 2.0},
+                                                 {Index{1, 1}, 3.0},
+                                                 {Index{0, 2}, 4.0},
+                                                 {Index{2, 2}, 5.0}}};
 
     CHECK(mat(0, 0) == Catch::Approx(1.0));
     CHECK(mat(1, 0) == Catch::Approx(2.0));
@@ -121,14 +125,13 @@ namespace sparkit::testing {
 
   // -- sCSR matrix <-> CSR matrix conversions --
 
-  TEST_CASE("conversions - scsr_matrix_to_csr_matrix_basic",
-            "[conversions]")
-  {
-    Symmetric_compressed_row_matrix<double> scsr{Shape{3, 3}, {
-      {Index{0, 0}, 1.0},
-      {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0},
-      {Index{2, 1}, 4.0}, {Index{2, 2}, 5.0}
-    }};
+  TEST_CASE("conversions - scsr_matrix_to_csr_matrix_basic", "[conversions]") {
+    Symmetric_compressed_row_matrix<double> scsr{Shape{3, 3},
+                                                 {{Index{0, 0}, 1.0},
+                                                  {Index{1, 0}, 2.0},
+                                                  {Index{1, 1}, 3.0},
+                                                  {Index{2, 1}, 4.0},
+                                                  {Index{2, 2}, 5.0}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(scsr);
 
@@ -142,14 +145,15 @@ namespace sparkit::testing {
     CHECK(csr(2, 2) == Catch::Approx(5.0));
   }
 
-  TEST_CASE("conversions - csr_matrix_to_scsr_matrix_basic",
-            "[conversions]")
-  {
-    Compressed_row_matrix<double> csr{Shape{3, 3}, {
-      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
-      {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0}, {Index{1, 2}, 4.0},
-      {Index{2, 1}, 4.0}, {Index{2, 2}, 5.0}
-    }};
+  TEST_CASE("conversions - csr_matrix_to_scsr_matrix_basic", "[conversions]") {
+    Compressed_row_matrix<double> csr{Shape{3, 3},
+                                      {{Index{0, 0}, 1.0},
+                                       {Index{0, 1}, 2.0},
+                                       {Index{1, 0}, 2.0},
+                                       {Index{1, 1}, 3.0},
+                                       {Index{1, 2}, 4.0},
+                                       {Index{2, 1}, 4.0},
+                                       {Index{2, 2}, 5.0}}};
 
     auto scsr = sparkit::data::detail::to_symmetric_compressed_row(csr);
 
@@ -163,15 +167,15 @@ namespace sparkit::testing {
     CHECK(scsr(2, 2) == Catch::Approx(5.0));
   }
 
-  TEST_CASE("conversions - scsr_matrix_csr_matrix_roundtrip",
-            "[conversions]")
-  {
-    Symmetric_compressed_row_matrix<double> original{Shape{4, 4}, {
-      {Index{0, 0}, 1.0},
-      {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0},
-      {Index{2, 1}, 4.0}, {Index{2, 2}, 5.0},
-      {Index{3, 2}, 6.0}, {Index{3, 3}, 7.0}
-    }};
+  TEST_CASE("conversions - scsr_matrix_csr_matrix_roundtrip", "[conversions]") {
+    Symmetric_compressed_row_matrix<double> original{Shape{4, 4},
+                                                     {{Index{0, 0}, 1.0},
+                                                      {Index{1, 0}, 2.0},
+                                                      {Index{1, 1}, 3.0},
+                                                      {Index{2, 1}, 4.0},
+                                                      {Index{2, 2}, 5.0},
+                                                      {Index{3, 2}, 6.0},
+                                                      {Index{3, 3}, 7.0}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(original);
     auto roundtrip = sparkit::data::detail::to_symmetric_compressed_row(csr);

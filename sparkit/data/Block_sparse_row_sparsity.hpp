@@ -14,8 +14,7 @@
 #include <sparkit/data/Index.hpp>
 #include <sparkit/data/Shape.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Immutable block sparse row (BSR) sparsity pattern.
@@ -27,8 +26,7 @@ namespace sparkit::data::detail
    *
    * @see Compressed_row_sparsity
    */
-  class Block_sparse_row_sparsity final
-  {
+  class Block_sparse_row_sparsity final {
   public:
     using size_type = config::size_type;
 
@@ -37,21 +35,15 @@ namespace sparkit::data::detail
      *
      * Scalar indices are mapped to block positions, deduplicated.
      */
-    Block_sparse_row_sparsity(
-      Shape shape,
-      size_type block_rows,
-      size_type block_cols,
-      std::initializer_list<Index> const& input);
+    Block_sparse_row_sparsity(Shape shape, size_type block_rows,
+                              size_type block_cols,
+                              std::initializer_list<Index> const& input);
 
-    template<typename Iter>
-    Block_sparse_row_sparsity(
-      Shape shape,
-      size_type block_rows,
-      size_type block_cols,
-      Iter first, Iter last)
-      : Block_sparse_row_sparsity(shape, block_rows, block_cols,
-          std::vector<Index>(first, last))
-    {}
+    template <typename Iter>
+    Block_sparse_row_sparsity(Shape shape, size_type block_rows,
+                              size_type block_cols, Iter first, Iter last)
+        : Block_sparse_row_sparsity(shape, block_rows, block_cols,
+                                    std::vector<Index>(first, last)) {}
 
     Block_sparse_row_sparsity(Block_sparse_row_sparsity const& input);
     Block_sparse_row_sparsity(Block_sparse_row_sparsity&& input);
@@ -101,11 +93,8 @@ namespace sparkit::data::detail
     col_ind() const;
 
   private:
-    Block_sparse_row_sparsity(
-      Shape shape,
-      size_type block_rows,
-      size_type block_cols,
-      std::vector<Index> indices);
+    Block_sparse_row_sparsity(Shape shape, size_type block_rows,
+                              size_type block_cols, std::vector<Index> indices);
 
     class Impl;
     Impl* pimpl;

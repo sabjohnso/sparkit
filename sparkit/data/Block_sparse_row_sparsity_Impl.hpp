@@ -11,24 +11,31 @@
 //
 #include <sparkit/data/Block_sparse_row_sparsity.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
-  class Block_sparse_row_sparsity::Impl
-  {
+  class Block_sparse_row_sparsity::Impl {
   public:
     Impl(Shape shape, size_type block_rows, size_type block_cols,
          std::vector<Index> indices);
 
-    Shape shape() const;
-    size_type size() const;
-    size_type block_rows() const;
-    size_type block_cols() const;
-    size_type num_block_rows() const;
-    size_type num_block_cols() const;
-    size_type num_blocks() const;
-    std::span<size_type const> row_ptr() const;
-    std::span<size_type const> col_ind() const;
+    Shape
+    shape() const;
+    size_type
+    size() const;
+    size_type
+    block_rows() const;
+    size_type
+    block_cols() const;
+    size_type
+    num_block_rows() const;
+    size_type
+    num_block_cols() const;
+    size_type
+    num_blocks() const;
+    std::span<size_type const>
+    row_ptr() const;
+    std::span<size_type const>
+    col_ind() const;
 
   private:
     Shape shape_;

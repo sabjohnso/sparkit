@@ -14,8 +14,7 @@
 #include <sparkit/data/Index.hpp>
 #include <sparkit/data/Shape.hpp>
 
-namespace sparkit::data::detail
-{
+namespace sparkit::data::detail {
 
   /**
    * @brief Immutable compressed sparse column (CSC) sparsity pattern.
@@ -30,8 +29,7 @@ namespace sparkit::data::detail
    *
    * @see Compressed_row_sparsity
    */
-  class Compressed_column_sparsity final
-  {
+  class Compressed_column_sparsity final {
   public:
     using size_type = config::size_type;
 
@@ -43,7 +41,8 @@ namespace sparkit::data::detail
      * @param shape  Matrix dimensions.
      * @param input  Nonzero positions.
      */
-    Compressed_column_sparsity(Shape shape, std::initializer_list<Index> const& input);
+    Compressed_column_sparsity(Shape shape,
+                               std::initializer_list<Index> const& input);
 
     /**
      * @brief Construct from a shape and an iterator range of indices.
@@ -55,10 +54,9 @@ namespace sparkit::data::detail
      * @param first  Beginning of the index range.
      * @param last   End of the index range.
      */
-    template<typename Iter>
+    template <typename Iter>
     Compressed_column_sparsity(Shape shape, Iter first, Iter last)
-      : Compressed_column_sparsity(shape, std::vector<Index>(first, last))
-    {}
+        : Compressed_column_sparsity(shape, std::vector<Index>(first, last)) {}
 
     Compressed_column_sparsity(Compressed_column_sparsity const& input);
     Compressed_column_sparsity(Compressed_column_sparsity&& input);

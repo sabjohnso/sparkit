@@ -786,4 +786,93 @@ namespace sparkit::data::detail {
     return amd_build_permutation(s);
   }
 
+  // ================================================================
+  // Column Approximate Minimum Degree (COLAMD) ordering
+  //
+  // Reference: Davis, Gilbert, Larimore, Ng — "Algorithm 836: COLAMD,
+  // a Column Approximate Minimum Degree Ordering Algorithm" (ACM
+  // TOMS, 2004).
+  //
+  // COLAMD on A is equivalent to AMD on A^T*A. We form the sparsity
+  // pattern of A^T*A and delegate to approximate_minimum_degree.
+  // ================================================================
+
+  // Build the sparsity pattern of A^T*A from A's CSR, without values.
+  //
+  // Phase 1: Build a column-to-row mapping (CSC-like structure).
+  // Phase 2: For each column j (= row j of A^T*A), find all rows
+  //   containing j, then for each such row find all columns — those
+  //   are j's neighbors in A^T*A. A marker array avoids duplicates.
+  static Compressed_row_sparsity
+  form_ata_pattern(Compressed_row_sparsity const& sp)
+  {
+    auto nrow = sp.shape().row();
+    auto ncol = sp.shape().column();
+    auto rp = sp.row_ptr();
+    auto ci = sp.col_ind();
+    auto un = static_cast<std::size_t>(ncol);
+
+    // Phase 1: Build column-to-row mapping (col_ptr, row_ind)
+    std::vector<size_type> col_count(un, 0);
+    for (size_type i = 0; i < nrow; ++i) {
+      for (auto p = rp[i]; p < rp[i + 1]; ++p) {
+        ++col_count[static_cast<std::size_t>(ci[p])];
+      }
+    }
+
+    std::vector<size_type> col_ptr(un + 1, 0);
+    for (size_type j = 0; j < ncol; ++j) {
+      col_ptr[static_cast<std::size_t>(j + 1)] =
+        col_ptr[static_cast<std::size_t>(j)] +
+        col_count[static_cast<std::size_t>(j)];
+    }
+
+    auto total_entries = col_ptr[un];
+    std::vector<size_type> row_ind(static_cast<std::size_t>(total_entries));
+    std::vector<size_type> col_pos(col_ptr.begin(), col_ptr.end() - 1);
+
+    for (size_type i = 0; i < nrow; ++i) {
+      for (auto p = rp[i]; p < rp[i + 1]; ++p) {
+        auto j = ci[p];
+        row_ind[static_cast<std::size_t>(col_pos[
+          static_cast<std::size_t>(j)]++)] = i;
+      }
+    }
+
+    // Phase 2: Collect A^T*A entries as Index pairs
+    std::vector<Index> indices;
+    std::vector<size_type> marker(un, -1);
+
+    for (size_type j = 0; j < ncol; ++j) {
+      auto uj = static_cast<std::size_t>(j);
+
+      // Always include diagonal
+      marker[uj] = j;
+      indices.push_back(Index{j, j});
+
+      // For each row containing column j
+      for (auto r = col_ptr[uj]; r < col_ptr[uj + 1]; ++r) {
+        auto row = row_ind[static_cast<std::size_t>(r)];
+        // For each column k in that row
+        for (auto p = rp[row]; p < rp[row + 1]; ++p) {
+          auto k = ci[p];
+          if (marker[static_cast<std::size_t>(k)] != j) {
+            marker[static_cast<std::size_t>(k)] = j;
+            indices.push_back(Index{j, k});
+          }
+        }
+      }
+    }
+
+    return Compressed_row_sparsity{
+      Shape{ncol, ncol}, indices.begin(), indices.end()};
+  }
+
+  std::vector<size_type>
+  column_approximate_minimum_degree(Compressed_row_sparsity const& sp)
+  {
+    auto ata = form_ata_pattern(sp);
+    return approximate_minimum_degree(ata);
+  }
+
 } // end of namespace sparkit::data::detail

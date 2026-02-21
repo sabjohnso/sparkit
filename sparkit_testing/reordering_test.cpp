@@ -569,4 +569,222 @@ namespace sparkit::testing {
     CHECK(is_valid_permutation(perm));
   }
 
+  // ================================================================
+  // column_approximate_minimum_degree (COLAMD)
+  // ================================================================
+
+  using sparkit::data::detail::column_approximate_minimum_degree;
+  using sparkit::data::detail::cperm;
+
+  // Build the sparsity pattern of A^T*A from A's CSR sparsity.
+  // Used for measuring fill in COLAMD tests.
+  static Compressed_row_sparsity
+  test_form_ata(Compressed_row_sparsity const& sp)
+  {
+    auto nrow = sp.shape().row();
+    auto ncol = sp.shape().column();
+    auto rp = sp.row_ptr();
+    auto ci = sp.col_ind();
+
+    std::vector<Index> indices;
+    for (size_type row = 0; row < nrow; ++row) {
+      for (auto j = rp[row]; j < rp[row + 1]; ++j) {
+        for (auto k = rp[row]; k < rp[row + 1]; ++k) {
+          indices.push_back(Index{ci[j], ci[k]});
+        }
+      }
+    }
+
+    return Compressed_row_sparsity{Shape{ncol, ncol},
+                                    indices.begin(), indices.end()};
+  }
+
+  // -- Validation --
+
+  TEST_CASE("reordering - colamd valid permutation", "[reordering]")
+  {
+    // Unsymmetric 4x4
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 1}, Index{1, 2},
+      Index{2, 0}, Index{2, 2}, Index{2, 3},
+      Index{3, 1}, Index{3, 3}
+    }};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - colamd rectangular", "[reordering]")
+  {
+    Compressed_row_sparsity sp{Shape{4, 5}, {
+      Index{0, 0}, Index{0, 2},
+      Index{1, 1}, Index{1, 3},
+      Index{2, 2}, Index{2, 4},
+      Index{3, 0}, Index{3, 3}
+    }};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 5);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  // -- Known examples --
+
+  TEST_CASE("reordering - colamd diagonal", "[reordering]")
+  {
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}
+    }};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - colamd arrow columns", "[reordering]")
+  {
+    // Column 0 appears in every row — A^T*A is an arrow with node 0 as hub
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 2},
+      Index{2, 0}, Index{2, 3},
+      Index{3, 0}, Index{3, 3}
+    }};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+    // The dense column (col 0) should be ordered late
+    // (not first — AMD reduces its degree as leaves are eliminated)
+    CHECK(perm[0] >= 2);
+  }
+
+  TEST_CASE("reordering - colamd square unsymmetric", "[reordering]")
+  {
+    // Upper triangular 4x4
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3},
+      Index{1, 1}, Index{1, 2}, Index{1, 3},
+      Index{2, 2}, Index{2, 3},
+      Index{3, 3}
+    }};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  // -- Properties --
+
+  TEST_CASE("reordering - colamd fill reduction", "[reordering]")
+  {
+    // Column 0 appears in every row (arrow in A^T*A)
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 2},
+      Index{2, 0}, Index{2, 3},
+      Index{3, 0}, Index{3, 3}
+    }};
+
+    auto ata = test_form_ata(sp);
+    auto natural_fill = symbolic_cholesky_nnz(ata);
+
+    auto perm = column_approximate_minimum_degree(sp);
+    auto reordered_ata = dperm(ata, perm);
+    auto colamd_fill = symbolic_cholesky_nnz(reordered_ata);
+
+    CHECK(colamd_fill <= natural_fill);
+  }
+
+  TEST_CASE("reordering - colamd round trip cperm", "[reordering]")
+  {
+    Compressed_row_matrix<double> A{Shape{4, 4}, {
+      {Index{0, 0}, 1.0}, {Index{0, 1}, 2.0},
+      {Index{1, 1}, 3.0}, {Index{1, 2}, 4.0},
+      {Index{2, 0}, 5.0}, {Index{2, 2}, 6.0}, {Index{2, 3}, 7.0},
+      {Index{3, 1}, 8.0}, {Index{3, 3}, 9.0}
+    }};
+
+    auto perm = column_approximate_minimum_degree(A.sparsity());
+    auto B = cperm(A, perm);
+    auto inv = inverse_permutation(perm);
+    auto C = cperm(B, inv);
+
+    for (size_type i = 0; i < 4; ++i) {
+      for (size_type j = 0; j < 4; ++j) {
+        CHECK(C(i, j) == Catch::Approx(A(i, j)));
+      }
+    }
+  }
+
+  TEST_CASE("reordering - colamd disconnected columns", "[reordering]")
+  {
+    // Block diagonal: cols {0,1} and {2,3} never share a row
+    Compressed_row_sparsity sp{Shape{4, 4}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 1},
+      Index{2, 2}, Index{2, 3},
+      Index{3, 2}, Index{3, 3}
+    }};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  // -- Edge cases --
+
+  TEST_CASE("reordering - colamd minimal", "[reordering]")
+  {
+    Compressed_row_sparsity sp{Shape{2, 2}, {
+      Index{0, 0}, Index{0, 1},
+      Index{1, 0}, Index{1, 1}
+    }};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 2);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - colamd tall thin", "[reordering]")
+  {
+    Compressed_row_sparsity sp{Shape{5, 2}, {
+      Index{0, 0},
+      Index{1, 0}, Index{1, 1},
+      Index{2, 1},
+      Index{3, 0},
+      Index{4, 0}, Index{4, 1}
+    }};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 2);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - colamd dense block", "[reordering]")
+  {
+    std::vector<Index> indices;
+    for (size_type i = 0; i < 4; ++i) {
+      for (size_type j = 0; j < 4; ++j) {
+        indices.push_back(Index{i, j});
+      }
+    }
+    Compressed_row_sparsity sp{Shape{4, 4}, indices.begin(), indices.end()};
+
+    auto perm = column_approximate_minimum_degree(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
 } // end of namespace sparkit::testing

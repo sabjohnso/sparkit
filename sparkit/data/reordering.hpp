@@ -30,4 +30,7 @@ namespace sparkit::data::detail {
   std::vector<config::size_type>
   column_approximate_minimum_degree(Compressed_row_sparsity const& sp);
 
+  std::vector<config::size_type>
+  nested_dissection(Compressed_row_sparsity const& sp);
+
 } // end of namespace sparkit::data::detail

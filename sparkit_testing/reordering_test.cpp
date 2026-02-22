@@ -701,4 +701,194 @@ namespace sparkit::testing {
     CHECK(is_valid_permutation(perm));
   }
 
+  // ================================================================
+  // nested_dissection
+  // ================================================================
+
+  using sparkit::data::detail::nested_dissection;
+
+  TEST_CASE("reordering - nd valid permutation", "[reordering]") {
+    // 6x6 tridiagonal
+    Compressed_row_sparsity sp{
+        Shape{6, 6},
+        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
+         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3},
+         Index{3, 4}, Index{4, 3}, Index{4, 4}, Index{4, 5}, Index{5, 4},
+         Index{5, 5}}};
+
+    auto perm = nested_dissection(sp);
+
+    REQUIRE(std::ssize(perm) == 6);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - nd rectangular rejected", "[reordering]") {
+    Compressed_row_sparsity sp{Shape{3, 4},
+                               {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
+
+    CHECK_THROWS_AS(nested_dissection(sp), std::invalid_argument);
+  }
+
+  TEST_CASE("reordering - nd diagonal matrix", "[reordering]") {
+    Compressed_row_sparsity sp{
+        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+
+    auto perm = nested_dissection(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - nd tridiagonal", "[reordering]") {
+    Compressed_row_sparsity sp{
+        Shape{4, 4},
+        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
+         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+
+    auto perm = nested_dissection(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+
+    Compressed_row_matrix<double> A{sp, [](auto, auto) { return 1.0; }};
+    auto B = dperm(A, perm);
+    auto [lo, hi] = bandwidth(B);
+    CHECK(lo <= 2);
+    CHECK(hi <= 2);
+  }
+
+  TEST_CASE("reordering - nd arrow matrix", "[reordering]") {
+    // Node 0 is the hub, connected to all others
+    Compressed_row_sparsity sp{
+        Shape{5, 5},
+        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
+         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
+         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+
+    auto perm = nested_dissection(sp);
+
+    REQUIRE(std::ssize(perm) == 5);
+    CHECK(is_valid_permutation(perm));
+
+    // The hub node (degree 4) should be among the last eliminated
+    CHECK(perm[0] >= 3);
+  }
+
+  TEST_CASE("reordering - nd fill reduction", "[reordering]") {
+    // Arrow matrix: natural ordering creates massive fill
+    Compressed_row_sparsity sp{
+        Shape{5, 5},
+        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
+         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
+         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+
+    auto natural_fill = symbolic_cholesky_nnz(sp);
+
+    auto perm = nested_dissection(sp);
+    auto reordered = dperm(sp, perm);
+    auto nd_fill = symbolic_cholesky_nnz(reordered);
+
+    CHECK(nd_fill <= natural_fill);
+  }
+
+  TEST_CASE("reordering - nd disconnected graph", "[reordering]") {
+    // Two disconnected 3x3 tridiagonal blocks
+    Compressed_row_sparsity sp{
+        Shape{6, 6},
+        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
+         Index{2, 1}, Index{2, 2}, Index{3, 3}, Index{3, 4}, Index{4, 3},
+         Index{4, 4}, Index{4, 5}, Index{5, 4}, Index{5, 5}}};
+
+    auto perm = nested_dissection(sp);
+
+    REQUIRE(std::ssize(perm) == 6);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - nd round trip values", "[reordering]") {
+    Compressed_row_matrix<double> A{Shape{4, 4},
+                                    {{Index{0, 0}, 1.0},
+                                     {Index{0, 1}, 2.0},
+                                     {Index{1, 0}, 3.0},
+                                     {Index{1, 1}, 4.0},
+                                     {Index{1, 2}, 5.0},
+                                     {Index{2, 1}, 6.0},
+                                     {Index{2, 2}, 7.0},
+                                     {Index{2, 3}, 8.0},
+                                     {Index{3, 2}, 9.0},
+                                     {Index{3, 3}, 10.0}}};
+
+    auto perm = nested_dissection(A.sparsity());
+    auto B = dperm(A, perm);
+
+    CHECK(B.size() == A.size());
+
+    auto inv = inverse_permutation(perm);
+    auto C = dperm(B, inv);
+
+    for (size_type i = 0; i < 4; ++i) {
+      for (size_type j = 0; j < 4; ++j) {
+        CHECK(C(i, j) == Catch::Approx(A(i, j)));
+      }
+    }
+  }
+
+  TEST_CASE("reordering - nd vs amd fill", "[reordering]") {
+    // 4x4 grid graph (16 nodes)
+    // Nodes numbered row-major: node(r,c) = r*4 + c
+    // Edges: horizontal (i, i+1) for each row, vertical (i, i+4)
+    std::vector<Index> indices;
+    for (size_type r = 0; r < 4; ++r) {
+      for (size_type c = 0; c < 4; ++c) {
+        auto node = r * 4 + c;
+        indices.push_back(Index{node, node}); // diagonal
+        if (c + 1 < 4) {
+          indices.push_back(Index{node, node + 1});
+          indices.push_back(Index{node + 1, node});
+        }
+        if (r + 1 < 4) {
+          indices.push_back(Index{node, node + 4});
+          indices.push_back(Index{node + 4, node});
+        }
+      }
+    }
+    Compressed_row_sparsity sp{Shape{16, 16}, indices.begin(), indices.end()};
+
+    auto nd_perm = nested_dissection(sp);
+    auto amd_perm = approximate_minimum_degree(sp);
+
+    auto nd_reordered = dperm(sp, nd_perm);
+    auto amd_reordered = dperm(sp, amd_perm);
+
+    auto nd_fill = symbolic_cholesky_nnz(nd_reordered);
+    auto amd_fill = symbolic_cholesky_nnz(amd_reordered);
+
+    CHECK(nd_fill <= amd_fill);
+  }
+
+  TEST_CASE("reordering - nd small matrix", "[reordering]") {
+    Compressed_row_sparsity sp{
+        Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
+
+    auto perm = nested_dissection(sp);
+
+    REQUIRE(std::ssize(perm) == 2);
+    CHECK(is_valid_permutation(perm));
+  }
+
+  TEST_CASE("reordering - nd dense block", "[reordering]") {
+    std::vector<Index> indices;
+    for (size_type i = 0; i < 4; ++i) {
+      for (size_type j = 0; j < 4; ++j) {
+        indices.push_back(Index{i, j});
+      }
+    }
+    Compressed_row_sparsity sp{Shape{4, 4}, indices.begin(), indices.end()};
+
+    auto perm = nested_dissection(sp);
+
+    REQUIRE(std::ssize(perm) == 4);
+    CHECK(is_valid_permutation(perm));
+  }
+
 } // end of namespace sparkit::testing

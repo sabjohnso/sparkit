@@ -837,4 +837,219 @@ namespace sparkit::data::detail {
     return approximate_minimum_degree(ata);
   }
 
+  // ================================================================
+  // Nested Dissection ordering
+  //
+  // Divide-and-conquer fill-reducing ordering using level-set
+  // bisection. Excels on structured problems (FEM grids) and
+  // produces good block structure for supernodal factorization.
+  //
+  // Uses BFS level sets to partition the graph into two parts
+  // separated by a vertex separator. Separator nodes are numbered
+  // last, then each part is recursed.
+  // ================================================================
+
+  namespace {
+
+    // BFS returning full level array. Unreached nodes get level -1.
+    std::vector<size_type>
+    nd_bfs_level_array(Compressed_row_sparsity const& sp, size_type start) {
+      auto rp = sp.row_ptr();
+      auto ci = sp.col_ind();
+      auto n = sp.shape().row();
+
+      std::vector<size_type> level(static_cast<std::size_t>(n), -1);
+      std::queue<size_type> queue;
+
+      level[static_cast<std::size_t>(start)] = 0;
+      queue.push(start);
+
+      while (!queue.empty()) {
+        auto node = queue.front();
+        queue.pop();
+        auto node_level = level[static_cast<std::size_t>(node)];
+
+        for (auto j = rp[node]; j < rp[node + 1]; ++j) {
+          auto nbr = ci[j];
+          if (nbr != node && level[static_cast<std::size_t>(nbr)] == -1) {
+            level[static_cast<std::size_t>(nbr)] = node_level + 1;
+            queue.push(nbr);
+          }
+        }
+      }
+
+      return level;
+    }
+
+    // Extract induced subgraph for a node subset, renumbered 0..k-1.
+    Compressed_row_sparsity
+    nd_extract_subgraph(Compressed_row_sparsity const& sym,
+                        std::vector<size_type> const& nodes) {
+      auto rp = sym.row_ptr();
+      auto ci = sym.col_ind();
+      auto n = sym.shape().row();
+
+      // Build old->local mapping (-1 = not in subset)
+      std::vector<size_type> old_to_local(static_cast<std::size_t>(n), -1);
+      for (std::size_t k = 0; k < nodes.size(); ++k) {
+        old_to_local[static_cast<std::size_t>(nodes[k])] =
+            static_cast<size_type>(k);
+      }
+
+      auto local_n = static_cast<size_type>(nodes.size());
+      std::vector<Index> indices;
+      for (std::size_t k = 0; k < nodes.size(); ++k) {
+        auto old_node = nodes[k];
+        auto local_row = static_cast<size_type>(k);
+        // Always include diagonal
+        indices.push_back(Index{local_row, local_row});
+        for (auto j = rp[old_node]; j < rp[old_node + 1]; ++j) {
+          auto nbr = ci[j];
+          if (nbr == old_node) continue;
+          auto local_col = old_to_local[static_cast<std::size_t>(nbr)];
+          if (local_col != -1) {
+            indices.push_back(Index{local_row, local_col});
+          }
+        }
+      }
+
+      return Compressed_row_sparsity{Shape{local_n, local_n}, indices.begin(),
+                                     indices.end()};
+    }
+
+    // Level-set bisection: BFS from pseudo-peripheral node, split at mid-level.
+    void
+    nd_bfs_partition(Compressed_row_sparsity const& subgraph,
+                     std::vector<size_type>& part_a,
+                     std::vector<size_type>& part_b,
+                     std::vector<size_type>& separator) {
+      auto n = subgraph.shape().row();
+      auto start = pseudo_peripheral_node(subgraph);
+      auto level = nd_bfs_level_array(subgraph, start);
+
+      // Find max level among reached nodes
+      size_type max_level = 0;
+      for (size_type i = 0; i < n; ++i) {
+        if (level[static_cast<std::size_t>(i)] > max_level) {
+          max_level = level[static_cast<std::size_t>(i)];
+        }
+      }
+
+      auto mid = max_level / 2;
+
+      part_a.clear();
+      part_b.clear();
+      separator.clear();
+
+      for (size_type i = 0; i < n; ++i) {
+        auto lev = level[static_cast<std::size_t>(i)];
+        if (lev == -1) {
+          // Unreached by BFS — put in part B for deeper recursion
+          part_b.push_back(i);
+        } else if (lev < mid) {
+          part_a.push_back(i);
+        } else if (lev == mid) {
+          separator.push_back(i);
+        } else {
+          part_b.push_back(i);
+        }
+      }
+    }
+
+    // Recursive workhorse operating on global indices.
+    void
+    nd_recurse(Compressed_row_sparsity const& sym,
+               std::vector<size_type> const& nodes,
+               std::vector<size_type>& perm, size_type& next_pos) {
+      auto node_count = static_cast<size_type>(nodes.size());
+
+      // Base case: single node
+      if (node_count == 1) {
+        perm[static_cast<std::size_t>(nodes[0])] = next_pos++;
+        return;
+      }
+
+      // Base case: small subgraph — fall through to AMD
+      if (node_count <= 64) {
+        auto sub = nd_extract_subgraph(sym, nodes);
+        auto local_perm = approximate_minimum_degree(sub);
+
+        for (size_type i = 0; i < node_count; ++i) {
+          auto local_pos = local_perm[static_cast<std::size_t>(i)];
+          perm[static_cast<std::size_t>(nodes[static_cast<std::size_t>(i)])] =
+              next_pos + local_pos;
+        }
+        next_pos += node_count;
+        return;
+      }
+
+      // Extract induced subgraph and partition
+      auto sub = nd_extract_subgraph(sym, nodes);
+
+      std::vector<size_type> local_a, local_b, local_sep;
+      nd_bfs_partition(sub, local_a, local_b, local_sep);
+
+      // Guard: if partition produces empty A or B, fall through to AMD
+      if (local_a.empty() || local_b.empty()) {
+        auto local_perm = approximate_minimum_degree(sub);
+
+        for (size_type i = 0; i < node_count; ++i) {
+          auto local_pos = local_perm[static_cast<std::size_t>(i)];
+          perm[static_cast<std::size_t>(nodes[static_cast<std::size_t>(i)])] =
+              next_pos + local_pos;
+        }
+        next_pos += node_count;
+        return;
+      }
+
+      // Map local indices back to global indices
+      std::vector<size_type> global_a, global_b, global_sep;
+      global_a.reserve(local_a.size());
+      global_b.reserve(local_b.size());
+      global_sep.reserve(local_sep.size());
+
+      for (auto li : local_a) {
+        global_a.push_back(nodes[static_cast<std::size_t>(li)]);
+      }
+      for (auto li : local_b) {
+        global_b.push_back(nodes[static_cast<std::size_t>(li)]);
+      }
+      for (auto li : local_sep) {
+        global_sep.push_back(nodes[static_cast<std::size_t>(li)]);
+      }
+
+      // Recurse on A, then B; assign separator positions last
+      nd_recurse(sym, global_a, perm, next_pos);
+      nd_recurse(sym, global_b, perm, next_pos);
+
+      // Assign separator nodes last (in order)
+      for (auto g : global_sep) {
+        perm[static_cast<std::size_t>(g)] = next_pos++;
+      }
+    }
+
+  } // end of anonymous namespace
+
+  std::vector<size_type>
+  nested_dissection(Compressed_row_sparsity const& sp) {
+    auto nrow = sp.shape().row();
+    auto ncol = sp.shape().column();
+    if (nrow != ncol) {
+      throw std::invalid_argument("nested_dissection: matrix must be square");
+    }
+
+    auto sym = symmetrize_pattern(sp);
+
+    // Build initial node list [0, 1, ..., n-1]
+    std::vector<size_type> nodes(static_cast<std::size_t>(nrow));
+    std::iota(nodes.begin(), nodes.end(), size_type{0});
+
+    std::vector<size_type> perm(static_cast<std::size_t>(nrow), -1);
+    size_type next_pos = 0;
+
+    nd_recurse(sym, nodes, perm, next_pos);
+
+    return perm;
+  }
+
 } // end of namespace sparkit::data::detail

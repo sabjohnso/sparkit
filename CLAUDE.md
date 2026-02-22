@@ -98,20 +98,23 @@ All implementation types live in `detail` namespaces. Public headers
 - CI passes `-Dnlohmann_json_FORCE_DOWNLOAD=ON -Dnlohmann_json_GIT_TAG=v3.10.0`
   since nlohmann/json is not pre-installed on runners
 
-### Storage Formats (Current and Planned)
+### Storage Formats
 
 Following SPARSKIT2's taxonomy, with CSR as the hub:
 
-| Format                   | Abbreviation | Status                              |
-|--------------------------|--------------|-------------------------------------|
-| Coordinate               | COO          | Implemented (`Coordinate_sparsity`) |
-| Compressed Sparse Row    | CSR          | Stub (`Compressed_row_sparsity`)    |
-| Compressed Sparse Column | CSC          | Planned                             |
-| Modified Sparse Row      | MSR          | Planned                             |
-| Block Sparse Row         | BSR          | Planned                             |
-| ELLPACK/ITPACK           | ELL          | Planned                             |
-| Diagonal                 | DIA          | Planned                             |
-| Jagged Diagonal          | JAD          | Planned                             |
+| Format                        | Abbreviation | Status      |
+|-------------------------------|--------------|-------------|
+| Coordinate                    | COO          | Implemented |
+| Compressed Sparse Row         | CSR          | Implemented |
+| Compressed Sparse Column      | CSC          | Implemented |
+| Modified Sparse Row           | MSR          | Implemented |
+| Diagonal                      | DIA          | Implemented |
+| ELLPACK/ITPACK                | ELL          | Implemented |
+| Block Sparse Row              | BSR          | Implemented |
+| Jagged Diagonal               | JAD          | Implemented |
+| Symmetric Compressed Row      | sCSR         | Implemented |
+| Symmetric Coordinate          | sCOO         | Implemented |
+| Symmetric Block Sparse Row    | sBSR         | Implemented |
 
 ### Matrix-Free Interface
 

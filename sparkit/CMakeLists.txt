@@ -41,7 +41,8 @@ add_library(sparkit_shared_library SHARED
   data/matrix_market.hpp data/matrix_market.cpp
   data/harwell_boeing.hpp data/harwell_boeing.cpp
   data/permutation.hpp data/permutation.cpp
-  data/reordering.hpp data/reordering.cpp)
+  data/reordering.hpp data/reordering.cpp
+  data/elimination_tree.hpp data/elimination_tree.cpp)
 
 set_target_properties(sparkit_shared_library
   PROPERTIES

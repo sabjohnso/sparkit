@@ -42,7 +42,8 @@ add_library(sparkit_shared_library SHARED
   data/harwell_boeing.hpp data/harwell_boeing.cpp
   data/permutation.hpp data/permutation.cpp
   data/reordering.hpp data/reordering.cpp
-  data/elimination_tree.hpp data/elimination_tree.cpp)
+  data/elimination_tree.hpp data/elimination_tree.cpp
+  data/symbolic_cholesky.hpp data/symbolic_cholesky.cpp)
 
 set_target_properties(sparkit_shared_library
   PROPERTIES

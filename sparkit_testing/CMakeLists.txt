@@ -46,3 +46,4 @@ sparkit_add_test(json_serialization json_serialization_test json_serialization_t
 sparkit_add_test(permutation permutation_test permutation_test.cpp)
 sparkit_add_test(reordering reordering_test reordering_test.cpp)
 sparkit_add_test(elimination_tree elimination_tree_test elimination_tree_test.cpp)
+sparkit_add_test(symbolic_cholesky symbolic_cholesky_test symbolic_cholesky_test.cpp)

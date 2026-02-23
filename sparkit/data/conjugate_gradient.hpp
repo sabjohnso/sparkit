@@ -17,31 +17,93 @@
 
 namespace sparkit::data::detail {
 
+  /**
+   * @brief Convergence summary returned by conjugate gradient solvers.
+   *
+   * @tparam T  Value type (e.g. double).
+   */
   template <typename T>
   struct CGSummary {
+    /** Final residual 2-norm, @f$ \|r\|_2 @f$. */
     T residual_norm{};
+
+    /** Number of iterations actually performed. */
     size_type computed_iterations{};
+
+    /** True when @f$ \|r\|_2 / \|b\|_2 < @f$ tolerance. */
     bool converged{};
+
+    /** Per-iteration residual norms (populated when
+     *  CGConfig::collect_residuals is true). */
     std::vector<T> iteration_residuals{};
   };
 
+  /**
+   * @brief Configuration for conjugate gradient solvers.
+   *
+   * @tparam T  Value type matching the linear system.
+   */
   template <typename T>
   struct CGConfig {
+    /**
+     * @brief Relative convergence tolerance:
+     *  @f$ \|r\|_2 / \|b\|_2 < \text{tolerance} @f$.
+     */
     T tolerance{};
+
+    /**
+     * @brief Reorthogonalisation interval
+     *
+     * @details Every this many iterations the
+     *  true residual @f$ b - Ax @f$ is recomputed from scratch to
+     *  prevent drift from accumulated floating-point error.
+     */
     size_type restart_iterations{};
+
+    /**
+     * @brief Hard upper bound on the number of iterations.
+     */
     size_type max_iterations{};
+
+    /**
+     * @brief When true, each iteration's residual norm is appended to
+     *  CGSummary::iteration_residuals.
+     */
     bool collect_residuals{};
   };
 
-  // Unpreconditioned conjugate gradient solver.
-  //
-  // Solves A*x = b where A is symmetric positive definite.
-  // The linear operator has output-iterator signature:
-  //   linear_operator(first, last, output_first)
-  // The solution x is modified in-place via [xfirst, xlast).
-  // Periodic reorthogonalization recomputes the true residual
-  // every restart_iterations steps.
-
+  /**
+   * @brief Unpreconditioned conjugate gradient solver.
+   *
+   * Solves the symmetric positive-definite system @f$ Ax = b @f$ using
+   * the standard CG algorithm (Hestenes & Stiefel, 1952).  The
+   * solution is written in-place into the caller's buffer
+   * @c [xfirst, xlast), and a CGSummary is returned with convergence
+   * diagnostics.
+   *
+   * The linear operator uses an output-iterator signature so that
+   * matrix-free operators are supported without allocation:
+   * @code
+   *   linear_operator(first, last, output_first)  // y = A * x
+   * @endcode
+   *
+   * Periodic reorthogonalisation (controlled by
+   * CGConfig::restart_iterations) recomputes the true residual
+   * @f$ r = b - Ax @f$ to guard against floating-point drift.
+   *
+   * When @f$ \|b\|_2 = 0 @f$ the solver returns immediately with
+   * @f$ x = 0 @f$ and @c converged = true.
+   *
+   * @tparam T               Value type (e.g. double).
+   * @tparam BIter           Iterator over the right-hand side @a b.
+   * @tparam XIter           Iterator over the solution vector @a x.
+   * @tparam LinearOperator  Callable with signature
+   *                         @c (BIter, BIter, XIter) implementing
+   *                         @f$ y \leftarrow Ax @f$.
+   *
+   * @see conjugate_gradient  Free-function convenience wrapper.
+   * @see PreconditionedConjugateGradientSolver  Preconditioned variant.
+   */
   template <typename T, typename BIter, typename XIter, typename LinearOperator>
   class ConjugateGradientSolver {
   public:
@@ -54,6 +116,9 @@ namespace sparkit::data::detail {
       run();
     }
 
+    /**
+     * @brief Return a summary of the solution process
+     */
     CGSummary<T>
     summary() const {
       return summary_;
@@ -190,6 +255,22 @@ namespace sparkit::data::detail {
     std::vector<T> q_{};
   };
 
+  /**
+   * @brief Solve @f$ Ax = b @f$ with the conjugate gradient method.
+   *
+   * Convenience wrapper that constructs a ConjugateGradientSolver,
+   * runs it to completion, and returns the convergence summary.
+   * The solution is written in-place into @c [xfirst, xlast).
+   *
+   * @param bfirst           Start of right-hand side @a b.
+   * @param blast            Past-the-end of @a b.
+   * @param xfirst           Start of initial guess / solution @a x.
+   * @param xlast            Past-the-end of @a x.
+   * @param cfg              Solver configuration.
+   * @param linear_operator  Output-iterator callable implementing
+   *                         @f$ y \leftarrow Ax @f$.
+   * @return CGSummary with convergence diagnostics.
+   */
   template <typename BIter, typename XIter, typename T, typename LinearOperator>
   CGSummary<T>
   conjugate_gradient(BIter bfirst, BIter blast, XIter xfirst, XIter xlast,
@@ -199,14 +280,38 @@ namespace sparkit::data::detail {
     return solver.summary();
   }
 
-  // Preconditioned conjugate gradient solver.
-  //
-  // Solves A*x = b where A is symmetric positive definite, using
-  // a preconditioner M^{-1} to accelerate convergence.
-  // Both the linear operator and preconditioner use output-iterator
-  // signature: callable(first, last, output_first).
-  // Convergence is checked on the unpreconditioned residual norm.
-
+  /**
+   * @brief Preconditioned conjugate gradient solver.
+   *
+   * Solves the symmetric positive-definite system @f$ Ax = b @f$ using
+   * the preconditioned CG algorithm.  A preconditioner
+   * @f$ M^{-1} \approx A^{-1} @f$ clusters eigenvalues and accelerates
+   * convergence relative to unpreconditioned CG.
+   *
+   * Both the linear operator and the preconditioner use an
+   * output-iterator signature:
+   * @code
+   *   linear_operator(first, last, output_first)   // y = A * x
+   *   preconditioner(first, last, output_first)     // z = M^{-1} * r
+   * @endcode
+   *
+   * Internally the solver tracks the inner product
+   * @f$ \langle r, z \rangle @f$ (where @f$ z = M^{-1}r @f$) for
+   * step-size and direction updates, while convergence is still
+   * checked on the unpreconditioned residual norm
+   * @f$ \|r\|_2 / \|b\|_2 @f$.
+   *
+   * @tparam T               Value type (e.g. double).
+   * @tparam BIter           Iterator over the right-hand side @a b.
+   * @tparam XIter           Iterator over the solution vector @a x.
+   * @tparam LinearOperator  Callable implementing @f$ y \leftarrow Ax @f$.
+   * @tparam Preconditioner  Callable implementing
+   *                         @f$ z \leftarrow M^{-1}r @f$.
+   *
+   * @see preconditioned_conjugate_gradient  Free-function convenience
+   *      wrapper.
+   * @see ConjugateGradientSolver  Unpreconditioned variant.
+   */
   template <typename T, typename BIter, typename XIter, typename LinearOperator,
             typename Preconditioner>
   class PreconditionedConjugateGradientSolver {
@@ -223,6 +328,9 @@ namespace sparkit::data::detail {
       run();
     }
 
+    /**
+     * @brief Return a summary of the solution process
+     */
     CGSummary<T>
     summary() const {
       return summary_;
@@ -363,6 +471,26 @@ namespace sparkit::data::detail {
     std::vector<T> q_{};
   };
 
+  /**
+   * @brief Solve @f$ Ax = b @f$ with the preconditioned conjugate
+   *        gradient method.
+   *
+   * Convenience wrapper that constructs a
+   * PreconditionedConjugateGradientSolver, runs it to completion,
+   * and returns the convergence summary.  The solution is written
+   * in-place into @c [xfirst, xlast).
+   *
+   * @param bfirst           Start of right-hand side @a b.
+   * @param blast            Past-the-end of @a b.
+   * @param xfirst           Start of initial guess / solution @a x.
+   * @param xlast            Past-the-end of @a x.
+   * @param cfg              Solver configuration.
+   * @param linear_operator  Output-iterator callable implementing
+   *                         @f$ y \leftarrow Ax @f$.
+   * @param preconditioner   Output-iterator callable implementing
+   *                         @f$ z \leftarrow M^{-1}r @f$.
+   * @return CGSummary with convergence diagnostics.
+   */
   template <typename BIter, typename XIter, typename T, typename LinearOperator,
             typename Preconditioner>
   CGSummary<T>

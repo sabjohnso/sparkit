@@ -14,6 +14,7 @@
 // ... sparkit header files
 //
 #include <sparkit/config.hpp>
+#include <sparkit/data/import.hpp>
 
 namespace sparkit::data::detail {
 

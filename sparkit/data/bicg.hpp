@@ -12,10 +12,9 @@
 // ... sparkit header files
 //
 #include <sparkit/config.hpp>
+#include <sparkit/data/import.hpp>
 
 namespace sparkit::data::detail {
-
-  using size_type = config::size_type;
 
   /**
    * @brief Configuration for BiCG solver.

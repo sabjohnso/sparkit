@@ -36,9 +36,12 @@ namespace sparkit::testing {
   using sparkit::data::detail::forward_solve_transpose;
   using sparkit::data::detail::incomplete_cholesky;
   using sparkit::data::detail::multiply;
-  using sparkit::data::detail::preconditioned_conjugate_gradient;
 
   using size_type = sparkit::config::size_type;
+
+  static auto const identity = [](auto first, auto last, auto out) {
+    std::copy(first, last, out);
+  };
 
   // Build a CSR matrix from a list of (row, col, value) entries.
   static Compressed_row_matrix<double>
@@ -138,7 +141,7 @@ namespace sparkit::testing {
         .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
     auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A);
+                                      cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     CHECK(summary.computed_iterations <= 1);
@@ -164,7 +167,7 @@ namespace sparkit::testing {
         .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
     auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A);
+                                      cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     CHECK(x[0] == Catch::Approx(3.0).margin(1e-10));
@@ -188,7 +191,7 @@ namespace sparkit::testing {
         .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
     auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A);
+                                      cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < 4; ++i) {
@@ -215,7 +218,7 @@ namespace sparkit::testing {
         .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
 
     auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A);
+                                      cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
@@ -224,10 +227,10 @@ namespace sparkit::testing {
   }
 
   // ================================================================
-  // Preconditioned CG tests
+  // Left-preconditioned CG tests
   // ================================================================
 
-  TEST_CASE("preconditioned CG - tridiag", "[conjugate_gradient]") {
+  TEST_CASE("left preconditioned CG - tridiag", "[conjugate_gradient]") {
     auto A = make_tridiag_4();
 
     auto apply_A = [&A](auto first, auto last, auto out) {
@@ -249,13 +252,14 @@ namespace sparkit::testing {
     CGConfig<double> cfg{
         .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
-    auto summary_pcg = preconditioned_conjugate_gradient(
-        b.begin(), b.end(), x_pcg.begin(), x_pcg.end(), cfg, apply_A,
-        apply_inv_M);
+    auto summary_pcg =
+        conjugate_gradient(b.begin(), b.end(), x_pcg.begin(), x_pcg.end(), cfg,
+                           apply_A, apply_inv_M, identity);
 
     std::vector<double> x_cg(4, 0.0);
-    auto summary_cg = conjugate_gradient(b.begin(), b.end(), x_cg.begin(),
-                                         x_cg.end(), cfg, apply_A);
+    auto summary_cg =
+        conjugate_gradient(b.begin(), b.end(), x_cg.begin(), x_cg.end(), cfg,
+                           apply_A, identity, identity);
 
     REQUIRE(summary_pcg.converged);
     CHECK(summary_pcg.computed_iterations <= summary_cg.computed_iterations);
@@ -264,7 +268,7 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("preconditioned CG - grid", "[conjugate_gradient]") {
+  TEST_CASE("left preconditioned CG - grid", "[conjugate_gradient]") {
     auto A = make_grid_16();
     size_type const n = 16;
 
@@ -290,8 +294,85 @@ namespace sparkit::testing {
     CGConfig<double> cfg{
         .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
 
-    auto summary = preconditioned_conjugate_gradient(
-        b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_inv_M);
+    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
+                                      cfg, apply_A, apply_inv_M, identity);
+
+    REQUIRE(summary.converged);
+    for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
+      CHECK(x[i] == Catch::Approx(x_true[i]).margin(1e-6));
+    }
+  }
+
+  // ================================================================
+  // Right-preconditioned CG tests
+  // ================================================================
+
+  TEST_CASE("right preconditioned CG - tridiag", "[conjugate_gradient]") {
+    auto A = make_tridiag_4();
+
+    auto apply_A = [&A](auto first, auto last, auto out) {
+      auto result = multiply(A, std::span<double const>{first, last});
+      std::copy(result.begin(), result.end(), out);
+    };
+
+    std::vector<double> x_true = {1.0, 2.0, 3.0, 4.0};
+    auto b = multiply(A, std::span<double const>{x_true});
+
+    auto L = incomplete_cholesky(A);
+    auto apply_inv_M = [&L](auto first, auto last, auto out) {
+      auto y = forward_solve(L, std::span<double const>{first, last});
+      auto z = forward_solve_transpose(L, std::span<double const>{y});
+      std::copy(z.begin(), z.end(), out);
+    };
+
+    std::vector<double> x_rpcg(4, 0.0);
+    CGConfig<double> cfg{
+        .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
+
+    auto summary_rpcg =
+        conjugate_gradient(b.begin(), b.end(), x_rpcg.begin(), x_rpcg.end(),
+                           cfg, apply_A, identity, apply_inv_M);
+
+    std::vector<double> x_cg(4, 0.0);
+    auto summary_cg =
+        conjugate_gradient(b.begin(), b.end(), x_cg.begin(), x_cg.end(), cfg,
+                           apply_A, identity, identity);
+
+    REQUIRE(summary_rpcg.converged);
+    CHECK(summary_rpcg.computed_iterations <= summary_cg.computed_iterations);
+    for (std::size_t i = 0; i < 4; ++i) {
+      CHECK(x_rpcg[i] == Catch::Approx(x_true[i]).margin(1e-8));
+    }
+  }
+
+  TEST_CASE("right preconditioned CG - grid", "[conjugate_gradient]") {
+    auto A = make_grid_16();
+    size_type const n = 16;
+
+    auto apply_A = [&A](auto first, auto last, auto out) {
+      auto result = multiply(A, std::span<double const>{first, last});
+      std::copy(result.begin(), result.end(), out);
+    };
+
+    std::vector<double> x_true;
+    for (size_type i = 0; i < n; ++i) {
+      x_true.push_back(static_cast<double>(i + 1));
+    }
+    auto b = multiply(A, std::span<double const>{x_true});
+
+    auto L = incomplete_cholesky(A);
+    auto apply_inv_M = [&L](auto first, auto last, auto out) {
+      auto y = forward_solve(L, std::span<double const>{first, last});
+      auto z = forward_solve_transpose(L, std::span<double const>{y});
+      std::copy(z.begin(), z.end(), out);
+    };
+
+    std::vector<double> x(static_cast<std::size_t>(n), 0.0);
+    CGConfig<double> cfg{
+        .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
+
+    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
+                                      cfg, apply_A, identity, apply_inv_M);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
@@ -317,7 +398,7 @@ namespace sparkit::testing {
         .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
     auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A);
+                                      cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < 4; ++i) {
@@ -344,7 +425,7 @@ namespace sparkit::testing {
         .tolerance = 1e-14, .restart_iterations = 50, .max_iterations = 1};
 
     auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A);
+                                      cfg, apply_A, identity, identity);
 
     CHECK_FALSE(summary.converged);
     CHECK(summary.computed_iterations == 1);

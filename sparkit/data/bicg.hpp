@@ -15,6 +15,8 @@
 
 namespace sparkit::data::detail {
 
+  using size_type = config::size_type;
+
   /**
    * @brief Configuration for BiCG solver.
    *

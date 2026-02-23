@@ -52,3 +52,8 @@ sparkit_add_test(triangular_solve triangular_solve_test triangular_solve_test.cp
 sparkit_add_test(incomplete_cholesky incomplete_cholesky_test incomplete_cholesky_test.cpp)
 sparkit_add_test(conjugate_gradient conjugate_gradient_test conjugate_gradient_test.cpp)
 sparkit_add_test(gmres gmres_test gmres_test.cpp)
+sparkit_add_test(fgmres fgmres_test fgmres_test.cpp)
+sparkit_add_test(bicgstab bicgstab_test bicgstab_test.cpp)
+sparkit_add_test(bicg bicg_test bicg_test.cpp)
+sparkit_add_test(qmr qmr_test qmr_test.cpp)
+sparkit_add_test(lsqr lsqr_test lsqr_test.cpp)

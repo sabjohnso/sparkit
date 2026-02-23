@@ -51,3 +51,4 @@ sparkit_add_test(numeric_cholesky numeric_cholesky_test numeric_cholesky_test.cp
 sparkit_add_test(triangular_solve triangular_solve_test triangular_solve_test.cpp)
 sparkit_add_test(incomplete_cholesky incomplete_cholesky_test incomplete_cholesky_test.cpp)
 sparkit_add_test(conjugate_gradient conjugate_gradient_test conjugate_gradient_test.cpp)
+sparkit_add_test(gmres gmres_test gmres_test.cpp)

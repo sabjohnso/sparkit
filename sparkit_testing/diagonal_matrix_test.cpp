@@ -28,26 +28,28 @@ namespace sparkit::testing {
 
   // -- DIA matrix core --
 
-  TEST_CASE("diagonal_matrix - construction_from_entries",
-            "[diagonal_matrix]") {
-    Diagonal_matrix<double> mat{Shape{3, 3},
-                                {{Index{0, 0}, 1.0},
-                                 {Index{1, 1}, 2.0},
-                                 {Index{2, 2}, 3.0},
-                                 {Index{0, 1}, 4.0},
-                                 {Index{1, 2}, 5.0}}};
+  TEST_CASE(
+    "diagonal_matrix - construction_from_entries", "[diagonal_matrix]") {
+    Diagonal_matrix<double> mat{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{1, 1}, 2.0},
+       {Index{2, 2}, 3.0},
+       {Index{0, 1}, 4.0},
+       {Index{1, 2}, 5.0}}};
 
     CHECK(mat.shape() == Shape(3, 3));
     CHECK(mat.size() == 5);
   }
 
   TEST_CASE("diagonal_matrix - element_access", "[diagonal_matrix]") {
-    Diagonal_matrix<double> mat{Shape{3, 3},
-                                {{Index{0, 0}, 1.0},
-                                 {Index{1, 1}, 2.0},
-                                 {Index{2, 2}, 3.0},
-                                 {Index{0, 1}, 4.0},
-                                 {Index{1, 2}, 5.0}}};
+    Diagonal_matrix<double> mat{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{1, 1}, 2.0},
+       {Index{2, 2}, 3.0},
+       {Index{0, 1}, 4.0},
+       {Index{1, 2}, 5.0}}};
 
     CHECK(mat(0, 0) == Catch::Approx(1.0));
     CHECK(mat(1, 1) == Catch::Approx(2.0));
@@ -58,20 +60,21 @@ namespace sparkit::testing {
     CHECK(mat(2, 0) == Catch::Approx(0.0));
   }
 
-  TEST_CASE("diagonal_matrix - tridiagonal_element_access",
-            "[diagonal_matrix]") {
+  TEST_CASE(
+    "diagonal_matrix - tridiagonal_element_access", "[diagonal_matrix]") {
     // 4x4 tridiagonal
-    Diagonal_matrix<double> mat{Shape{4, 4},
-                                {{Index{0, 0}, 2.0},
-                                 {Index{0, 1}, -1.0},
-                                 {Index{1, 0}, -1.0},
-                                 {Index{1, 1}, 2.0},
-                                 {Index{1, 2}, -1.0},
-                                 {Index{2, 1}, -1.0},
-                                 {Index{2, 2}, 2.0},
-                                 {Index{2, 3}, -1.0},
-                                 {Index{3, 2}, -1.0},
-                                 {Index{3, 3}, 2.0}}};
+    Diagonal_matrix<double> mat{
+      Shape{4, 4},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, -1.0},
+       {Index{1, 0}, -1.0},
+       {Index{1, 1}, 2.0},
+       {Index{1, 2}, -1.0},
+       {Index{2, 1}, -1.0},
+       {Index{2, 2}, 2.0},
+       {Index{2, 3}, -1.0},
+       {Index{3, 2}, -1.0},
+       {Index{3, 3}, 2.0}}};
 
     CHECK(mat(0, 0) == Catch::Approx(2.0));
     CHECK(mat(0, 1) == Catch::Approx(-1.0));
@@ -91,14 +94,15 @@ namespace sparkit::testing {
   // -- CSR matrix <-> DIA matrix conversions --
 
   TEST_CASE("conversions - csr_matrix_to_dia_matrix_basic", "[conversions]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 1}, -1.0},
-                                       {Index{1, 0}, -1.0},
-                                       {Index{1, 1}, 2.0},
-                                       {Index{1, 2}, -1.0},
-                                       {Index{2, 1}, -1.0},
-                                       {Index{2, 2}, 2.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, -1.0},
+       {Index{1, 0}, -1.0},
+       {Index{1, 1}, 2.0},
+       {Index{1, 2}, -1.0},
+       {Index{2, 1}, -1.0},
+       {Index{2, 2}, 2.0}}};
 
     auto dia = sparkit::data::detail::to_diagonal(csr);
 
@@ -110,14 +114,15 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("conversions - dia_matrix_to_csr_matrix_basic", "[conversions]") {
-    Diagonal_matrix<double> dia{Shape{3, 3},
-                                {{Index{0, 0}, 2.0},
-                                 {Index{0, 1}, -1.0},
-                                 {Index{1, 0}, -1.0},
-                                 {Index{1, 1}, 2.0},
-                                 {Index{1, 2}, -1.0},
-                                 {Index{2, 1}, -1.0},
-                                 {Index{2, 2}, 2.0}}};
+    Diagonal_matrix<double> dia{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, -1.0},
+       {Index{1, 0}, -1.0},
+       {Index{1, 1}, 2.0},
+       {Index{1, 2}, -1.0},
+       {Index{2, 1}, -1.0},
+       {Index{2, 2}, 2.0}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(dia);
 
@@ -129,17 +134,18 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("conversions - csr_matrix_dia_matrix_roundtrip", "[conversions]") {
-    Compressed_row_matrix<double> original{Shape{4, 4},
-                                           {{Index{0, 0}, 2.0},
-                                            {Index{0, 1}, -1.0},
-                                            {Index{1, 0}, -1.0},
-                                            {Index{1, 1}, 2.0},
-                                            {Index{1, 2}, -1.0},
-                                            {Index{2, 1}, -1.0},
-                                            {Index{2, 2}, 2.0},
-                                            {Index{2, 3}, -1.0},
-                                            {Index{3, 2}, -1.0},
-                                            {Index{3, 3}, 2.0}}};
+    Compressed_row_matrix<double> original{
+      Shape{4, 4},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, -1.0},
+       {Index{1, 0}, -1.0},
+       {Index{1, 1}, 2.0},
+       {Index{1, 2}, -1.0},
+       {Index{2, 1}, -1.0},
+       {Index{2, 2}, 2.0},
+       {Index{2, 3}, -1.0},
+       {Index{3, 2}, -1.0},
+       {Index{3, 3}, 2.0}}};
 
     auto dia = sparkit::data::detail::to_diagonal(original);
     auto roundtrip = sparkit::data::detail::to_compressed_row(dia);

@@ -8,8 +8,9 @@
 namespace sparkit::data::detail {
 
   Compressed_row_sparsity::Impl::Impl(Shape shape, std::vector<Index> indices)
-      : shape_(shape), row_ptr_(static_cast<std::size_t>(shape.row() + 1), 0),
-        col_ind_() {
+      : shape_(shape)
+      , row_ptr_(static_cast<std::size_t>(shape.row() + 1), 0)
+      , col_ind_() {
     // Sort by (row, column)
     std::sort(begin(indices), end(indices), [](Index const& a, Index const& b) {
       return a.row() != b.row() ? a.row() < b.row() : a.column() < b.column();

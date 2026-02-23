@@ -71,9 +71,11 @@ namespace sparkit::testing {
   TEST_CASE("incomplete cholesky - diagonal", "[incomplete_cholesky]") {
     // A = diag(4, 9, 16, 25)  ->  IC(0) == full Cholesky = diag(2, 3, 4, 5)
     Compressed_row_matrix<double> A{
-        Shape{4, 4},
-        {Entry<double>{Index{0, 0}, 4.0}, Entry<double>{Index{1, 1}, 9.0},
-         Entry<double>{Index{2, 2}, 16.0}, Entry<double>{Index{3, 3}, 25.0}}};
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{1, 1}, 9.0},
+       Entry<double>{Index{2, 2}, 16.0},
+       Entry<double>{Index{3, 3}, 25.0}}};
 
     auto L = incomplete_cholesky(A);
 
@@ -89,10 +91,12 @@ namespace sparkit::testing {
 
   TEST_CASE("incomplete cholesky - 2x2 SPD", "[incomplete_cholesky]") {
     // A = [[4, 2], [2, 5]]  ->  IC(0) == full Cholesky (no fill possible)
-    auto A = make_matrix(Shape{2, 2}, {Entry<double>{Index{0, 0}, 4.0},
-                                       Entry<double>{Index{0, 1}, 2.0},
-                                       Entry<double>{Index{1, 0}, 2.0},
-                                       Entry<double>{Index{1, 1}, 5.0}});
+    auto A = make_matrix(
+      Shape{2, 2},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{0, 1}, 2.0},
+       Entry<double>{Index{1, 0}, 2.0},
+       Entry<double>{Index{1, 1}, 5.0}});
 
     auto L_ic = incomplete_cholesky(A);
     auto L_full = cholesky(A);
@@ -128,8 +132,8 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("incomplete cholesky - arrow 5x5 approximation",
-            "[incomplete_cholesky]") {
+  TEST_CASE(
+    "incomplete cholesky - arrow 5x5 approximation", "[incomplete_cholesky]") {
     // Arrow matrix has fill in full Cholesky, so IC(0) != full Cholesky.
     // But L*L^T should approximate A well.
     std::vector<Entry<double>> entries;
@@ -156,8 +160,8 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("incomplete cholesky - L is lower triangular",
-            "[incomplete_cholesky]") {
+  TEST_CASE(
+    "incomplete cholesky - L is lower triangular", "[incomplete_cholesky]") {
     std::vector<Entry<double>> entries;
     for (size_type i = 0; i < 5; ++i) {
       entries.push_back(Entry<double>{Index{i, i}, 10.0});
@@ -179,8 +183,9 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("incomplete cholesky - same nnz as lower triangle",
-            "[incomplete_cholesky]") {
+  TEST_CASE(
+    "incomplete cholesky - same nnz as lower triangle",
+    "[incomplete_cholesky]") {
     // IC(0) factor should have exactly the same nnz as lower(A)
     std::vector<Entry<double>> entries;
     for (size_type i = 0; i < 5; ++i) {
@@ -198,12 +203,13 @@ namespace sparkit::testing {
     CHECK(L.size() == lower_A.size());
   }
 
-  TEST_CASE("incomplete cholesky - rectangular rejected",
-            "[incomplete_cholesky]") {
-    Compressed_row_matrix<double> A{Shape{3, 4},
-                                    {Entry<double>{Index{0, 0}, 1.0},
-                                     Entry<double>{Index{1, 1}, 1.0},
-                                     Entry<double>{Index{2, 2}, 1.0}}};
+  TEST_CASE(
+    "incomplete cholesky - rectangular rejected", "[incomplete_cholesky]") {
+    Compressed_row_matrix<double> A{
+      Shape{3, 4},
+      {Entry<double>{Index{0, 0}, 1.0},
+       Entry<double>{Index{1, 1}, 1.0},
+       Entry<double>{Index{2, 2}, 1.0}}};
 
     CHECK_THROWS_AS(incomplete_cholesky(A), std::invalid_argument);
   }

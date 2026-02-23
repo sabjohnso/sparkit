@@ -13,12 +13,12 @@
 namespace sparkit::data::detail {
 
   Coordinate_sparsity::Coordinate_sparsity(
-      Shape shape, std::initializer_list<Index> const& input)
+    Shape shape, std::initializer_list<Index> const& input)
       : pimpl(nullptr) {
     init(shape);
     assert(pimpl);
-    std::for_each(begin(input), end(input),
-                  [this](Index index) { add(index); });
+    std::for_each(
+      begin(input), end(input), [this](Index index) { add(index); });
   }
 
   Coordinate_sparsity::Coordinate_sparsity(const Coordinate_sparsity& input)

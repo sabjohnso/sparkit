@@ -27,12 +27,13 @@ namespace sparkit::data::detail {
      *
      * Values layout matches col_ind: organized by jagged diagonals.
      */
-    Jagged_diagonal_matrix(Jagged_diagonal_sparsity sparsity,
-                           std::vector<T> values)
-        : sparsity_(std::move(sparsity)), values_(std::move(values)) {}
+    Jagged_diagonal_matrix(
+      Jagged_diagonal_sparsity sparsity, std::vector<T> values)
+        : sparsity_(std::move(sparsity))
+        , values_(std::move(values)) {}
 
-    Jagged_diagonal_matrix(Shape shape,
-                           std::initializer_list<Entry<T>> const& input)
+    Jagged_diagonal_matrix(
+      Shape shape, std::initializer_list<Entry<T>> const& input)
         : Jagged_diagonal_matrix(from_entries(shape, input)) {}
 
     size_type
@@ -98,8 +99,8 @@ namespace sparkit::data::detail {
       auto same_index = [](auto const& a, auto const& b) {
         return a.index == b.index;
       };
-      sorted.erase(std::unique(sorted.begin(), sorted.end(), same_index),
-                   sorted.end());
+      sorted.erase(
+        std::unique(sorted.begin(), sorted.end(), same_index), sorted.end());
 
       std::vector<Index> indices;
       indices.reserve(sorted.size());
@@ -114,7 +115,7 @@ namespace sparkit::data::detail {
       std::vector<std::vector<T>> row_vals(static_cast<std::size_t>(nrow));
       for (auto const& entry : sorted) {
         row_vals[static_cast<std::size_t>(entry.index.row())].push_back(
-            entry.value);
+          entry.value);
       }
 
       // Fill values in jagged diagonal order
@@ -129,8 +130,8 @@ namespace sparkit::data::detail {
         for (size_type i = 0; i < width; ++i) {
           auto orig_row = pm[i];
           values[static_cast<std::size_t>(jd[k] + i)] =
-              row_vals[static_cast<std::size_t>(orig_row)]
-                      [static_cast<std::size_t>(k)];
+            row_vals[static_cast<std::size_t>(orig_row)]
+                    [static_cast<std::size_t>(k)];
         }
       }
 

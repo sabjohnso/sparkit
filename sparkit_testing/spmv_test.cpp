@@ -46,12 +46,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - csc_known_3x3", "[spmv]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // y = {2*1+3*3, 4*2, 5*1+6*3} = {11, 8, 23}
-    Compressed_column_matrix<double> A{Shape{3, 3},
-                                       {{Index{0, 0}, 2.0},
-                                        {Index{0, 2}, 3.0},
-                                        {Index{1, 1}, 4.0},
-                                        {Index{2, 0}, 5.0},
-                                        {Index{2, 2}, 6.0}}};
+    Compressed_column_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -78,8 +79,8 @@ namespace sparkit::testing {
     // 2x3: A = [[1,0,2],[0,3,0]], x = {1,2,3}
     // y = {1+6, 6} = {7, 6}
     Compressed_column_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -90,18 +91,20 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - csc_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 2}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 0}, 5.0},
-                                       {Index{2, 2}, 6.0}}};
-    Compressed_column_matrix<double> csc{Shape{3, 3},
-                                         {{Index{0, 0}, 2.0},
-                                          {Index{0, 2}, 3.0},
-                                          {Index{1, 1}, 4.0},
-                                          {Index{2, 0}, 5.0},
-                                          {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
+    Compressed_column_matrix<double> csc{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply(csr, std::span<double const>{x});
@@ -109,8 +112,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_csc));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_csc[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_csc[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -121,12 +125,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - msr_known_3x3", "[spmv]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // y = {11, 8, 23}
-    Modified_sparse_row_matrix<double> A{Shape{3, 3},
-                                         {{Index{0, 0}, 2.0},
-                                          {Index{0, 2}, 3.0},
-                                          {Index{1, 1}, 4.0},
-                                          {Index{2, 0}, 5.0},
-                                          {Index{2, 2}, 6.0}}};
+    Modified_sparse_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -151,8 +156,8 @@ namespace sparkit::testing {
 
   TEST_CASE("spmv - msr_diagonal_only", "[spmv]") {
     Modified_sparse_row_matrix<double> A{
-        Shape{3, 3},
-        {{Index{0, 0}, 2.0}, {Index{1, 1}, 3.0}, {Index{2, 2}, 5.0}}};
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0}, {Index{1, 1}, 3.0}, {Index{2, 2}, 5.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -164,18 +169,20 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - msr_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 2}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 0}, 5.0},
-                                       {Index{2, 2}, 6.0}}};
-    Modified_sparse_row_matrix<double> msr{Shape{3, 3},
-                                           {{Index{0, 0}, 2.0},
-                                            {Index{0, 2}, 3.0},
-                                            {Index{1, 1}, 4.0},
-                                            {Index{2, 0}, 5.0},
-                                            {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
+    Modified_sparse_row_matrix<double> msr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply(csr, std::span<double const>{x});
@@ -183,8 +190,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_msr));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_msr[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_msr[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -195,14 +203,15 @@ namespace sparkit::testing {
   TEST_CASE("spmv - dia_tridiagonal", "[spmv]") {
     // Tridiagonal: A = [[2,1,0],[1,3,1],[0,1,4]], x = {1,2,3}
     // y = {2+2, 1+6+3, 2+12} = {4, 10, 14}
-    Diagonal_matrix<double> A{Shape{3, 3},
-                              {{Index{0, 0}, 2.0},
-                               {Index{0, 1}, 1.0},
-                               {Index{1, 0}, 1.0},
-                               {Index{1, 1}, 3.0},
-                               {Index{1, 2}, 1.0},
-                               {Index{2, 1}, 1.0},
-                               {Index{2, 2}, 4.0}}};
+    Diagonal_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 0}, 1.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 1.0},
+       {Index{2, 1}, 1.0},
+       {Index{2, 2}, 4.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -215,8 +224,8 @@ namespace sparkit::testing {
 
   TEST_CASE("spmv - dia_main_diagonal_only", "[spmv]") {
     Diagonal_matrix<double> A{
-        Shape{3, 3},
-        {{Index{0, 0}, 2.0}, {Index{1, 1}, 3.0}, {Index{2, 2}, 5.0}}};
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0}, {Index{1, 1}, 3.0}, {Index{2, 2}, 5.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -240,22 +249,24 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - dia_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 1}, 1.0},
-                                       {Index{1, 0}, 1.0},
-                                       {Index{1, 1}, 3.0},
-                                       {Index{1, 2}, 1.0},
-                                       {Index{2, 1}, 1.0},
-                                       {Index{2, 2}, 4.0}}};
-    Diagonal_matrix<double> dia{Shape{3, 3},
-                                {{Index{0, 0}, 2.0},
-                                 {Index{0, 1}, 1.0},
-                                 {Index{1, 0}, 1.0},
-                                 {Index{1, 1}, 3.0},
-                                 {Index{1, 2}, 1.0},
-                                 {Index{2, 1}, 1.0},
-                                 {Index{2, 2}, 4.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 0}, 1.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 1.0},
+       {Index{2, 1}, 1.0},
+       {Index{2, 2}, 4.0}}};
+    Diagonal_matrix<double> dia{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 0}, 1.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 1.0},
+       {Index{2, 1}, 1.0},
+       {Index{2, 2}, 4.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply(csr, std::span<double const>{x});
@@ -263,8 +274,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_dia));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_dia[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_dia[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -275,12 +287,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - ell_known_3x3", "[spmv]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // y = {11, 8, 23}
-    Ellpack_matrix<double> A{Shape{3, 3},
-                             {{Index{0, 0}, 2.0},
-                              {Index{0, 2}, 3.0},
-                              {Index{1, 1}, 4.0},
-                              {Index{2, 0}, 5.0},
-                              {Index{2, 2}, 6.0}}};
+    Ellpack_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -295,13 +308,14 @@ namespace sparkit::testing {
     // Row 0: 3 entries, Row 1: 1 entry, Row 2: 2 entries
     // A = [[1,2,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // y = {1+4+9, 8, 5+18} = {14, 8, 23}
-    Ellpack_matrix<double> A{Shape{3, 3},
-                             {{Index{0, 0}, 1.0},
-                              {Index{0, 1}, 2.0},
-                              {Index{0, 2}, 3.0},
-                              {Index{1, 1}, 4.0},
-                              {Index{2, 0}, 5.0},
-                              {Index{2, 2}, 6.0}}};
+    Ellpack_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -325,18 +339,20 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - ell_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 2}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 0}, 5.0},
-                                       {Index{2, 2}, 6.0}}};
-    Ellpack_matrix<double> ell{Shape{3, 3},
-                               {{Index{0, 0}, 2.0},
-                                {Index{0, 2}, 3.0},
-                                {Index{1, 1}, 4.0},
-                                {Index{2, 0}, 5.0},
-                                {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
+    Ellpack_matrix<double> ell{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply(csr, std::span<double const>{x});
@@ -344,8 +360,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_ell));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_ell[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_ell[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -358,17 +375,18 @@ namespace sparkit::testing {
     // A = [[1,2,0,0],[3,4,0,0],[0,0,5,6],[0,0,7,8]]
     // x = {1,2,3,4}
     // y = {1+4, 3+8, 15+24, 21+32} = {5, 11, 39, 53}
-    Block_sparse_row_matrix<double> A{Shape{4, 4},
-                                      2,
-                                      2,
-                                      {{Index{0, 0}, 1.0},
-                                       {Index{0, 1}, 2.0},
-                                       {Index{1, 0}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 2}, 5.0},
-                                       {Index{2, 3}, 6.0},
-                                       {Index{3, 2}, 7.0},
-                                       {Index{3, 3}, 8.0}}};
+    Block_sparse_row_matrix<double> A{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 2}, 5.0},
+       {Index{2, 3}, 6.0},
+       {Index{3, 2}, 7.0},
+       {Index{3, 3}, 8.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0, 4.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -385,21 +403,22 @@ namespace sparkit::testing {
     // A = [[1,2,5,6],[3,4,7,8],[0,0,9,10],[0,0,11,12]]
     // x = {1,2,3,4}
     // y = {1+4+15+24, 3+8+21+32, 27+40, 33+48} = {44, 64, 67, 81}
-    Block_sparse_row_matrix<double> A{Shape{4, 4},
-                                      2,
-                                      2,
-                                      {{Index{0, 0}, 1.0},
-                                       {Index{0, 1}, 2.0},
-                                       {Index{0, 2}, 5.0},
-                                       {Index{0, 3}, 6.0},
-                                       {Index{1, 0}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{1, 2}, 7.0},
-                                       {Index{1, 3}, 8.0},
-                                       {Index{2, 2}, 9.0},
-                                       {Index{2, 3}, 10.0},
-                                       {Index{3, 2}, 11.0},
-                                       {Index{3, 3}, 12.0}}};
+    Block_sparse_row_matrix<double> A{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 5.0},
+       {Index{0, 3}, 6.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{1, 2}, 7.0},
+       {Index{1, 3}, 8.0},
+       {Index{2, 2}, 9.0},
+       {Index{2, 3}, 10.0},
+       {Index{3, 2}, 11.0},
+       {Index{3, 3}, 12.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0, 4.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -425,26 +444,28 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - bsr_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{4, 4},
-                                      {{Index{0, 0}, 1.0},
-                                       {Index{0, 1}, 2.0},
-                                       {Index{1, 0}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 2}, 5.0},
-                                       {Index{2, 3}, 6.0},
-                                       {Index{3, 2}, 7.0},
-                                       {Index{3, 3}, 8.0}}};
-    Block_sparse_row_matrix<double> bsr{Shape{4, 4},
-                                        2,
-                                        2,
-                                        {{Index{0, 0}, 1.0},
-                                         {Index{0, 1}, 2.0},
-                                         {Index{1, 0}, 3.0},
-                                         {Index{1, 1}, 4.0},
-                                         {Index{2, 2}, 5.0},
-                                         {Index{2, 3}, 6.0},
-                                         {Index{3, 2}, 7.0},
-                                         {Index{3, 3}, 8.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 2}, 5.0},
+       {Index{2, 3}, 6.0},
+       {Index{3, 2}, 7.0},
+       {Index{3, 3}, 8.0}}};
+    Block_sparse_row_matrix<double> bsr{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 2}, 5.0},
+       {Index{2, 3}, 6.0},
+       {Index{3, 2}, 7.0},
+       {Index{3, 3}, 8.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0, 17.0};
     auto y_csr = multiply(csr, std::span<double const>{x});
@@ -452,8 +473,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_bsr));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_bsr[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_bsr[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -464,12 +486,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - jad_known_3x3", "[spmv]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // y = {11, 8, 23}
-    Jagged_diagonal_matrix<double> A{Shape{3, 3},
-                                     {{Index{0, 0}, 2.0},
-                                      {Index{0, 2}, 3.0},
-                                      {Index{1, 1}, 4.0},
-                                      {Index{2, 0}, 5.0},
-                                      {Index{2, 2}, 6.0}}};
+    Jagged_diagonal_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -484,13 +507,14 @@ namespace sparkit::testing {
     // Row nnz: row0=3, row1=1, row2=2 => perm puts row0 first, row2 second
     // A = [[1,2,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // y = {14, 8, 23}
-    Jagged_diagonal_matrix<double> A{Shape{3, 3},
-                                     {{Index{0, 0}, 1.0},
-                                      {Index{0, 1}, 2.0},
-                                      {Index{0, 2}, 3.0},
-                                      {Index{1, 1}, 4.0},
-                                      {Index{2, 0}, 5.0},
-                                      {Index{2, 2}, 6.0}}};
+    Jagged_diagonal_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -514,18 +538,20 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - jad_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 2}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 0}, 5.0},
-                                       {Index{2, 2}, 6.0}}};
-    Jagged_diagonal_matrix<double> jad{Shape{3, 3},
-                                       {{Index{0, 0}, 2.0},
-                                        {Index{0, 2}, 3.0},
-                                        {Index{1, 1}, 4.0},
-                                        {Index{2, 0}, 5.0},
-                                        {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
+    Jagged_diagonal_matrix<double> jad{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply(csr, std::span<double const>{x});
@@ -533,8 +559,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_jad));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_jad[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_jad[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -545,12 +572,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - scsr_known_3x3", "[spmv]") {
     // Symmetric: A = [[4,1,0],[1,5,2],[0,2,6]], x = {1,2,3}
     // y = {4+2, 1+10+6, 4+18} = {6, 17, 22}
-    Symmetric_compressed_row_matrix<double> A{Shape{3, 3},
-                                              {{Index{0, 0}, 4.0},
-                                               {Index{0, 1}, 1.0},
-                                               {Index{1, 1}, 5.0},
-                                               {Index{1, 2}, 2.0},
-                                               {Index{2, 2}, 6.0}}};
+    Symmetric_compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 4.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 2.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -563,8 +591,8 @@ namespace sparkit::testing {
 
   TEST_CASE("spmv - scsr_diagonal_only", "[spmv]") {
     Symmetric_compressed_row_matrix<double> A{
-        Shape{3, 3},
-        {{Index{0, 0}, 2.0}, {Index{1, 1}, 3.0}, {Index{2, 2}, 5.0}}};
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0}, {Index{1, 1}, 3.0}, {Index{2, 2}, 5.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -578,13 +606,14 @@ namespace sparkit::testing {
   TEST_CASE("spmv - scsr_off_diagonal_symmetry", "[spmv]") {
     // Full symmetric: A = [[1,2,3],[2,4,5],[3,5,6]], x = {1,2,3}
     // y = {1+4+9, 2+8+15, 3+10+18} = {14, 25, 31}
-    Symmetric_compressed_row_matrix<double> A{Shape{3, 3},
-                                              {{Index{0, 0}, 1.0},
-                                               {Index{0, 1}, 2.0},
-                                               {Index{0, 2}, 3.0},
-                                               {Index{1, 1}, 4.0},
-                                               {Index{1, 2}, 5.0},
-                                               {Index{2, 2}, 6.0}}};
+    Symmetric_compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{1, 2}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -609,20 +638,22 @@ namespace sparkit::testing {
 
   TEST_CASE("spmv - scsr_cross_validate_with_csr", "[spmv]") {
     // Build equivalent full CSR from symmetric input
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 4.0},
-                                       {Index{0, 1}, 1.0},
-                                       {Index{1, 0}, 1.0},
-                                       {Index{1, 1}, 5.0},
-                                       {Index{1, 2}, 2.0},
-                                       {Index{2, 1}, 2.0},
-                                       {Index{2, 2}, 6.0}}};
-    Symmetric_compressed_row_matrix<double> scsr{Shape{3, 3},
-                                                 {{Index{0, 0}, 4.0},
-                                                  {Index{0, 1}, 1.0},
-                                                  {Index{1, 1}, 5.0},
-                                                  {Index{1, 2}, 2.0},
-                                                  {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 4.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 0}, 1.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 2.0},
+       {Index{2, 1}, 2.0},
+       {Index{2, 2}, 6.0}}};
+    Symmetric_compressed_row_matrix<double> scsr{
+      Shape{3, 3},
+      {{Index{0, 0}, 4.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 2.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply(csr, std::span<double const>{x});
@@ -630,8 +661,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_scsr));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_scsr[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_scsr[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -643,12 +675,13 @@ namespace sparkit::testing {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // A^T = [[2,0,5],[0,4,0],[3,0,6]]
     // A^T*x = {2+15, 8, 3+18} = {17, 8, 21}
-    Compressed_column_matrix<double> A{Shape{3, 3},
-                                       {{Index{0, 0}, 2.0},
-                                        {Index{0, 2}, 3.0},
-                                        {Index{1, 1}, 4.0},
-                                        {Index{2, 0}, 5.0},
-                                        {Index{2, 2}, 6.0}}};
+    Compressed_column_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -663,8 +696,8 @@ namespace sparkit::testing {
     // A is 2x3: [[1,0,2],[0,3,0]], x = {1,2}
     // A^T is 3x2: A^T*x = {1, 6, 2} — output length 3
     Compressed_column_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
 
     std::vector<double> x{1.0, 2.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -676,18 +709,20 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - csc_transpose_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 2}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 0}, 5.0},
-                                       {Index{2, 2}, 6.0}}};
-    Compressed_column_matrix<double> csc{Shape{3, 3},
-                                         {{Index{0, 0}, 2.0},
-                                          {Index{0, 2}, 3.0},
-                                          {Index{1, 1}, 4.0},
-                                          {Index{2, 0}, 5.0},
-                                          {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
+    Compressed_column_matrix<double> csc{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply_transpose(csr, std::span<double const>{x});
@@ -695,8 +730,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_csc));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_csc[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_csc[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -707,12 +743,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - msr_transpose_known_3x3", "[spmv]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // A^T*x = {17, 8, 21}
-    Modified_sparse_row_matrix<double> A{Shape{3, 3},
-                                         {{Index{0, 0}, 2.0},
-                                          {Index{0, 2}, 3.0},
-                                          {Index{1, 1}, 4.0},
-                                          {Index{2, 0}, 5.0},
-                                          {Index{2, 2}, 6.0}}};
+    Modified_sparse_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -724,18 +761,20 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - msr_transpose_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 2}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 0}, 5.0},
-                                       {Index{2, 2}, 6.0}}};
-    Modified_sparse_row_matrix<double> msr{Shape{3, 3},
-                                           {{Index{0, 0}, 2.0},
-                                            {Index{0, 2}, 3.0},
-                                            {Index{1, 1}, 4.0},
-                                            {Index{2, 0}, 5.0},
-                                            {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
+    Modified_sparse_row_matrix<double> msr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply_transpose(csr, std::span<double const>{x});
@@ -743,8 +782,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_msr));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_msr[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_msr[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -755,12 +795,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - dia_transpose_known_3x3", "[spmv]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // A^T*x = {17, 8, 21}
-    Diagonal_matrix<double> A{Shape{3, 3},
-                              {{Index{0, 0}, 2.0},
-                               {Index{0, 2}, 3.0},
-                               {Index{1, 1}, 4.0},
-                               {Index{2, 0}, 5.0},
-                               {Index{2, 2}, 6.0}}};
+    Diagonal_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -772,22 +813,24 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - dia_transpose_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 1}, 1.0},
-                                       {Index{1, 0}, 1.0},
-                                       {Index{1, 1}, 3.0},
-                                       {Index{1, 2}, 1.0},
-                                       {Index{2, 1}, 1.0},
-                                       {Index{2, 2}, 4.0}}};
-    Diagonal_matrix<double> dia{Shape{3, 3},
-                                {{Index{0, 0}, 2.0},
-                                 {Index{0, 1}, 1.0},
-                                 {Index{1, 0}, 1.0},
-                                 {Index{1, 1}, 3.0},
-                                 {Index{1, 2}, 1.0},
-                                 {Index{2, 1}, 1.0},
-                                 {Index{2, 2}, 4.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 0}, 1.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 1.0},
+       {Index{2, 1}, 1.0},
+       {Index{2, 2}, 4.0}}};
+    Diagonal_matrix<double> dia{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 0}, 1.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 1.0},
+       {Index{2, 1}, 1.0},
+       {Index{2, 2}, 4.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply_transpose(csr, std::span<double const>{x});
@@ -795,8 +838,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_dia));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_dia[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_dia[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -807,12 +851,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - ell_transpose_known_3x3", "[spmv]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // A^T*x = {17, 8, 21}
-    Ellpack_matrix<double> A{Shape{3, 3},
-                             {{Index{0, 0}, 2.0},
-                              {Index{0, 2}, 3.0},
-                              {Index{1, 1}, 4.0},
-                              {Index{2, 0}, 5.0},
-                              {Index{2, 2}, 6.0}}};
+    Ellpack_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -827,8 +872,8 @@ namespace sparkit::testing {
     // A is 2x3: [[1,0,2],[0,3,0]], x = {1,2}
     // A^T*x = {1, 6, 2} — output length 3
     Ellpack_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
 
     std::vector<double> x{1.0, 2.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -840,18 +885,20 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - ell_transpose_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 2}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 0}, 5.0},
-                                       {Index{2, 2}, 6.0}}};
-    Ellpack_matrix<double> ell{Shape{3, 3},
-                               {{Index{0, 0}, 2.0},
-                                {Index{0, 2}, 3.0},
-                                {Index{1, 1}, 4.0},
-                                {Index{2, 0}, 5.0},
-                                {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
+    Ellpack_matrix<double> ell{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply_transpose(csr, std::span<double const>{x});
@@ -859,8 +906,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_ell));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_ell[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_ell[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -872,17 +920,18 @@ namespace sparkit::testing {
     // A = [[1,2,0,0],[3,4,0,0],[0,0,5,6],[0,0,7,8]], x = {1,2,3,4}
     // A^T = [[1,3,0,0],[2,4,0,0],[0,0,5,7],[0,0,6,8]]
     // A^T*x = {7, 10, 43, 50}
-    Block_sparse_row_matrix<double> A{Shape{4, 4},
-                                      2,
-                                      2,
-                                      {{Index{0, 0}, 1.0},
-                                       {Index{0, 1}, 2.0},
-                                       {Index{1, 0}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 2}, 5.0},
-                                       {Index{2, 3}, 6.0},
-                                       {Index{3, 2}, 7.0},
-                                       {Index{3, 3}, 8.0}}};
+    Block_sparse_row_matrix<double> A{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 2}, 5.0},
+       {Index{2, 3}, 6.0},
+       {Index{3, 2}, 7.0},
+       {Index{3, 3}, 8.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0, 4.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -895,26 +944,28 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - bsr_transpose_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{4, 4},
-                                      {{Index{0, 0}, 1.0},
-                                       {Index{0, 1}, 2.0},
-                                       {Index{1, 0}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 2}, 5.0},
-                                       {Index{2, 3}, 6.0},
-                                       {Index{3, 2}, 7.0},
-                                       {Index{3, 3}, 8.0}}};
-    Block_sparse_row_matrix<double> bsr{Shape{4, 4},
-                                        2,
-                                        2,
-                                        {{Index{0, 0}, 1.0},
-                                         {Index{0, 1}, 2.0},
-                                         {Index{1, 0}, 3.0},
-                                         {Index{1, 1}, 4.0},
-                                         {Index{2, 2}, 5.0},
-                                         {Index{2, 3}, 6.0},
-                                         {Index{3, 2}, 7.0},
-                                         {Index{3, 3}, 8.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 2}, 5.0},
+       {Index{2, 3}, 6.0},
+       {Index{3, 2}, 7.0},
+       {Index{3, 3}, 8.0}}};
+    Block_sparse_row_matrix<double> bsr{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 2}, 5.0},
+       {Index{2, 3}, 6.0},
+       {Index{3, 2}, 7.0},
+       {Index{3, 3}, 8.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0, 17.0};
     auto y_csr = multiply_transpose(csr, std::span<double const>{x});
@@ -922,8 +973,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_bsr));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_bsr[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_bsr[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -934,12 +986,13 @@ namespace sparkit::testing {
   TEST_CASE("spmv - jad_transpose_known_3x3", "[spmv]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // A^T*x = {17, 8, 21}
-    Jagged_diagonal_matrix<double> A{Shape{3, 3},
-                                     {{Index{0, 0}, 2.0},
-                                      {Index{0, 2}, 3.0},
-                                      {Index{1, 1}, 4.0},
-                                      {Index{2, 0}, 5.0},
-                                      {Index{2, 2}, 6.0}}};
+    Jagged_diagonal_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -951,18 +1004,20 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("spmv - jad_transpose_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 2.0},
-                                       {Index{0, 2}, 3.0},
-                                       {Index{1, 1}, 4.0},
-                                       {Index{2, 0}, 5.0},
-                                       {Index{2, 2}, 6.0}}};
-    Jagged_diagonal_matrix<double> jad{Shape{3, 3},
-                                       {{Index{0, 0}, 2.0},
-                                        {Index{0, 2}, 3.0},
-                                        {Index{1, 1}, 4.0},
-                                        {Index{2, 0}, 5.0},
-                                        {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
+    Jagged_diagonal_matrix<double> jad{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply_transpose(csr, std::span<double const>{x});
@@ -970,8 +1025,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_jad));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_jad[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_jad[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -981,12 +1037,13 @@ namespace sparkit::testing {
 
   TEST_CASE("spmv - scsr_transpose_equals_forward", "[spmv]") {
     // For symmetric A, A^T = A, so multiply_transpose == multiply
-    Symmetric_compressed_row_matrix<double> A{Shape{3, 3},
-                                              {{Index{0, 0}, 4.0},
-                                               {Index{0, 1}, 1.0},
-                                               {Index{1, 1}, 5.0},
-                                               {Index{1, 2}, 2.0},
-                                               {Index{2, 2}, 6.0}}};
+    Symmetric_compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 4.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 2.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_fwd = multiply(A, std::span<double const>{x});
@@ -994,26 +1051,29 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_fwd) == std::ssize(y_trans));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_fwd); ++i) {
-      CHECK(y_trans[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_fwd[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_trans[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_fwd[static_cast<std::size_t>(i)]));
     }
   }
 
   TEST_CASE("spmv - scsr_transpose_cross_validate_with_csr", "[spmv]") {
-    Compressed_row_matrix<double> csr{Shape{3, 3},
-                                      {{Index{0, 0}, 4.0},
-                                       {Index{0, 1}, 1.0},
-                                       {Index{1, 0}, 1.0},
-                                       {Index{1, 1}, 5.0},
-                                       {Index{1, 2}, 2.0},
-                                       {Index{2, 1}, 2.0},
-                                       {Index{2, 2}, 6.0}}};
-    Symmetric_compressed_row_matrix<double> scsr{Shape{3, 3},
-                                                 {{Index{0, 0}, 4.0},
-                                                  {Index{0, 1}, 1.0},
-                                                  {Index{1, 1}, 5.0},
-                                                  {Index{1, 2}, 2.0},
-                                                  {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{3, 3},
+      {{Index{0, 0}, 4.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 0}, 1.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 2.0},
+       {Index{2, 1}, 2.0},
+       {Index{2, 2}, 6.0}}};
+    Symmetric_compressed_row_matrix<double> scsr{
+      Shape{3, 3},
+      {{Index{0, 0}, 4.0},
+       {Index{0, 1}, 1.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 2.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{7.0, 11.0, 13.0};
     auto y_csr = multiply_transpose(csr, std::span<double const>{x});
@@ -1021,8 +1081,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y_csr) == std::ssize(y_scsr));
     for (std::ptrdiff_t i = 0; i < std::ssize(y_csr); ++i) {
-      CHECK(y_scsr[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
+      CHECK(
+        y_scsr[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y_csr[static_cast<std::size_t>(i)]));
     }
   }
 

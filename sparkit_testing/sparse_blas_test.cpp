@@ -36,12 +36,13 @@ namespace sparkit::testing {
   TEST_CASE("sparse_blas - spmv_known_3x3", "[sparse_blas]") {
     // A = [[2,0,3],[0,4,0],[5,0,6]], x = {1,2,3}
     // y = {2*1+3*3, 4*2, 5*1+6*3} = {11, 8, 23}
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -68,8 +69,8 @@ namespace sparkit::testing {
     // 2x3 matrix: A = [[1,0,2],[0,3,0]], x = {1,2,3}
     // y = {1+6, 6} = {7, 6}
     Compressed_row_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply(A, std::span<double const>{x});
@@ -81,8 +82,8 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - spmv_identity", "[sparse_blas]") {
     Compressed_row_matrix<double> I{
-        Shape{3, 3},
-        {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}, {Index{2, 2}, 1.0}}};
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}, {Index{2, 2}, 1.0}}};
 
     std::vector<double> x{4.0, 5.0, 6.0};
     auto y = multiply(I, std::span<double const>{x});
@@ -99,12 +100,13 @@ namespace sparkit::testing {
     // Same A as spmv_known_3x3
     // A^T = [[2,0,5],[0,4,0],[3,0,6]], x = {1,2,3}
     // y = {2*1+5*3, 4*2, 3*1+6*3} = {17, 8, 21}
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -120,8 +122,8 @@ namespace sparkit::testing {
     // A^T is 3x2, x has length 2, y has length 3
     // A^T*x = [[1,0],[0,3],[2,0]] * {1,2} = {1, 6, 2}
     Compressed_row_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
 
     std::vector<double> x{1.0, 2.0};
     auto y = multiply_transpose(A, std::span<double const>{x});
@@ -132,19 +134,20 @@ namespace sparkit::testing {
     CHECK(y[2] == Catch::Approx(2.0));
   }
 
-  TEST_CASE("sparse_blas - transpose_spmv_symmetric_equals_spmv",
-            "[sparse_blas]") {
+  TEST_CASE(
+    "sparse_blas - transpose_spmv_symmetric_equals_spmv", "[sparse_blas]") {
     // For symmetric A, A^T*x = A*x
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{1, 0}, 2.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{1, 2}, 5.0},
-                                     {Index{2, 0}, 3.0},
-                                     {Index{2, 1}, 5.0},
-                                     {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 4.0},
+       {Index{1, 2}, 5.0},
+       {Index{2, 0}, 3.0},
+       {Index{2, 1}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<double> x{1.0, 2.0, 3.0};
     auto y1 = multiply(A, std::span<double const>{x});
@@ -152,8 +155,9 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(y1) == std::ssize(y2));
     for (std::ptrdiff_t i = 0; i < std::ssize(y1); ++i) {
-      CHECK(y1[static_cast<std::size_t>(i)] ==
-            Catch::Approx(y2[static_cast<std::size_t>(i)]));
+      CHECK(
+        y1[static_cast<std::size_t>(i)] ==
+        Catch::Approx(y2[static_cast<std::size_t>(i)]));
     }
   }
 
@@ -174,11 +178,12 @@ namespace sparkit::testing {
   TEST_CASE("sparse_blas - left_diagonal_scales_rows", "[sparse_blas]") {
     // A = [[2,3],[4,5]], d = {10, 100}
     // diag(d)*A = [[20,30],[400,500]]
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 1}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0}}};
 
     std::vector<double> d{10.0, 100.0};
     auto C = multiply_left_diagonal(A, std::span<double const>{d});
@@ -191,11 +196,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - left_diagonal_identity", "[sparse_blas]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 1}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0}}};
 
     std::vector<double> d{1.0, 1.0};
     auto C = multiply_left_diagonal(A, std::span<double const>{d});
@@ -209,11 +215,12 @@ namespace sparkit::testing {
   TEST_CASE("sparse_blas - right_diagonal_scales_columns", "[sparse_blas]") {
     // A = [[2,3],[4,5]], d = {10, 100}
     // A*diag(d) = [[20,300],[40,500]]
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 1}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0}}};
 
     std::vector<double> d{10.0, 100.0};
     auto C = multiply_right_diagonal(A, std::span<double const>{d});
@@ -226,11 +233,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - right_diagonal_identity", "[sparse_blas]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 1}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0}}};
 
     std::vector<double> d{1.0, 1.0};
     auto C = multiply_right_diagonal(A, std::span<double const>{d});
@@ -244,11 +252,12 @@ namespace sparkit::testing {
   TEST_CASE("sparse_blas - add_diagonal_present", "[sparse_blas]") {
     // A = [[1,2],[3,4]], d = {10, 20}
     // A + diag(d) = [[11,2],[3,24]]
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
 
     std::vector<double> d{10.0, 20.0};
     auto C = add_diagonal(A, std::span<double const>{d});
@@ -263,8 +272,8 @@ namespace sparkit::testing {
   TEST_CASE("sparse_blas - add_diagonal_absent", "[sparse_blas]") {
     // A has no diagonal entries: A = [[0,2],[3,0]], d = {10, 20}
     // A + diag(d) = [[10,2],[3,20]]
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 1}, 2.0}, {Index{1, 0}, 3.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 1}, 2.0}, {Index{1, 0}, 3.0}}};
 
     std::vector<double> d{10.0, 20.0};
     auto C = add_diagonal(A, std::span<double const>{d});
@@ -293,8 +302,8 @@ namespace sparkit::testing {
   TEST_CASE("sparse_blas - add_diagonal_rectangular", "[sparse_blas]") {
     // 2x3 matrix, d has min(2,3)=2 entries
     Compressed_row_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
 
     std::vector<double> d{10.0, 20.0};
     auto C = add_diagonal(A, std::span<double const>{d});
@@ -311,10 +320,10 @@ namespace sparkit::testing {
     // A has entries at (0,0) and (1,1)
     // B has entries at (0,1) and (1,0)
     // C = A + B has all four entries
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0}, {Index{1, 1}, 2.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 1}, 3.0}, {Index{1, 0}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 0}, 1.0}, {Index{1, 1}, 2.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2}, {{Index{0, 1}, 3.0}, {Index{1, 0}, 4.0}}};
 
     auto C = add(A, B);
 
@@ -327,16 +336,18 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - add_identical_patterns", "[sparse_blas]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 0}, 10.0},
-                                     {Index{0, 1}, 20.0},
-                                     {Index{1, 0}, 30.0},
-                                     {Index{1, 1}, 40.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2},
+      {{Index{0, 0}, 10.0},
+       {Index{0, 1}, 20.0},
+       {Index{1, 0}, 30.0},
+       {Index{1, 1}, 40.0}}};
 
     auto C = add(A, B);
 
@@ -349,11 +360,11 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - add_partial_overlap", "[sparse_blas]") {
     Compressed_row_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
     Compressed_row_matrix<double> B{
-        Shape{2, 3},
-        {{Index{0, 0}, 10.0}, {Index{0, 1}, 20.0}, {Index{1, 2}, 30.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 10.0}, {Index{0, 1}, 20.0}, {Index{1, 2}, 30.0}}};
 
     auto C = add(A, B);
 
@@ -366,10 +377,10 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - add_scaled", "[sparse_blas]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0}, {Index{1, 1}, 2.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 0}, 3.0}, {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 0}, 1.0}, {Index{1, 1}, 2.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2}, {{Index{0, 0}, 3.0}, {Index{1, 1}, 4.0}}};
 
     auto C = add(A, 2.0, B);
 
@@ -378,8 +389,8 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - add_one_empty", "[sparse_blas]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0}, {Index{1, 1}, 2.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 0}, 1.0}, {Index{1, 1}, 2.0}}};
     Compressed_row_matrix<double> empty{Shape{2, 2}, {}};
 
     auto C = add(A, empty);
@@ -390,10 +401,10 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - add_commutativity", "[sparse_blas]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0}, {Index{0, 1}, 2.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 0}, 3.0}, {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 0}, 1.0}, {Index{0, 1}, 2.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2}, {{Index{0, 0}, 3.0}, {Index{1, 1}, 4.0}}};
 
     auto C1 = add(A, B);
     auto C2 = add(B, A);
@@ -404,11 +415,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - add_negation", "[sparse_blas]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 5.0},
-                                     {Index{0, 1}, 7.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 9.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 5.0},
+       {Index{0, 1}, 7.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 9.0}}};
 
     auto C = add(A, -1.0, A);
 
@@ -425,16 +437,18 @@ namespace sparkit::testing {
     // A = [[1,2],[3,4]], B = [[5,6],[7,8]]
     // B^T = [[5,7],[6,8]]
     // C = A + B^T = [[6,9],[9,12]]
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 0}, 5.0},
-                                     {Index{0, 1}, 6.0},
-                                     {Index{1, 0}, 7.0},
-                                     {Index{1, 1}, 8.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2},
+      {{Index{0, 0}, 5.0},
+       {Index{0, 1}, 6.0},
+       {Index{1, 0}, 7.0},
+       {Index{1, 1}, 8.0}}};
 
     auto C = add_transpose(A, B);
 
@@ -447,17 +461,19 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - add_transpose_cross_validation", "[sparse_blas]") {
     // add_transpose(A, s, B) == add(A, s, transpose(B))
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 2}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{2, 0}, 4.0},
-                                     {Index{2, 2}, 5.0}}};
-    Compressed_row_matrix<double> B{Shape{3, 3},
-                                    {{Index{0, 0}, 10.0},
-                                     {Index{0, 1}, 20.0},
-                                     {Index{1, 2}, 30.0},
-                                     {Index{2, 1}, 40.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 2}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 2}, 5.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{3, 3},
+      {{Index{0, 0}, 10.0},
+       {Index{0, 1}, 20.0},
+       {Index{1, 2}, 30.0},
+       {Index{2, 1}, 40.0}}};
     double s = 2.5;
 
     auto fused = add_transpose(A, s, B);
@@ -475,13 +491,14 @@ namespace sparkit::testing {
     // A is (2,3), B is (3,2), B^T is (2,3)
     // C = A + B^T is (2,3)
     Compressed_row_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
-    Compressed_row_matrix<double> B{Shape{3, 2},
-                                    {{Index{0, 0}, 10.0},
-                                     {Index{0, 1}, 20.0},
-                                     {Index{1, 0}, 30.0},
-                                     {Index{2, 1}, 40.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{3, 2},
+      {{Index{0, 0}, 10.0},
+       {Index{0, 1}, 20.0},
+       {Index{1, 0}, 30.0},
+       {Index{2, 1}, 40.0}}};
 
     auto C = add_transpose(A, B);
 
@@ -497,14 +514,15 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - add_transpose_identity", "[sparse_blas]") {
     // A + I^T = A + I
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 2}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{2, 0}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 2}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0}}};
     Compressed_row_matrix<double> I{
-        Shape{3, 3},
-        {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}, {Index{2, 2}, 1.0}}};
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}, {Index{2, 2}, 1.0}}};
 
     auto C = add_transpose(A, I);
     auto expected = add(A, I);
@@ -518,16 +536,18 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - add_transpose_symmetric_B", "[sparse_blas]") {
     // For symmetric B, add_transpose(A, B) == add(A, B)
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 0}, 5.0},
-                                     {Index{0, 1}, 6.0},
-                                     {Index{1, 0}, 6.0},
-                                     {Index{1, 1}, 7.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2},
+      {{Index{0, 0}, 5.0},
+       {Index{0, 1}, 6.0},
+       {Index{1, 0}, 6.0},
+       {Index{1, 1}, 7.0}}};
 
     auto with_transpose = add_transpose(A, B);
     auto direct = add(A, B);
@@ -541,16 +561,18 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - add_transpose_scale_zero", "[sparse_blas]") {
     // add_transpose(A, 0, B) == A (only A's pattern)
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 0}, 99.0},
-                                     {Index{0, 1}, 99.0},
-                                     {Index{1, 0}, 99.0},
-                                     {Index{1, 1}, 99.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2},
+      {{Index{0, 0}, 99.0},
+       {Index{0, 1}, 99.0},
+       {Index{1, 0}, 99.0},
+       {Index{1, 1}, 99.0}}};
 
     auto C = add_transpose(A, 0.0, B);
 
@@ -563,8 +585,8 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - add_transpose_empty_B", "[sparse_blas]") {
     Compressed_row_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
     Compressed_row_matrix<double> empty{Shape{3, 2}, {}};
 
     auto C = add_transpose(A, 2.0, empty);
@@ -580,16 +602,18 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - matmul_known_2x2", "[sparse_blas]") {
     // [[2,3],[4,5]] * [[6,7],[8,9]] = [[36,41],[64,73]]
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 1}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 0}, 6.0},
-                                     {Index{0, 1}, 7.0},
-                                     {Index{1, 0}, 8.0},
-                                     {Index{1, 1}, 9.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2},
+      {{Index{0, 0}, 6.0},
+       {Index{0, 1}, 7.0},
+       {Index{1, 0}, 8.0},
+       {Index{1, 1}, 9.0}}};
 
     auto C = multiply(A, B);
 
@@ -601,13 +625,14 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - matmul_identity_left", "[sparse_blas]") {
-    Compressed_row_matrix<double> I{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}}};
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 1}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0}}};
+    Compressed_row_matrix<double> I{
+      Shape{2, 2}, {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0}}};
 
     auto C = multiply(I, A);
 
@@ -618,13 +643,14 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("sparse_blas - matmul_identity_right", "[sparse_blas]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 2.0},
-                                     {Index{0, 1}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0}}};
-    Compressed_row_matrix<double> I{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 2.0},
+       {Index{0, 1}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0}}};
+    Compressed_row_matrix<double> I{
+      Shape{2, 2}, {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}}};
 
     auto C = multiply(A, I);
 
@@ -636,10 +662,10 @@ namespace sparkit::testing {
 
   TEST_CASE("sparse_blas - matmul_result_shape", "[sparse_blas]") {
     // A(2,3) * B(3,4) = C(2,4)
-    Compressed_row_matrix<double> A{Shape{2, 3},
-                                    {{Index{0, 0}, 1.0}, {Index{1, 2}, 1.0}}};
-    Compressed_row_matrix<double> B{Shape{3, 4},
-                                    {{Index{0, 0}, 1.0}, {Index{2, 3}, 1.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 3}, {{Index{0, 0}, 1.0}, {Index{1, 2}, 1.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{3, 4}, {{Index{0, 0}, 1.0}, {Index{2, 3}, 1.0}}};
 
     auto C = multiply(A, B);
 
@@ -649,13 +675,14 @@ namespace sparkit::testing {
   TEST_CASE("sparse_blas - matmul_associativity_with_vector", "[sparse_blas]") {
     // A*(B*x) should equal (A*B)*x
     Compressed_row_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
-    Compressed_row_matrix<double> B{Shape{3, 2},
-                                    {{Index{0, 0}, 4.0},
-                                     {Index{0, 1}, 5.0},
-                                     {Index{1, 0}, 6.0},
-                                     {Index{2, 1}, 7.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{3, 2},
+      {{Index{0, 0}, 4.0},
+       {Index{0, 1}, 5.0},
+       {Index{1, 0}, 6.0},
+       {Index{2, 1}, 7.0}}};
 
     std::vector<double> x{1.0, 2.0};
 
@@ -667,17 +694,18 @@ namespace sparkit::testing {
 
     REQUIRE(std::ssize(lhs) == std::ssize(rhs));
     for (std::ptrdiff_t i = 0; i < std::ssize(lhs); ++i) {
-      CHECK(lhs[static_cast<std::size_t>(i)] ==
-            Catch::Approx(rhs[static_cast<std::size_t>(i)]));
+      CHECK(
+        lhs[static_cast<std::size_t>(i)] ==
+        Catch::Approx(rhs[static_cast<std::size_t>(i)]));
     }
   }
 
   TEST_CASE("sparse_blas - matmul_empty_row_propagation", "[sparse_blas]") {
     // Row 1 of A is empty, so row 1 of C should also be empty
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0}, {Index{0, 1}, 2.0}}};
-    Compressed_row_matrix<double> B{Shape{2, 2},
-                                    {{Index{0, 0}, 3.0}, {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 0}, 1.0}, {Index{0, 1}, 2.0}}};
+    Compressed_row_matrix<double> B{
+      Shape{2, 2}, {{Index{0, 0}, 3.0}, {Index{1, 1}, 4.0}}};
 
     auto C = multiply(A, B);
 

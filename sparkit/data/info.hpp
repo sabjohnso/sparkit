@@ -254,7 +254,8 @@ namespace sparkit::data::detail {
             for (auto bi = block_row_start; bi < block_row_start + br && valid;
                  ++bi) {
               for (auto bj = block_col_start;
-                   bj < block_col_start + bc && valid; ++bj) {
+                   bj < block_col_start + bc && valid;
+                   ++bj) {
                 auto row_begin = ci.begin() + rp[bi];
                 auto row_end = ci.begin() + rp[bi + 1];
                 if (!std::binary_search(row_begin, row_end, bj)) {

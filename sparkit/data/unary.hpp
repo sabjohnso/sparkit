@@ -40,8 +40,8 @@ namespace sparkit::data::detail {
 
   template <typename T>
   Compressed_row_matrix<T>
-  extract_lower_triangle(Compressed_row_matrix<T> const& A,
-                         bool include_diagonal = false) {
+  extract_lower_triangle(
+    Compressed_row_matrix<T> const& A, bool include_diagonal = false) {
     auto rows = A.shape().row();
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
@@ -66,8 +66,8 @@ namespace sparkit::data::detail {
 
   template <typename T>
   Compressed_row_matrix<T>
-  extract_upper_triangle(Compressed_row_matrix<T> const& A,
-                         bool include_diagonal = false) {
+  extract_upper_triangle(
+    Compressed_row_matrix<T> const& A, bool include_diagonal = false) {
     auto rows = A.shape().row();
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
@@ -131,10 +131,10 @@ namespace sparkit::data::detail {
       sorted_vals.push_back(new_vals[perm[k]]);
     }
 
-    Compressed_row_sparsity sparsity{Shape{cols, rows}, sorted_indices.begin(),
-                                     sorted_indices.end()};
-    return Compressed_row_matrix<T>{std::move(sparsity),
-                                    std::move(sorted_vals)};
+    Compressed_row_sparsity sparsity{
+      Shape{cols, rows}, sorted_indices.begin(), sorted_indices.end()};
+    return Compressed_row_matrix<T>{
+      std::move(sparsity), std::move(sorted_vals)};
   }
 
   template <typename T>
@@ -163,9 +163,12 @@ namespace sparkit::data::detail {
 
   template <typename T>
   Compressed_row_matrix<T>
-  submatrix(Compressed_row_matrix<T> const& A, config::size_type row_start,
-            config::size_type row_end, config::size_type col_start,
-            config::size_type col_end) {
+  submatrix(
+    Compressed_row_matrix<T> const& A,
+    config::size_type row_start,
+    config::size_type row_end,
+    config::size_type col_start,
+    config::size_type col_end) {
     auto rp = A.row_ptr();
     auto ci = A.col_ind();
     auto vals = A.values();
@@ -183,8 +186,9 @@ namespace sparkit::data::detail {
     }
 
     Compressed_row_sparsity sparsity{
-        Shape{row_end - row_start, col_end - col_start}, indices.begin(),
-        indices.end()};
+      Shape{row_end - row_start, col_end - col_start},
+      indices.begin(),
+      indices.end()};
     return Compressed_row_matrix<T>{std::move(sparsity), std::move(new_vals)};
   }
 

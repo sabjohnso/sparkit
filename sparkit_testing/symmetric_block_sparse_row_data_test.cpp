@@ -25,17 +25,27 @@ namespace sparkit::testing {
 
   // -- sBSR construction --
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - construction_basic",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - construction_basic",
+    "[symmetric_block_sparse_row_sparsity]") {
     // 4x4 symmetric matrix, 2x2 blocks
     // Diagonal blocks (0,0) and (1,1) + off-diagonal block (1,0)
     Symmetric_block_sparse_row_sparsity sbsr{
-        Shape{4, 4},
-        2,
-        2,
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{2, 0},
-         Index{2, 1}, Index{3, 0}, Index{3, 1}, Index{2, 2}, Index{2, 3},
-         Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      2,
+      2,
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 1},
+       Index{3, 0},
+       Index{3, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     CHECK(sbsr.shape() == Shape(4, 4));
     CHECK(sbsr.block_rows() == 2);
@@ -46,25 +56,30 @@ namespace sparkit::testing {
     CHECK(sbsr.num_blocks() == 3);
   }
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - "
-            "construction_normalizes_upper_blocks",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - "
+    "construction_normalizes_upper_blocks",
+    "[symmetric_block_sparse_row_sparsity]") {
     // Provide entries in upper-triangle block (0,1) -> normalized to block
     // (1,0)
     Symmetric_block_sparse_row_sparsity sbsr{
-        Shape{4, 4},
-        2,
-        2,
-        {Index{0, 0}, Index{1, 1},   // block (0,0)
-         Index{0, 2}, Index{0, 3},   // block (0,1) -> (1,0)
-         Index{2, 2}, Index{3, 3}}}; // block (1,1)
+      Shape{4, 4},
+      2,
+      2,
+      {Index{0, 0},
+       Index{1, 1}, // block (0,0)
+       Index{0, 2},
+       Index{0, 3}, // block (0,1) -> (1,0)
+       Index{2, 2},
+       Index{3, 3}}}; // block (1,1)
 
     // Should have 3 lower-triangle blocks: (0,0), (1,0), (1,1)
     CHECK(sbsr.num_blocks() == 3);
   }
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - construction_empty",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - construction_empty",
+    "[symmetric_block_sparse_row_sparsity]") {
     Symmetric_block_sparse_row_sparsity sbsr{Shape{4, 4}, 2, 2, {}};
     CHECK(sbsr.shape() == Shape(4, 4));
     CHECK(sbsr.num_blocks() == 0);
@@ -73,19 +88,25 @@ namespace sparkit::testing {
 
   // -- Block structure --
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - lower_triangle_blocks_only",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - lower_triangle_blocks_only",
+    "[symmetric_block_sparse_row_sparsity]") {
     // 6x6, 2x2 blocks -> 3x3 block grid
     // Entries touching blocks (0,0), (1,0), (1,1), (2,0), (2,2)
     Symmetric_block_sparse_row_sparsity sbsr{
-        Shape{6, 6},
-        2,
-        2,
-        {Index{0, 0}, Index{1, 1},   // block (0,0)
-         Index{2, 0}, Index{3, 1},   // block (1,0)
-         Index{2, 2}, Index{3, 3},   // block (1,1)
-         Index{4, 0}, Index{5, 1},   // block (2,0)
-         Index{4, 4}, Index{5, 5}}}; // block (2,2)
+      Shape{6, 6},
+      2,
+      2,
+      {Index{0, 0},
+       Index{1, 1}, // block (0,0)
+       Index{2, 0},
+       Index{3, 1}, // block (1,0)
+       Index{2, 2},
+       Index{3, 3}, // block (1,1)
+       Index{4, 0},
+       Index{5, 1}, // block (2,0)
+       Index{4, 4},
+       Index{5, 5}}}; // block (2,2)
 
     CHECK(sbsr.num_blocks() == 5);
 
@@ -107,25 +128,24 @@ namespace sparkit::testing {
 
   // -- Duplicate handling --
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - duplicate_blocks_collapsed",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - duplicate_blocks_collapsed",
+    "[symmetric_block_sparse_row_sparsity]") {
     // Multiple entries in same block
     Symmetric_block_sparse_row_sparsity sbsr{
-        Shape{4, 4},
-        2,
-        2,
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
+      Shape{4, 4}, 2, 2, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
 
     CHECK(sbsr.num_blocks() == 1);
   }
 
   // -- Non-divisible dimensions --
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - non_divisible_dimensions",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - non_divisible_dimensions",
+    "[symmetric_block_sparse_row_sparsity]") {
     // 5x5 with 2x2 blocks: 3 block rows, 3 block cols
     Symmetric_block_sparse_row_sparsity sbsr{
-        Shape{5, 5}, 2, 2, {Index{0, 0}, Index{4, 4}}};
+      Shape{5, 5}, 2, 2, {Index{0, 0}, Index{4, 4}}};
 
     CHECK(sbsr.num_block_rows() == 3);
     CHECK(sbsr.num_block_cols() == 3);
@@ -134,13 +154,11 @@ namespace sparkit::testing {
 
   // -- Diagonal blocks only --
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - diagonal_blocks_only",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - diagonal_blocks_only",
+    "[symmetric_block_sparse_row_sparsity]") {
     Symmetric_block_sparse_row_sparsity sbsr{
-        Shape{4, 4},
-        2,
-        2,
-        {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, 2, 2, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     CHECK(sbsr.num_blocks() == 2);
     auto ci = sbsr.col_ind();
@@ -150,10 +168,11 @@ namespace sparkit::testing {
 
   // -- Copy/move --
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - copy_construction",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - copy_construction",
+    "[symmetric_block_sparse_row_sparsity]") {
     Symmetric_block_sparse_row_sparsity original{
-        Shape{4, 4}, 2, 2, {Index{0, 0}, Index{2, 0}, Index{2, 2}}};
+      Shape{4, 4}, 2, 2, {Index{0, 0}, Index{2, 0}, Index{2, 2}}};
     Symmetric_block_sparse_row_sparsity copy{original};
 
     CHECK(copy.shape() == original.shape());
@@ -161,10 +180,11 @@ namespace sparkit::testing {
     CHECK(copy.col_ind().data() != original.col_ind().data());
   }
 
-  TEST_CASE("symmetric_block_sparse_row_sparsity - move_construction",
-            "[symmetric_block_sparse_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_sparsity - move_construction",
+    "[symmetric_block_sparse_row_sparsity]") {
     Symmetric_block_sparse_row_sparsity original{
-        Shape{4, 4}, 2, 2, {Index{0, 0}, Index{2, 0}, Index{2, 2}}};
+      Shape{4, 4}, 2, 2, {Index{0, 0}, Index{2, 0}, Index{2, 2}}};
     auto original_blocks = original.num_blocks();
 
     Symmetric_block_sparse_row_sparsity moved{std::move(original)};
@@ -175,12 +195,16 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - sbsr_to_csr_expands", "[conversions]") {
     // 4x4 with block (0,0), (1,0), (1,1) — all lower-triangle blocks
-    Symmetric_block_sparse_row_sparsity sbsr{Shape{4, 4},
-                                             2,
-                                             2,
-                                             {Index{0, 0}, Index{1, 1},
-                                              Index{2, 0}, Index{3, 1},
-                                              Index{2, 2}, Index{3, 3}}};
+    Symmetric_block_sparse_row_sparsity sbsr{
+      Shape{4, 4},
+      2,
+      2,
+      {Index{0, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{3, 1},
+       Index{2, 2},
+       Index{3, 3}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(sbsr);
 
@@ -194,11 +218,23 @@ namespace sparkit::testing {
   TEST_CASE("conversions - csr_to_sbsr_filters_lower_blocks", "[conversions]") {
     // Full symmetric CSR (4x4 dense)
     Compressed_row_sparsity csr{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{1, 0},
-         Index{1, 1}, Index{1, 2}, Index{1, 3}, Index{2, 0}, Index{2, 1},
-         Index{2, 2}, Index{2, 3}, Index{3, 0}, Index{3, 1}, Index{3, 2},
-         Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{1, 3},
+       Index{2, 0},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 0},
+       Index{3, 1},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto sbsr = sparkit::data::detail::to_symmetric_block_sparse_row(csr, 2, 2);
 
@@ -210,14 +246,26 @@ namespace sparkit::testing {
   TEST_CASE("conversions - csr_sbsr_roundtrip", "[conversions]") {
     // 4x4 symmetric with blocks (0,0), (1,0), (1,1)
     Compressed_row_sparsity original{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{1, 0},
-         Index{1, 1}, Index{1, 2}, Index{1, 3}, Index{2, 0}, Index{2, 1},
-         Index{2, 2}, Index{2, 3}, Index{3, 0}, Index{3, 1}, Index{3, 2},
-         Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{1, 3},
+       Index{2, 0},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 0},
+       Index{3, 1},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto sbsr =
-        sparkit::data::detail::to_symmetric_block_sparse_row(original, 2, 2);
+      sparkit::data::detail::to_symmetric_block_sparse_row(original, 2, 2);
     auto roundtrip = sparkit::data::detail::to_compressed_row(sbsr);
 
     CHECK(roundtrip.shape() == original.shape());

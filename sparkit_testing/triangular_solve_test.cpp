@@ -71,10 +71,12 @@ namespace sparkit::testing {
 
   TEST_CASE("forward solve - identity", "[triangular_solve]") {
     // L = 4x4 identity, b = [1,2,3,4] -> x = [1,2,3,4]
-    auto L = make_matrix(Shape{4, 4}, {Entry<double>{Index{0, 0}, 1.0},
-                                       Entry<double>{Index{1, 1}, 1.0},
-                                       Entry<double>{Index{2, 2}, 1.0},
-                                       Entry<double>{Index{3, 3}, 1.0}});
+    auto L = make_matrix(
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 1.0},
+       Entry<double>{Index{1, 1}, 1.0},
+       Entry<double>{Index{2, 2}, 1.0},
+       Entry<double>{Index{3, 3}, 1.0}});
 
     std::vector<double> b = {1.0, 2.0, 3.0, 4.0};
     auto x = forward_solve(L, std::span<double const>{b});
@@ -88,10 +90,12 @@ namespace sparkit::testing {
 
   TEST_CASE("forward solve - diagonal", "[triangular_solve]") {
     // L = diag(2,3,4,5), b = [6,12,20,30] -> x = [3,4,5,6]
-    auto L = make_matrix(Shape{4, 4}, {Entry<double>{Index{0, 0}, 2.0},
-                                       Entry<double>{Index{1, 1}, 3.0},
-                                       Entry<double>{Index{2, 2}, 4.0},
-                                       Entry<double>{Index{3, 3}, 5.0}});
+    auto L = make_matrix(
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 2.0},
+       Entry<double>{Index{1, 1}, 3.0},
+       Entry<double>{Index{2, 2}, 4.0},
+       Entry<double>{Index{3, 3}, 5.0}});
 
     std::vector<double> b = {6.0, 12.0, 20.0, 30.0};
     auto x = forward_solve(L, std::span<double const>{b});
@@ -107,9 +111,11 @@ namespace sparkit::testing {
     // L = [[2, 0], [1, 2]], b = [4, 5]
     // Row 0: x[0] = 4/2 = 2
     // Row 1: x[1] = (5 - 1*2)/2 = 3/2 = 1.5
-    auto L = make_matrix(Shape{2, 2}, {Entry<double>{Index{0, 0}, 2.0},
-                                       Entry<double>{Index{1, 0}, 1.0},
-                                       Entry<double>{Index{1, 1}, 2.0}});
+    auto L = make_matrix(
+      Shape{2, 2},
+      {Entry<double>{Index{0, 0}, 2.0},
+       Entry<double>{Index{1, 0}, 1.0},
+       Entry<double>{Index{1, 1}, 2.0}});
 
     std::vector<double> b = {4.0, 5.0};
     auto x = forward_solve(L, std::span<double const>{b});
@@ -122,12 +128,17 @@ namespace sparkit::testing {
   TEST_CASE("forward solve - tridiag cholesky", "[triangular_solve]") {
     // Factor tridiag SPD, then verify L*x == b
     auto A = make_matrix(
-        Shape{4, 4},
-        {Entry<double>{Index{0, 0}, 4.0}, Entry<double>{Index{0, 1}, -1.0},
-         Entry<double>{Index{1, 0}, -1.0}, Entry<double>{Index{1, 1}, 4.0},
-         Entry<double>{Index{1, 2}, -1.0}, Entry<double>{Index{2, 1}, -1.0},
-         Entry<double>{Index{2, 2}, 4.0}, Entry<double>{Index{2, 3}, -1.0},
-         Entry<double>{Index{3, 2}, -1.0}, Entry<double>{Index{3, 3}, 4.0}});
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{0, 1}, -1.0},
+       Entry<double>{Index{1, 0}, -1.0},
+       Entry<double>{Index{1, 1}, 4.0},
+       Entry<double>{Index{1, 2}, -1.0},
+       Entry<double>{Index{2, 1}, -1.0},
+       Entry<double>{Index{2, 2}, 4.0},
+       Entry<double>{Index{2, 3}, -1.0},
+       Entry<double>{Index{3, 2}, -1.0},
+       Entry<double>{Index{3, 3}, 4.0}});
 
     auto L = cholesky(A);
 
@@ -170,10 +181,12 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("backward solve - identity", "[triangular_solve]") {
-    auto U = make_matrix(Shape{4, 4}, {Entry<double>{Index{0, 0}, 1.0},
-                                       Entry<double>{Index{1, 1}, 1.0},
-                                       Entry<double>{Index{2, 2}, 1.0},
-                                       Entry<double>{Index{3, 3}, 1.0}});
+    auto U = make_matrix(
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 1.0},
+       Entry<double>{Index{1, 1}, 1.0},
+       Entry<double>{Index{2, 2}, 1.0},
+       Entry<double>{Index{3, 3}, 1.0}});
 
     std::vector<double> b = {1.0, 2.0, 3.0, 4.0};
     auto x = backward_solve(U, std::span<double const>{b});
@@ -186,10 +199,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("backward solve - diagonal", "[triangular_solve]") {
-    auto U = make_matrix(Shape{4, 4}, {Entry<double>{Index{0, 0}, 2.0},
-                                       Entry<double>{Index{1, 1}, 3.0},
-                                       Entry<double>{Index{2, 2}, 4.0},
-                                       Entry<double>{Index{3, 3}, 5.0}});
+    auto U = make_matrix(
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 2.0},
+       Entry<double>{Index{1, 1}, 3.0},
+       Entry<double>{Index{2, 2}, 4.0},
+       Entry<double>{Index{3, 3}, 5.0}});
 
     std::vector<double> b = {6.0, 12.0, 20.0, 30.0};
     auto x = backward_solve(U, std::span<double const>{b});
@@ -205,9 +220,11 @@ namespace sparkit::testing {
     // U = [[2, 1], [0, 2]], b = [5, 4]
     // Row 1: x[1] = 4/2 = 2
     // Row 0: x[0] = (5 - 1*2)/2 = 3/2 = 1.5
-    auto U = make_matrix(Shape{2, 2}, {Entry<double>{Index{0, 0}, 2.0},
-                                       Entry<double>{Index{0, 1}, 1.0},
-                                       Entry<double>{Index{1, 1}, 2.0}});
+    auto U = make_matrix(
+      Shape{2, 2},
+      {Entry<double>{Index{0, 0}, 2.0},
+       Entry<double>{Index{0, 1}, 1.0},
+       Entry<double>{Index{1, 1}, 2.0}});
 
     std::vector<double> b = {5.0, 4.0};
     auto x = backward_solve(U, std::span<double const>{b});
@@ -221,17 +238,22 @@ namespace sparkit::testing {
   // forward_solve_transpose tests
   // ================================================================
 
-  TEST_CASE("forward solve transpose - matches backward on L^T",
-            "[triangular_solve]") {
+  TEST_CASE(
+    "forward solve transpose - matches backward on L^T", "[triangular_solve]") {
     // Factor tridiag, then:
     //   forward_solve_transpose(L, b) == backward_solve(transpose(L), b)
     auto A = make_matrix(
-        Shape{4, 4},
-        {Entry<double>{Index{0, 0}, 4.0}, Entry<double>{Index{0, 1}, -1.0},
-         Entry<double>{Index{1, 0}, -1.0}, Entry<double>{Index{1, 1}, 4.0},
-         Entry<double>{Index{1, 2}, -1.0}, Entry<double>{Index{2, 1}, -1.0},
-         Entry<double>{Index{2, 2}, 4.0}, Entry<double>{Index{2, 3}, -1.0},
-         Entry<double>{Index{3, 2}, -1.0}, Entry<double>{Index{3, 3}, 4.0}});
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{0, 1}, -1.0},
+       Entry<double>{Index{1, 0}, -1.0},
+       Entry<double>{Index{1, 1}, 4.0},
+       Entry<double>{Index{1, 2}, -1.0},
+       Entry<double>{Index{2, 1}, -1.0},
+       Entry<double>{Index{2, 2}, 4.0},
+       Entry<double>{Index{2, 3}, -1.0},
+       Entry<double>{Index{3, 2}, -1.0},
+       Entry<double>{Index{3, 3}, 4.0}});
 
     auto L = cholesky(A);
     auto Lt = transpose(L);
@@ -252,12 +274,17 @@ namespace sparkit::testing {
 
   TEST_CASE("full cholesky solve - tridiag", "[triangular_solve]") {
     auto A = make_matrix(
-        Shape{4, 4},
-        {Entry<double>{Index{0, 0}, 4.0}, Entry<double>{Index{0, 1}, -1.0},
-         Entry<double>{Index{1, 0}, -1.0}, Entry<double>{Index{1, 1}, 4.0},
-         Entry<double>{Index{1, 2}, -1.0}, Entry<double>{Index{2, 1}, -1.0},
-         Entry<double>{Index{2, 2}, 4.0}, Entry<double>{Index{2, 3}, -1.0},
-         Entry<double>{Index{3, 2}, -1.0}, Entry<double>{Index{3, 3}, 4.0}});
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{0, 1}, -1.0},
+       Entry<double>{Index{1, 0}, -1.0},
+       Entry<double>{Index{1, 1}, 4.0},
+       Entry<double>{Index{1, 2}, -1.0},
+       Entry<double>{Index{2, 1}, -1.0},
+       Entry<double>{Index{2, 2}, 4.0},
+       Entry<double>{Index{2, 3}, -1.0},
+       Entry<double>{Index{3, 2}, -1.0},
+       Entry<double>{Index{3, 3}, 4.0}});
 
     auto L = cholesky(A);
 
@@ -301,8 +328,8 @@ namespace sparkit::testing {
           entries.push_back(Entry<double>{Index{node, node + grid}, -1.0});
           ++degree;
         }
-        entries.push_back(Entry<double>{Index{node, node},
-                                        static_cast<double>(degree) + 5.0});
+        entries.push_back(
+          Entry<double>{Index{node, node}, static_cast<double>(degree) + 5.0});
       }
     }
 
@@ -330,13 +357,15 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("forward solve - rectangular rejected", "[triangular_solve]") {
-    auto L = make_matrix(Shape{3, 4}, {Entry<double>{Index{0, 0}, 1.0},
-                                       Entry<double>{Index{1, 1}, 1.0},
-                                       Entry<double>{Index{2, 2}, 1.0}});
+    auto L = make_matrix(
+      Shape{3, 4},
+      {Entry<double>{Index{0, 0}, 1.0},
+       Entry<double>{Index{1, 1}, 1.0},
+       Entry<double>{Index{2, 2}, 1.0}});
 
     std::vector<double> b = {1.0, 2.0, 3.0};
-    CHECK_THROWS_AS(forward_solve(L, std::span<double const>{b}),
-                    std::invalid_argument);
+    CHECK_THROWS_AS(
+      forward_solve(L, std::span<double const>{b}), std::invalid_argument);
   }
 
 } // end of namespace sparkit::testing

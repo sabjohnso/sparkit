@@ -34,13 +34,14 @@ namespace sparkit::testing {
 
   TEST_CASE("unary - extract_diagonal known values", "[unary]") {
     // A = [[1,2,0],[0,3,4],[5,0,6]]
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     auto d = extract_diagonal(A);
 
@@ -52,11 +53,12 @@ namespace sparkit::testing {
 
   TEST_CASE("unary - extract_diagonal rectangular", "[unary]") {
     // 2x4 matrix: diagonal has min(2,4)=2 entries
-    Compressed_row_matrix<double> A{Shape{2, 4},
-                                    {{Index{0, 0}, 7.0},
-                                     {Index{0, 3}, 8.0},
-                                     {Index{1, 1}, 9.0},
-                                     {Index{1, 2}, 10.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 4},
+      {{Index{0, 0}, 7.0},
+       {Index{0, 3}, 8.0},
+       {Index{1, 1}, 9.0},
+       {Index{1, 2}, 10.0}}};
 
     auto d = extract_diagonal(A);
 
@@ -78,8 +80,8 @@ namespace sparkit::testing {
 
   TEST_CASE("unary - extract_diagonal zero diagonal entries", "[unary]") {
     // No structural diagonal entries
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 1}, 5.0}, {Index{1, 0}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 1}, 5.0}, {Index{1, 0}, 6.0}}};
 
     auto d = extract_diagonal(A);
 
@@ -94,16 +96,17 @@ namespace sparkit::testing {
 
   TEST_CASE("unary - extract_lower_triangle strict", "[unary]") {
     // A = [[1,2,3],[4,5,6],[7,8,9]]
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0},
-                                     {Index{1, 2}, 6.0},
-                                     {Index{2, 0}, 7.0},
-                                     {Index{2, 1}, 8.0},
-                                     {Index{2, 2}, 9.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 6.0},
+       {Index{2, 0}, 7.0},
+       {Index{2, 1}, 8.0},
+       {Index{2, 2}, 9.0}}};
 
     auto L = extract_lower_triangle(A);
 
@@ -117,16 +120,17 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("unary - extract_lower_triangle with diagonal", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0},
-                                     {Index{1, 2}, 6.0},
-                                     {Index{2, 0}, 7.0},
-                                     {Index{2, 1}, 8.0},
-                                     {Index{2, 2}, 9.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 6.0},
+       {Index{2, 0}, 7.0},
+       {Index{2, 1}, 8.0},
+       {Index{2, 2}, 9.0}}};
 
     auto L = extract_lower_triangle(A, true);
 
@@ -144,8 +148,8 @@ namespace sparkit::testing {
   TEST_CASE("unary - extract_lower_triangle empty result", "[unary]") {
     // Upper triangular matrix — strict lower is empty
     Compressed_row_matrix<double> A{
-        Shape{2, 2},
-        {{Index{0, 0}, 1.0}, {Index{0, 1}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0}, {Index{0, 1}, 2.0}, {Index{1, 1}, 3.0}}};
 
     auto L = extract_lower_triangle(A);
 
@@ -158,16 +162,17 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("unary - extract_upper_triangle strict", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0},
-                                     {Index{1, 2}, 6.0},
-                                     {Index{2, 0}, 7.0},
-                                     {Index{2, 1}, 8.0},
-                                     {Index{2, 2}, 9.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 6.0},
+       {Index{2, 0}, 7.0},
+       {Index{2, 1}, 8.0},
+       {Index{2, 2}, 9.0}}};
 
     auto U = extract_upper_triangle(A);
 
@@ -181,16 +186,17 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("unary - extract_upper_triangle with diagonal", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0},
-                                     {Index{1, 2}, 6.0},
-                                     {Index{2, 0}, 7.0},
-                                     {Index{2, 1}, 8.0},
-                                     {Index{2, 2}, 9.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 6.0},
+       {Index{2, 0}, 7.0},
+       {Index{2, 1}, 8.0},
+       {Index{2, 2}, 9.0}}};
 
     auto U = extract_upper_triangle(A, true);
 
@@ -208,8 +214,8 @@ namespace sparkit::testing {
   TEST_CASE("unary - extract_upper_triangle empty result", "[unary]") {
     // Lower triangular matrix — strict upper is empty
     Compressed_row_matrix<double> A{
-        Shape{2, 2},
-        {{Index{0, 0}, 1.0}, {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0}, {Index{1, 0}, 2.0}, {Index{1, 1}, 3.0}}};
 
     auto U = extract_upper_triangle(A);
 
@@ -224,11 +230,12 @@ namespace sparkit::testing {
   TEST_CASE("unary - transpose known result", "[unary]") {
     // A = [[1,2],[3,4]]
     // A^T = [[1,3],[2,4]]
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
 
     auto At = transpose(A);
 
@@ -243,8 +250,8 @@ namespace sparkit::testing {
     // A is 2x3: [[1,0,2],[0,3,0]]
     // A^T is 3x2: [[1,0],[0,3],[2,0]]
     Compressed_row_matrix<double> A{
-        Shape{2, 3},
-        {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0}, {Index{0, 2}, 2.0}, {Index{1, 1}, 3.0}}};
 
     auto At = transpose(A);
 
@@ -256,12 +263,13 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("unary - transpose double transpose equals identity", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 2}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{2, 0}, 4.0},
-                                     {Index{2, 2}, 5.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 2}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 2}, 5.0}}};
 
     auto Att = transpose(transpose(A));
 
@@ -288,11 +296,12 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("unary - filter drops below threshold", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 0.1},
-                                     {Index{0, 1}, 5.0},
-                                     {Index{1, 0}, 0.01},
-                                     {Index{1, 1}, 3.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 0.1},
+       {Index{0, 1}, 5.0},
+       {Index{1, 0}, 0.01},
+       {Index{1, 1}, 3.0}}};
 
     auto B = filter(A, 0.5);
 
@@ -303,11 +312,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("unary - filter all survive", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
 
     auto B = filter(A, 0.0);
 
@@ -315,11 +325,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("unary - filter none survive", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 0.1},
-                                     {Index{0, 1}, 0.2},
-                                     {Index{1, 0}, 0.3},
-                                     {Index{1, 1}, 0.4}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 0.1},
+       {Index{0, 1}, 0.2},
+       {Index{1, 0}, 0.3},
+       {Index{1, 1}, 0.4}}};
 
     auto B = filter(A, 1.0);
 
@@ -328,11 +339,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("unary - filter negative values", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, -5.0},
-                                     {Index{0, 1}, 0.1},
-                                     {Index{1, 0}, -0.2},
-                                     {Index{1, 1}, 3.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, -5.0},
+       {Index{0, 1}, 0.1},
+       {Index{1, 0}, -0.2},
+       {Index{1, 1}, 3.0}}};
 
     auto B = filter(A, 1.0);
 
@@ -347,23 +359,24 @@ namespace sparkit::testing {
 
   TEST_CASE("unary - submatrix interior block", "[unary]") {
     // 4x4 matrix, extract rows [1,3) cols [1,3) → 2x2
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{0, 3}, 4.0},
-                                     {Index{1, 0}, 5.0},
-                                     {Index{1, 1}, 6.0},
-                                     {Index{1, 2}, 7.0},
-                                     {Index{1, 3}, 8.0},
-                                     {Index{2, 0}, 9.0},
-                                     {Index{2, 1}, 10.0},
-                                     {Index{2, 2}, 11.0},
-                                     {Index{2, 3}, 12.0},
-                                     {Index{3, 0}, 13.0},
-                                     {Index{3, 1}, 14.0},
-                                     {Index{3, 2}, 15.0},
-                                     {Index{3, 3}, 16.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{0, 3}, 4.0},
+       {Index{1, 0}, 5.0},
+       {Index{1, 1}, 6.0},
+       {Index{1, 2}, 7.0},
+       {Index{1, 3}, 8.0},
+       {Index{2, 0}, 9.0},
+       {Index{2, 1}, 10.0},
+       {Index{2, 2}, 11.0},
+       {Index{2, 3}, 12.0},
+       {Index{3, 0}, 13.0},
+       {Index{3, 1}, 14.0},
+       {Index{3, 2}, 15.0},
+       {Index{3, 3}, 16.0}}};
 
     auto S = submatrix(A, 1, 3, 1, 3);
 
@@ -375,11 +388,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("unary - submatrix full matrix", "[unary]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
 
     auto S = submatrix(A, 0, 2, 0, 2);
 
@@ -393,23 +407,24 @@ namespace sparkit::testing {
 
   TEST_CASE("unary - submatrix two rows", "[unary]") {
     // 4x4 matrix, extract rows [1,3) cols [0,3) → 2x3
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{0, 3}, 4.0},
-                                     {Index{1, 0}, 5.0},
-                                     {Index{1, 1}, 6.0},
-                                     {Index{1, 2}, 7.0},
-                                     {Index{1, 3}, 8.0},
-                                     {Index{2, 0}, 9.0},
-                                     {Index{2, 1}, 10.0},
-                                     {Index{2, 2}, 11.0},
-                                     {Index{2, 3}, 12.0},
-                                     {Index{3, 0}, 13.0},
-                                     {Index{3, 1}, 14.0},
-                                     {Index{3, 2}, 15.0},
-                                     {Index{3, 3}, 16.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{0, 3}, 4.0},
+       {Index{1, 0}, 5.0},
+       {Index{1, 1}, 6.0},
+       {Index{1, 2}, 7.0},
+       {Index{1, 3}, 8.0},
+       {Index{2, 0}, 9.0},
+       {Index{2, 1}, 10.0},
+       {Index{2, 2}, 11.0},
+       {Index{2, 3}, 12.0},
+       {Index{3, 0}, 13.0},
+       {Index{3, 1}, 14.0},
+       {Index{3, 2}, 15.0},
+       {Index{3, 3}, 16.0}}};
 
     auto S = submatrix(A, 1, 3, 0, 3);
 
@@ -425,8 +440,8 @@ namespace sparkit::testing {
 
   TEST_CASE("unary - submatrix empty result", "[unary]") {
     // Sparse matrix, submatrix region has no entries
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0}, {Index{3, 3}, 2.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4}, {{Index{0, 0}, 1.0}, {Index{3, 3}, 2.0}}};
 
     auto S = submatrix(A, 0, 2, 2, 4);
 

@@ -16,8 +16,8 @@ namespace sparkit::data::detail {
   Ellpack_sparsity::Ellpack_sparsity(Shape shape, std::vector<Index> indices)
       : pimpl(new Impl(shape, std::move(indices))) {}
 
-  Ellpack_sparsity::Ellpack_sparsity(Shape shape,
-                                     std::initializer_list<Index> const& input)
+  Ellpack_sparsity::Ellpack_sparsity(
+    Shape shape, std::initializer_list<Index> const& input)
       : Ellpack_sparsity(shape, std::vector<Index>(begin(input), end(input))) {}
 
   Ellpack_sparsity::Ellpack_sparsity(Ellpack_sparsity const& input)

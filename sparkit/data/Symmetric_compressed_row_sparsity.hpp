@@ -41,17 +41,17 @@ namespace sparkit::data::detail {
      * @param input  Nonzero positions (from either triangle).
      */
     Symmetric_compressed_row_sparsity(
-        Shape shape, std::initializer_list<Index> const& input);
+      Shape shape, std::initializer_list<Index> const& input);
 
     template <typename Iter>
     Symmetric_compressed_row_sparsity(Shape shape, Iter first, Iter last)
-        : Symmetric_compressed_row_sparsity(shape,
-                                            std::vector<Index>(first, last)) {}
+        : Symmetric_compressed_row_sparsity(
+            shape, std::vector<Index>(first, last)) {}
 
     Symmetric_compressed_row_sparsity(
-        Symmetric_compressed_row_sparsity const& input);
+      Symmetric_compressed_row_sparsity const& input);
     Symmetric_compressed_row_sparsity(
-        Symmetric_compressed_row_sparsity&& input);
+      Symmetric_compressed_row_sparsity&& input);
 
     Symmetric_compressed_row_sparsity&
     operator=(Symmetric_compressed_row_sparsity const& input);

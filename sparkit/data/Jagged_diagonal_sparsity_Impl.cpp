@@ -9,7 +9,11 @@
 namespace sparkit::data::detail {
 
   Jagged_diagonal_sparsity::Impl::Impl(Shape shape, std::vector<Index> indices)
-      : shape_(shape), total_size_(0), perm_(), jdiag_(), col_ind_() {
+      : shape_(shape)
+      , total_size_(0)
+      , perm_()
+      , jdiag_()
+      , col_ind_() {
     auto nrow = shape.row();
 
     // Sort by (row, column) and deduplicate
@@ -62,13 +66,13 @@ namespace sparkit::data::detail {
         }
       }
       jdiag_[static_cast<std::size_t>(k + 1)] =
-          jdiag_[static_cast<std::size_t>(k)] + width;
+        jdiag_[static_cast<std::size_t>(k)] + width;
     }
 
     // Build CSR-like row pointers and sorted column indices per row
     // for efficient filling of col_ind in JD order
     std::vector<std::vector<size_type>> row_cols(
-        static_cast<std::size_t>(nrow));
+      static_cast<std::size_t>(nrow));
     for (auto const& idx : indices) {
       row_cols[static_cast<std::size_t>(idx.row())].push_back(idx.column());
     }
@@ -80,10 +84,10 @@ namespace sparkit::data::detail {
                    jdiag_[static_cast<std::size_t>(k)];
       for (size_type i = 0; i < width; ++i) {
         auto orig_row = perm_[static_cast<std::size_t>(i)];
-        col_ind_[static_cast<std::size_t>(jdiag_[static_cast<std::size_t>(k)] +
-                                          i)] =
-            row_cols[static_cast<std::size_t>(orig_row)]
-                    [static_cast<std::size_t>(k)];
+        col_ind_[static_cast<std::size_t>(
+          jdiag_[static_cast<std::size_t>(k)] + i)] =
+          row_cols[static_cast<std::size_t>(orig_row)]
+                  [static_cast<std::size_t>(k)];
       }
     }
   }

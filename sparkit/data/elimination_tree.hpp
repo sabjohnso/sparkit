@@ -20,7 +20,8 @@ namespace sparkit::data::detail {
   tree_postorder(std::span<config::size_type const> parent);
 
   std::vector<config::size_type>
-  cholesky_column_counts(Compressed_row_sparsity const& sp,
-                         std::span<config::size_type const> parent);
+  cholesky_column_counts(
+    Compressed_row_sparsity const& sp,
+    std::span<config::size_type const> parent);
 
 } // end of namespace sparkit::data::detail

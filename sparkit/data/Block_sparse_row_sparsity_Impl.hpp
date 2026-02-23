@@ -15,8 +15,11 @@ namespace sparkit::data::detail {
 
   class Block_sparse_row_sparsity::Impl {
   public:
-    Impl(Shape shape, size_type block_rows, size_type block_cols,
-         std::vector<Index> indices);
+    Impl(
+      Shape shape,
+      size_type block_rows,
+      size_type block_cols,
+      std::vector<Index> indices);
 
     Shape
     shape() const;

@@ -22,10 +22,11 @@ namespace sparkit::data::detail {
   public:
     using size_type = config::size_type;
 
-    explicit Symmetric_coordinate_matrix(Shape shape) : shape_(shape) {}
+    explicit Symmetric_coordinate_matrix(Shape shape)
+        : shape_(shape) {}
 
-    Symmetric_coordinate_matrix(Shape shape,
-                                std::initializer_list<Entry<T>> const& input)
+    Symmetric_coordinate_matrix(
+      Shape shape, std::initializer_list<Entry<T>> const& input)
         : shape_(shape) {
       for (auto const& entry : input) {
         add(entry.index, entry.value);
@@ -79,8 +80,8 @@ namespace sparkit::data::detail {
       for (auto const& [index, value] : entries_) {
         indices.push_back(index);
       }
-      return Symmetric_coordinate_sparsity(shape_, indices.begin(),
-                                           indices.end());
+      return Symmetric_coordinate_sparsity(
+        shape_, indices.begin(), indices.end());
     }
 
   private:

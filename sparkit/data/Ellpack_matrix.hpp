@@ -28,7 +28,8 @@ namespace sparkit::data::detail {
      * Values layout matches col_ind: nrow x max_nnz_per_row, row-major.
      */
     Ellpack_matrix(Ellpack_sparsity sparsity, std::vector<T> values)
-        : sparsity_(std::move(sparsity)), values_(std::move(values)) {}
+        : sparsity_(std::move(sparsity))
+        , values_(std::move(values)) {}
 
     Ellpack_matrix(Shape shape, std::initializer_list<Entry<T>> const& input)
         : Ellpack_matrix(from_entries(shape, input)) {}
@@ -84,8 +85,8 @@ namespace sparkit::data::detail {
       auto same_index = [](auto const& a, auto const& b) {
         return a.index == b.index;
       };
-      sorted.erase(std::unique(sorted.begin(), sorted.end(), same_index),
-                   sorted.end());
+      sorted.erase(
+        std::unique(sorted.begin(), sorted.end(), same_index), sorted.end());
 
       std::vector<Index> indices;
       indices.reserve(sorted.size());

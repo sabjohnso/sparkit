@@ -13,22 +13,21 @@
 
 namespace sparkit::data::detail {
 
-  Jagged_diagonal_sparsity::Jagged_diagonal_sparsity(Shape shape,
-                                                     std::vector<Index> indices)
+  Jagged_diagonal_sparsity::Jagged_diagonal_sparsity(
+    Shape shape, std::vector<Index> indices)
       : pimpl(new Impl(shape, std::move(indices))) {}
 
   Jagged_diagonal_sparsity::Jagged_diagonal_sparsity(
-      Shape shape, std::initializer_list<Index> const& input)
-      : Jagged_diagonal_sparsity(shape,
-                                 std::vector<Index>(begin(input), end(input))) {
-  }
+    Shape shape, std::initializer_list<Index> const& input)
+      : Jagged_diagonal_sparsity(
+          shape, std::vector<Index>(begin(input), end(input))) {}
 
   Jagged_diagonal_sparsity::Jagged_diagonal_sparsity(
-      Jagged_diagonal_sparsity const& input)
+    Jagged_diagonal_sparsity const& input)
       : pimpl(new Impl(*input.pimpl)) {}
 
   Jagged_diagonal_sparsity::Jagged_diagonal_sparsity(
-      Jagged_diagonal_sparsity&& input)
+    Jagged_diagonal_sparsity&& input)
       : pimpl(input.pimpl) {
     input.pimpl = nullptr;
   }

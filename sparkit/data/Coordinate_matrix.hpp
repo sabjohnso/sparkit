@@ -22,7 +22,8 @@ namespace sparkit::data::detail {
   public:
     using size_type = config::size_type;
 
-    explicit Coordinate_matrix(Shape shape) : shape_(shape) {}
+    explicit Coordinate_matrix(Shape shape)
+        : shape_(shape) {}
 
     Coordinate_matrix(Shape shape, std::initializer_list<Entry<T>> const& input)
         : shape_(shape) {
@@ -32,7 +33,8 @@ namespace sparkit::data::detail {
     }
 
     template <typename Iter>
-    Coordinate_matrix(Shape shape, Iter first, Iter last) : shape_(shape) {
+    Coordinate_matrix(Shape shape, Iter first, Iter last)
+        : shape_(shape) {
       for (auto it = first; it != last; ++it) {
         entries_.insert_or_assign(it->index, it->value);
       }

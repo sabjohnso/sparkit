@@ -28,23 +28,24 @@ namespace sparkit::testing {
 
   // -- sCOO construction --
 
-  TEST_CASE("symmetric_coordinate_sparsity - construction_from_lower_triangle",
-            "[symmetric_coordinate_sparsity]") {
+  TEST_CASE(
+    "symmetric_coordinate_sparsity - construction_from_lower_triangle",
+    "[symmetric_coordinate_sparsity]") {
     Symmetric_coordinate_sparsity scoo{
-        Shape{3, 3},
-        {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2}}};
+      Shape{3, 3},
+      {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2}}};
 
     CHECK(scoo.shape() == Shape(3, 3));
     CHECK(scoo.size() == 5);
   }
 
   TEST_CASE(
-      "symmetric_coordinate_sparsity - construction_normalizes_upper_to_lower",
-      "[symmetric_coordinate_sparsity]") {
+    "symmetric_coordinate_sparsity - construction_normalizes_upper_to_lower",
+    "[symmetric_coordinate_sparsity]") {
     // (0,1) -> (1,0), (1,2) -> (2,1)
     Symmetric_coordinate_sparsity scoo{
-        Shape{3, 3},
-        {Index{0, 0}, Index{0, 1}, Index{1, 1}, Index{1, 2}, Index{2, 2}}};
+      Shape{3, 3},
+      {Index{0, 0}, Index{0, 1}, Index{1, 1}, Index{1, 2}, Index{2, 2}}};
 
     CHECK(scoo.size() == 5);
 
@@ -55,8 +56,9 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("symmetric_coordinate_sparsity - construction_empty",
-            "[symmetric_coordinate_sparsity]") {
+  TEST_CASE(
+    "symmetric_coordinate_sparsity - construction_empty",
+    "[symmetric_coordinate_sparsity]") {
     Symmetric_coordinate_sparsity scoo{Shape{4, 4}, {}};
     CHECK(scoo.shape() == Shape(4, 4));
     CHECK(scoo.size() == 0);
@@ -64,8 +66,9 @@ namespace sparkit::testing {
 
   // -- Add/remove with normalization --
 
-  TEST_CASE("symmetric_coordinate_sparsity - add_normalizes_to_lower",
-            "[symmetric_coordinate_sparsity]") {
+  TEST_CASE(
+    "symmetric_coordinate_sparsity - add_normalizes_to_lower",
+    "[symmetric_coordinate_sparsity]") {
     Symmetric_coordinate_sparsity scoo{Shape{3, 3}, {}};
 
     scoo.add(Index{0, 1}); // upper -> stored as (1,0)
@@ -77,8 +80,9 @@ namespace sparkit::testing {
     CHECK(idx[0].column() == 0);
   }
 
-  TEST_CASE("symmetric_coordinate_sparsity - add_duplicate_via_normalization",
-            "[symmetric_coordinate_sparsity]") {
+  TEST_CASE(
+    "symmetric_coordinate_sparsity - add_duplicate_via_normalization",
+    "[symmetric_coordinate_sparsity]") {
     Symmetric_coordinate_sparsity scoo{Shape{3, 3}, {}};
 
     scoo.add(Index{0, 1}); // stored as (1,0)
@@ -86,8 +90,9 @@ namespace sparkit::testing {
     CHECK(scoo.size() == 1);
   }
 
-  TEST_CASE("symmetric_coordinate_sparsity - remove_normalizes",
-            "[symmetric_coordinate_sparsity]") {
+  TEST_CASE(
+    "symmetric_coordinate_sparsity - remove_normalizes",
+    "[symmetric_coordinate_sparsity]") {
     Symmetric_coordinate_sparsity scoo{Shape{3, 3}, {Index{1, 0}, Index{2, 2}}};
     CHECK(scoo.size() == 2);
 
@@ -97,11 +102,12 @@ namespace sparkit::testing {
 
   // -- Indices accessor --
 
-  TEST_CASE("symmetric_coordinate_sparsity - indices_all_lower_triangle",
-            "[symmetric_coordinate_sparsity]") {
+  TEST_CASE(
+    "symmetric_coordinate_sparsity - indices_all_lower_triangle",
+    "[symmetric_coordinate_sparsity]") {
     Symmetric_coordinate_sparsity scoo{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{1, 1}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{1, 1}, Index{3, 3}}};
 
     auto idx = scoo.indices();
     CHECK(std::ssize(idx) == 5);
@@ -113,20 +119,22 @@ namespace sparkit::testing {
 
   // -- Copy/move --
 
-  TEST_CASE("symmetric_coordinate_sparsity - copy_construction",
-            "[symmetric_coordinate_sparsity]") {
-    Symmetric_coordinate_sparsity original{Shape{3, 3},
-                                           {Index{0, 0}, Index{1, 0}}};
+  TEST_CASE(
+    "symmetric_coordinate_sparsity - copy_construction",
+    "[symmetric_coordinate_sparsity]") {
+    Symmetric_coordinate_sparsity original{
+      Shape{3, 3}, {Index{0, 0}, Index{1, 0}}};
     Symmetric_coordinate_sparsity copy{original};
 
     CHECK(copy.shape() == original.shape());
     CHECK(copy.size() == original.size());
   }
 
-  TEST_CASE("symmetric_coordinate_sparsity - move_construction",
-            "[symmetric_coordinate_sparsity]") {
-    Symmetric_coordinate_sparsity original{Shape{3, 3},
-                                           {Index{0, 0}, Index{1, 0}}};
+  TEST_CASE(
+    "symmetric_coordinate_sparsity - move_construction",
+    "[symmetric_coordinate_sparsity]") {
+    Symmetric_coordinate_sparsity original{
+      Shape{3, 3}, {Index{0, 0}, Index{1, 0}}};
     auto original_size = original.size();
 
     Symmetric_coordinate_sparsity moved{std::move(original)};
@@ -137,8 +145,8 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - scoo_to_scsr_basic", "[conversions]") {
     Symmetric_coordinate_sparsity scoo{
-        Shape{3, 3},
-        {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2}}};
+      Shape{3, 3},
+      {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2}}};
 
     auto scsr = sparkit::data::detail::to_symmetric_compressed_row(scoo);
 
@@ -150,8 +158,8 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - scoo_to_csr_expands", "[conversions]") {
     Symmetric_coordinate_sparsity scoo{
-        Shape{3, 3},
-        {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2}}};
+      Shape{3, 3},
+      {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(scoo);
 

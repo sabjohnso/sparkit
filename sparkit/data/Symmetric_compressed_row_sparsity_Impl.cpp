@@ -7,10 +7,11 @@
 
 namespace sparkit::data::detail {
 
-  Symmetric_compressed_row_sparsity::Impl::Impl(Shape shape,
-                                                std::vector<Index> indices)
-      : shape_(shape), row_ptr_(static_cast<std::size_t>(shape.row() + 1), 0),
-        col_ind_() {
+  Symmetric_compressed_row_sparsity::Impl::Impl(
+    Shape shape, std::vector<Index> indices)
+      : shape_(shape)
+      , row_ptr_(static_cast<std::size_t>(shape.row() + 1), 0)
+      , col_ind_() {
     // Normalize all indices to lower triangle: row >= col
     for (auto& idx : indices) {
       if (idx.row() < idx.column()) { idx = Index{idx.column(), idx.row()}; }

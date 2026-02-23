@@ -31,8 +31,9 @@ namespace sparkit::data::detail {
 
   template <typename T>
   Compressed_row_matrix<T>
-  numeric_cholesky(Compressed_row_matrix<T> const& A,
-                   Compressed_row_sparsity const& L_pattern) {
+  numeric_cholesky(
+    Compressed_row_matrix<T> const& A,
+    Compressed_row_sparsity const& L_pattern) {
     auto n = A.shape().row();
 
     if (A.shape().row() != A.shape().column()) {
@@ -41,7 +42,7 @@ namespace sparkit::data::detail {
 
     if (L_pattern.shape().row() != n || L_pattern.shape().column() != n) {
       throw std::invalid_argument(
-          "numeric_cholesky: pattern dimensions do not match matrix");
+        "numeric_cholesky: pattern dimensions do not match matrix");
     }
 
     auto a_rp = A.row_ptr();
@@ -103,7 +104,7 @@ namespace sparkit::data::detail {
         // L(i,j) = (A(i,j) - dot) / L(j,j)
         auto j_diag = l_vals[static_cast<std::size_t>(l_rp[j + 1] - 1)];
         x[static_cast<std::size_t>(j)] =
-            (x[static_cast<std::size_t>(j)] - dot) / j_diag;
+          (x[static_cast<std::size_t>(j)] - dot) / j_diag;
       }
 
       // 3. Diagonal: x[i] = sqrt(A(i,i) - sum of x[k]^2 for off-diag k)
@@ -117,7 +118,7 @@ namespace sparkit::data::detail {
       auto diag_val = x[static_cast<std::size_t>(i)] - diag_sum;
       if (diag_val <= T{0}) {
         throw std::domain_error(
-            "numeric_cholesky: matrix is not positive definite");
+          "numeric_cholesky: matrix is not positive definite");
       }
       x[static_cast<std::size_t>(i)] = std::sqrt(diag_val);
 

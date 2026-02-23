@@ -13,21 +13,21 @@
 
 namespace sparkit::data::detail {
 
-  Compressed_row_sparsity::Compressed_row_sparsity(Shape shape,
-                                                   std::vector<Index> indices)
+  Compressed_row_sparsity::Compressed_row_sparsity(
+    Shape shape, std::vector<Index> indices)
       : pimpl(new Impl(shape, std::move(indices))) {}
 
   Compressed_row_sparsity::Compressed_row_sparsity(
-      Shape shape, std::initializer_list<Index> const& input)
-      : Compressed_row_sparsity(shape,
-                                std::vector<Index>(begin(input), end(input))) {}
+    Shape shape, std::initializer_list<Index> const& input)
+      : Compressed_row_sparsity(
+          shape, std::vector<Index>(begin(input), end(input))) {}
 
   Compressed_row_sparsity::Compressed_row_sparsity(
-      Compressed_row_sparsity const& input)
+    Compressed_row_sparsity const& input)
       : pimpl(new Impl(*input.pimpl)) {}
 
   Compressed_row_sparsity::Compressed_row_sparsity(
-      Compressed_row_sparsity&& input)
+    Compressed_row_sparsity&& input)
       : pimpl(input.pimpl) {
     input.pimpl = nullptr;
   }

@@ -13,23 +13,23 @@
 namespace sparkit::data::detail {
 
   Symmetric_coordinate_sparsity::Symmetric_coordinate_sparsity(
-      Shape shape, std::initializer_list<Index> const& input)
+    Shape shape, std::initializer_list<Index> const& input)
       : pimpl(nullptr) {
     init(shape);
     assert(pimpl);
-    std::for_each(begin(input), end(input),
-                  [this](Index index) { add(index); });
+    std::for_each(
+      begin(input), end(input), [this](Index index) { add(index); });
   }
 
   Symmetric_coordinate_sparsity::Symmetric_coordinate_sparsity(
-      Symmetric_coordinate_sparsity const& input)
+    Symmetric_coordinate_sparsity const& input)
       : pimpl(nullptr) {
     init(input.shape());
     *pimpl = *input.pimpl;
   }
 
   Symmetric_coordinate_sparsity::Symmetric_coordinate_sparsity(
-      Symmetric_coordinate_sparsity&& input)
+    Symmetric_coordinate_sparsity&& input)
       : pimpl(input.pimpl) {
     input.pimpl = nullptr;
   }
@@ -40,7 +40,7 @@ namespace sparkit::data::detail {
 
   Symmetric_coordinate_sparsity&
   Symmetric_coordinate_sparsity::operator=(
-      Symmetric_coordinate_sparsity const& input) {
+    Symmetric_coordinate_sparsity const& input) {
     init(input.shape());
     *pimpl = *input.pimpl;
     return *this;
@@ -48,7 +48,7 @@ namespace sparkit::data::detail {
 
   Symmetric_coordinate_sparsity&
   Symmetric_coordinate_sparsity::operator=(
-      Symmetric_coordinate_sparsity&& input) {
+    Symmetric_coordinate_sparsity&& input) {
     delete pimpl;
     pimpl = input.pimpl;
     input.pimpl = nullptr;

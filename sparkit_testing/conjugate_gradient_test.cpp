@@ -113,8 +113,8 @@ namespace sparkit::testing {
           entries.push_back(Entry<double>{Index{node, node + grid}, -1.0});
           ++degree;
         }
-        entries.push_back(Entry<double>{Index{node, node},
-                                        static_cast<double>(degree) + 5.0});
+        entries.push_back(
+          Entry<double>{Index{node, node}, static_cast<double>(degree) + 5.0});
       }
     }
     return make_matrix(Shape{n, n}, entries);
@@ -125,10 +125,12 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("conjugate gradient - identity", "[conjugate_gradient]") {
-    auto A = make_matrix(Shape{4, 4}, {Entry<double>{Index{0, 0}, 1.0},
-                                       Entry<double>{Index{1, 1}, 1.0},
-                                       Entry<double>{Index{2, 2}, 1.0},
-                                       Entry<double>{Index{3, 3}, 1.0}});
+    auto A = make_matrix(
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 1.0},
+       Entry<double>{Index{1, 1}, 1.0},
+       Entry<double>{Index{2, 2}, 1.0},
+       Entry<double>{Index{3, 3}, 1.0}});
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
@@ -138,10 +140,10 @@ namespace sparkit::testing {
     std::vector<double> b = {1.0, 2.0, 3.0, 4.0};
     std::vector<double> x(4, 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
+      .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
-    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A, identity, identity);
+    auto summary = conjugate_gradient(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     CHECK(summary.computed_iterations <= 1);
@@ -151,10 +153,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("conjugate gradient - diagonal", "[conjugate_gradient]") {
-    auto A = make_matrix(Shape{4, 4}, {Entry<double>{Index{0, 0}, 2.0},
-                                       Entry<double>{Index{1, 1}, 3.0},
-                                       Entry<double>{Index{2, 2}, 4.0},
-                                       Entry<double>{Index{3, 3}, 5.0}});
+    auto A = make_matrix(
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 2.0},
+       Entry<double>{Index{1, 1}, 3.0},
+       Entry<double>{Index{2, 2}, 4.0},
+       Entry<double>{Index{3, 3}, 5.0}});
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
@@ -164,10 +168,10 @@ namespace sparkit::testing {
     std::vector<double> b = {6.0, 12.0, 20.0, 30.0};
     std::vector<double> x(4, 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
+      .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
-    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A, identity, identity);
+    auto summary = conjugate_gradient(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     CHECK(x[0] == Catch::Approx(3.0).margin(1e-10));
@@ -188,10 +192,10 @@ namespace sparkit::testing {
     auto b = multiply(A, std::span<double const>{x_true});
     std::vector<double> x(4, 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
+      .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
-    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A, identity, identity);
+    auto summary = conjugate_gradient(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < 4; ++i) {
@@ -215,10 +219,10 @@ namespace sparkit::testing {
     auto b = multiply(A, std::span<double const>{x_true});
     std::vector<double> x(static_cast<std::size_t>(n), 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
+      .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
 
-    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A, identity, identity);
+    auto summary = conjugate_gradient(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
@@ -250,16 +254,28 @@ namespace sparkit::testing {
 
     std::vector<double> x_pcg(4, 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
+      .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
-    auto summary_pcg =
-        conjugate_gradient(b.begin(), b.end(), x_pcg.begin(), x_pcg.end(), cfg,
-                           apply_A, apply_inv_M, identity);
+    auto summary_pcg = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x_pcg.begin(),
+      x_pcg.end(),
+      cfg,
+      apply_A,
+      apply_inv_M,
+      identity);
 
     std::vector<double> x_cg(4, 0.0);
-    auto summary_cg =
-        conjugate_gradient(b.begin(), b.end(), x_cg.begin(), x_cg.end(), cfg,
-                           apply_A, identity, identity);
+    auto summary_cg = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x_cg.begin(),
+      x_cg.end(),
+      cfg,
+      apply_A,
+      identity,
+      identity);
 
     REQUIRE(summary_pcg.converged);
     CHECK(summary_pcg.computed_iterations <= summary_cg.computed_iterations);
@@ -292,10 +308,17 @@ namespace sparkit::testing {
 
     std::vector<double> x(static_cast<std::size_t>(n), 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
+      .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
 
-    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A, apply_inv_M, identity);
+    auto summary = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x.begin(),
+      x.end(),
+      cfg,
+      apply_A,
+      apply_inv_M,
+      identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
@@ -327,16 +350,28 @@ namespace sparkit::testing {
 
     std::vector<double> x_rpcg(4, 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
+      .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
-    auto summary_rpcg =
-        conjugate_gradient(b.begin(), b.end(), x_rpcg.begin(), x_rpcg.end(),
-                           cfg, apply_A, identity, apply_inv_M);
+    auto summary_rpcg = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x_rpcg.begin(),
+      x_rpcg.end(),
+      cfg,
+      apply_A,
+      identity,
+      apply_inv_M);
 
     std::vector<double> x_cg(4, 0.0);
-    auto summary_cg =
-        conjugate_gradient(b.begin(), b.end(), x_cg.begin(), x_cg.end(), cfg,
-                           apply_A, identity, identity);
+    auto summary_cg = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x_cg.begin(),
+      x_cg.end(),
+      cfg,
+      apply_A,
+      identity,
+      identity);
 
     REQUIRE(summary_rpcg.converged);
     CHECK(summary_rpcg.computed_iterations <= summary_cg.computed_iterations);
@@ -369,10 +404,17 @@ namespace sparkit::testing {
 
     std::vector<double> x(static_cast<std::size_t>(n), 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
+      .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
 
-    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A, identity, apply_inv_M);
+    auto summary = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x.begin(),
+      x.end(),
+      cfg,
+      apply_A,
+      identity,
+      apply_inv_M);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
@@ -395,10 +437,10 @@ namespace sparkit::testing {
     std::vector<double> b = {0.0, 0.0, 0.0, 0.0};
     std::vector<double> x(4, 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
+      .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
 
-    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A, identity, identity);
+    auto summary = conjugate_gradient(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < 4; ++i) {
@@ -422,10 +464,10 @@ namespace sparkit::testing {
     auto b = multiply(A, std::span<double const>{x_true});
     std::vector<double> x(static_cast<std::size_t>(n), 0.0);
     CGConfig<double> cfg{
-        .tolerance = 1e-14, .restart_iterations = 50, .max_iterations = 1};
+      .tolerance = 1e-14, .restart_iterations = 50, .max_iterations = 1};
 
-    auto summary = conjugate_gradient(b.begin(), b.end(), x.begin(), x.end(),
-                                      cfg, apply_A, identity, identity);
+    auto summary = conjugate_gradient(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     CHECK_FALSE(summary.converged);
     CHECK(summary.computed_iterations == 1);

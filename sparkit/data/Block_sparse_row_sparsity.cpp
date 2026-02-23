@@ -14,23 +14,29 @@
 namespace sparkit::data::detail {
 
   Block_sparse_row_sparsity::Block_sparse_row_sparsity(
-      Shape shape, size_type block_rows, size_type block_cols,
-      std::vector<Index> indices)
+    Shape shape,
+    size_type block_rows,
+    size_type block_cols,
+    std::vector<Index> indices)
       : pimpl(new Impl(shape, block_rows, block_cols, std::move(indices))) {}
 
   Block_sparse_row_sparsity::Block_sparse_row_sparsity(
-      Shape shape, size_type block_rows, size_type block_cols,
-      std::initializer_list<Index> const& input)
+    Shape shape,
+    size_type block_rows,
+    size_type block_cols,
+    std::initializer_list<Index> const& input)
       : Block_sparse_row_sparsity(
-            shape, block_rows, block_cols,
-            std::vector<Index>(begin(input), end(input))) {}
+          shape,
+          block_rows,
+          block_cols,
+          std::vector<Index>(begin(input), end(input))) {}
 
   Block_sparse_row_sparsity::Block_sparse_row_sparsity(
-      Block_sparse_row_sparsity const& input)
+    Block_sparse_row_sparsity const& input)
       : pimpl(new Impl(*input.pimpl)) {}
 
   Block_sparse_row_sparsity::Block_sparse_row_sparsity(
-      Block_sparse_row_sparsity&& input)
+    Block_sparse_row_sparsity&& input)
       : pimpl(input.pimpl) {
     input.pimpl = nullptr;
   }

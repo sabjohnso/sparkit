@@ -2,7 +2,9 @@
 
 namespace sparkit::data::detail {
 
-  Shape::Shape(size_type row, size_type column) : row_(row), column_(column) {
+  Shape::Shape(size_type row, size_type column)
+      : row_(row)
+      , column_(column) {
     if (row_ <= 1 || column_ <= 1) {
       throw logic_error("invalid matrix shape");
     }

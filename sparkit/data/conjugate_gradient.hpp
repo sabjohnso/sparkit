@@ -118,19 +118,32 @@ namespace sparkit::data::detail {
    *
    * @see conjugate_gradient  Free-function convenience wrapper.
    */
-  template <typename T, typename BIter, typename XIter, typename LinearOperator,
-            typename LeftPreconditioner, typename RightPreconditioner>
+  template <
+    typename T,
+    typename BIter,
+    typename XIter,
+    typename LinearOperator,
+    typename LeftPreconditioner,
+    typename RightPreconditioner>
   class ConjugateGradientSolver {
   public:
-    ConjugateGradientSolver(BIter bfirst, BIter blast, XIter xfirst,
-                            XIter xlast, CGConfig<T> cfg,
-                            LinearOperator linear_operator,
-                            LeftPreconditioner left_preconditioner,
-                            RightPreconditioner right_preconditioner)
-        : bfirst_{bfirst}, blast_{blast}, xfirst_{xfirst}, xlast_{xlast},
-          cfg_{cfg}, linear_operator_{linear_operator},
-          left_preconditioner_{left_preconditioner},
-          right_preconditioner_{right_preconditioner} {
+    ConjugateGradientSolver(
+      BIter bfirst,
+      BIter blast,
+      XIter xfirst,
+      XIter xlast,
+      CGConfig<T> cfg,
+      LinearOperator linear_operator,
+      LeftPreconditioner left_preconditioner,
+      RightPreconditioner right_preconditioner)
+        : bfirst_{bfirst}
+        , blast_{blast}
+        , xfirst_{xfirst}
+        , xlast_{xlast}
+        , cfg_{cfg}
+        , linear_operator_{linear_operator}
+        , left_preconditioner_{left_preconditioner}
+        , right_preconditioner_{right_preconditioner} {
       init();
       run();
     }
@@ -202,12 +215,16 @@ namespace sparkit::data::detail {
     void
     reorthogonalize() {
       linear_operator_(xfirst_, xlast_, std::begin(ax_));
-      std::transform(bfirst_, blast_, std::begin(ax_), std::begin(residual_),
-                     std::minus<T>{});
-      left_preconditioner_(std::cbegin(residual_), std::cend(residual_),
-                           std::begin(z_));
-      rz_ = std::inner_product(std::cbegin(residual_), std::cend(residual_),
-                               std::begin(z_), T{0});
+      std::transform(
+        bfirst_,
+        blast_,
+        std::begin(ax_),
+        std::begin(residual_),
+        std::minus<T>{});
+      left_preconditioner_(
+        std::cbegin(residual_), std::cend(residual_), std::begin(z_));
+      rz_ = std::inner_product(
+        std::cbegin(residual_), std::cend(residual_), std::begin(z_), T{0});
       std::copy(std::cbegin(z_), std::cend(z_), std::begin(p_));
     }
 
@@ -215,32 +232,40 @@ namespace sparkit::data::detail {
     compute_step_size() {
       right_preconditioner_(std::cbegin(p_), std::cend(p_), std::begin(hatp_));
       linear_operator_(std::begin(hatp_), std::end(hatp_), std::begin(q_));
-      T pq = std::inner_product(std::begin(p_), std::end(p_), std::begin(q_),
-                                T{0});
+      T pq =
+        std::inner_product(std::begin(p_), std::end(p_), std::begin(q_), T{0});
       return rz_ / pq;
     }
 
     void
     compute_new_solution(auto alpha) {
       std::transform(
-          std::begin(hatp_), std::end(hatp_), xfirst_, xfirst_,
-          [&](const auto hi, const auto xi) { return alpha * hi + xi; });
+        std::begin(hatp_),
+        std::end(hatp_),
+        xfirst_,
+        xfirst_,
+        [&](const auto hi, const auto xi) { return alpha * hi + xi; });
     }
 
     void
     compute_new_residual(auto alpha) {
-      std::transform(std::begin(q_), std::end(q_), std::begin(residual_),
-                     std::begin(residual_), [&](const auto qi, const auto ri) {
-                       return ri - alpha * qi;
-                     });
+      std::transform(
+        std::begin(q_),
+        std::end(q_),
+        std::begin(residual_),
+        std::begin(residual_),
+        [&](const auto qi, const auto ri) { return ri - alpha * qi; });
     }
 
     bool
     is_converged() {
       using std::sqrt;
-      auto residual_norm =
-          sqrt(std::inner_product(std::begin(residual_), std::end(residual_),
-                                  std::begin(residual_), T{0}));
+      auto residual_norm = sqrt(
+        std::inner_product(
+          std::begin(residual_),
+          std::end(residual_),
+          std::begin(residual_),
+          T{0}));
       summary_.residual_norm = residual_norm;
       summary_.converged = residual_norm / bnorm_ < cfg_.tolerance;
       if (cfg_.collect_residuals) {
@@ -251,14 +276,17 @@ namespace sparkit::data::detail {
 
     void
     update_direction() {
-      left_preconditioner_(std::cbegin(residual_), std::cend(residual_),
-                           std::begin(z_));
+      left_preconditioner_(
+        std::cbegin(residual_), std::cend(residual_), std::begin(z_));
       auto rz_new = std::inner_product(
-          std::begin(residual_), std::end(residual_), std::begin(z_), T{0});
+        std::begin(residual_), std::end(residual_), std::begin(z_), T{0});
       const auto beta = rz_new / rz_;
       std::transform(
-          std::begin(z_), std::end(z_), std::begin(p_), std::begin(p_),
-          [&](const auto zi, const auto pi) { return zi + beta * pi; });
+        std::begin(z_),
+        std::end(z_),
+        std::begin(p_),
+        std::begin(p_),
+        [&](const auto zi, const auto pi) { return zi + beta * pi; });
       rz_ = rz_new;
     }
 
@@ -307,16 +335,32 @@ namespace sparkit::data::detail {
    *                             @f$ w \leftarrow M_R^{-1}p @f$.
    * @return CGSummary with convergence diagnostics.
    */
-  template <typename BIter, typename XIter, typename T, typename LinearOperator,
-            typename LeftPreconditioner, typename RightPreconditioner>
+  template <
+    typename BIter,
+    typename XIter,
+    typename T,
+    typename LinearOperator,
+    typename LeftPreconditioner,
+    typename RightPreconditioner>
   CGSummary<T>
-  conjugate_gradient(BIter bfirst, BIter blast, XIter xfirst, XIter xlast,
-                     CGConfig<T> cfg, LinearOperator linear_operator,
-                     LeftPreconditioner left_preconditioner,
-                     RightPreconditioner right_preconditioner) {
-    auto solver = ConjugateGradientSolver(bfirst, blast, xfirst, xlast, cfg,
-                                          linear_operator, left_preconditioner,
-                                          right_preconditioner);
+  conjugate_gradient(
+    BIter bfirst,
+    BIter blast,
+    XIter xfirst,
+    XIter xlast,
+    CGConfig<T> cfg,
+    LinearOperator linear_operator,
+    LeftPreconditioner left_preconditioner,
+    RightPreconditioner right_preconditioner) {
+    auto solver = ConjugateGradientSolver(
+      bfirst,
+      blast,
+      xfirst,
+      xlast,
+      cfg,
+      linear_operator,
+      left_preconditioner,
+      right_preconditioner);
     return solver.summary();
   }
 

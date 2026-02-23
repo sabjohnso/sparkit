@@ -28,10 +28,11 @@ namespace sparkit::testing {
 
   // -- Compressed_column_matrix core --
 
-  TEST_CASE("compressed_column_matrix - construction_and_accessors",
-            "[compressed_column_matrix]") {
-    Compressed_column_sparsity sp{Shape{6, 5},
-                                  {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
+  TEST_CASE(
+    "compressed_column_matrix - construction_and_accessors",
+    "[compressed_column_matrix]") {
+    Compressed_column_sparsity sp{
+      Shape{6, 5}, {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
 
     Compressed_column_matrix<double> mat{sp, {1.0, 2.0, 3.0}};
 
@@ -45,10 +46,11 @@ namespace sparkit::testing {
     CHECK(vals[2] == Catch::Approx(3.0));
   }
 
-  TEST_CASE("compressed_column_matrix - structural_accessors_delegate",
-            "[compressed_column_matrix]") {
-    Compressed_column_sparsity sp{Shape{6, 5},
-                                  {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
+  TEST_CASE(
+    "compressed_column_matrix - structural_accessors_delegate",
+    "[compressed_column_matrix]") {
+    Compressed_column_sparsity sp{
+      Shape{6, 5}, {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
 
     Compressed_column_matrix<double> mat{sp, {1.0, 2.0, 3.0}};
 
@@ -66,8 +68,9 @@ namespace sparkit::testing {
     CHECK(ri[2] == 5);
   }
 
-  TEST_CASE("compressed_column_matrix - sparsity_accessor",
-            "[compressed_column_matrix]") {
+  TEST_CASE(
+    "compressed_column_matrix - sparsity_accessor",
+    "[compressed_column_matrix]") {
     Compressed_column_sparsity sp{Shape{6, 5}, {Index{2, 2}, Index{5, 3}}};
 
     Compressed_column_matrix<double> mat{sp, {1.0, 2.0}};
@@ -77,8 +80,8 @@ namespace sparkit::testing {
     CHECK(sp_ref.size() == 2);
   }
 
-  TEST_CASE("compressed_column_matrix - empty_matrix",
-            "[compressed_column_matrix]") {
+  TEST_CASE(
+    "compressed_column_matrix - empty_matrix", "[compressed_column_matrix]") {
     Compressed_column_sparsity sp{Shape{3, 3}, {}};
     Compressed_column_matrix<double> mat{sp, {}};
 
@@ -89,10 +92,11 @@ namespace sparkit::testing {
 
   // -- Element access --
 
-  TEST_CASE("compressed_column_matrix - element_access_existing",
-            "[compressed_column_matrix]") {
-    Compressed_column_sparsity sp{Shape{6, 5},
-                                  {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
+  TEST_CASE(
+    "compressed_column_matrix - element_access_existing",
+    "[compressed_column_matrix]") {
+    Compressed_column_sparsity sp{
+      Shape{6, 5}, {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
 
     Compressed_column_matrix<double> mat{sp, {1.0, 2.0, 3.0}};
 
@@ -102,18 +106,19 @@ namespace sparkit::testing {
   }
 
   TEST_CASE(
-      "compressed_column_matrix - element_access_absent_in_populated_column",
-      "[compressed_column_matrix]") {
-    Compressed_column_sparsity sp{Shape{6, 5},
-                                  {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
+    "compressed_column_matrix - element_access_absent_in_populated_column",
+    "[compressed_column_matrix]") {
+    Compressed_column_sparsity sp{
+      Shape{6, 5}, {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
 
     Compressed_column_matrix<double> mat{sp, {1.0, 2.0, 3.0}};
 
     CHECK(mat(3, 2) == Catch::Approx(0.0));
   }
 
-  TEST_CASE("compressed_column_matrix - element_access_empty_column",
-            "[compressed_column_matrix]") {
+  TEST_CASE(
+    "compressed_column_matrix - element_access_empty_column",
+    "[compressed_column_matrix]") {
     Compressed_column_sparsity sp{Shape{6, 5}, {Index{2, 2}, Index{5, 3}}};
 
     Compressed_column_matrix<double> mat{sp, {1.0, 2.0}};
@@ -124,11 +129,11 @@ namespace sparkit::testing {
   // -- Construction from entries --
 
   TEST_CASE(
-      "compressed_column_matrix - construction_from_entry_initializer_list",
-      "[compressed_column_matrix]") {
+    "compressed_column_matrix - construction_from_entry_initializer_list",
+    "[compressed_column_matrix]") {
     Compressed_column_matrix<double> mat{
-        Shape{6, 5},
-        {{Index{2, 2}, 1.0}, {Index{4, 2}, 2.0}, {Index{5, 3}, 3.0}}};
+      Shape{6, 5},
+      {{Index{2, 2}, 1.0}, {Index{4, 2}, 2.0}, {Index{5, 3}, 3.0}}};
 
     CHECK(mat.shape() == Shape(6, 5));
     CHECK(mat.size() == 3);
@@ -141,14 +146,14 @@ namespace sparkit::testing {
   // -- Construction from sparsity + function --
 
   TEST_CASE(
-      "compressed_column_matrix - construction_from_sparsity_and_function",
-      "[compressed_column_matrix]") {
-    Compressed_column_sparsity sp{Shape{6, 5},
-                                  {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
+    "compressed_column_matrix - construction_from_sparsity_and_function",
+    "[compressed_column_matrix]") {
+    Compressed_column_sparsity sp{
+      Shape{6, 5}, {Index{2, 2}, Index{4, 2}, Index{5, 3}}};
 
     Compressed_column_matrix<double> mat{
-        sp,
-        [](auto row, auto col) { return static_cast<double>(row * 10 + col); }};
+      sp,
+      [](auto row, auto col) { return static_cast<double>(row * 10 + col); }};
 
     CHECK(mat(2, 2) == Catch::Approx(22.0));
     CHECK(mat(4, 2) == Catch::Approx(42.0));
@@ -159,8 +164,8 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - csr_matrix_to_csc_matrix_basic", "[conversions]") {
     Compressed_row_matrix<double> csr{
-        Shape{5, 6},
-        {{Index{2, 2}, 1.0}, {Index{2, 4}, 2.0}, {Index{3, 5}, 3.0}}};
+      Shape{5, 6},
+      {{Index{2, 2}, 1.0}, {Index{2, 4}, 2.0}, {Index{3, 5}, 3.0}}};
 
     auto csc = sparkit::data::detail::to_compressed_column(csr);
 
@@ -173,8 +178,8 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - csc_matrix_to_csr_matrix_basic", "[conversions]") {
     Compressed_column_matrix<double> csc{
-        Shape{5, 6},
-        {{Index{2, 2}, 1.0}, {Index{2, 4}, 2.0}, {Index{3, 5}, 3.0}}};
+      Shape{5, 6},
+      {{Index{2, 2}, 1.0}, {Index{2, 4}, 2.0}, {Index{3, 5}, 3.0}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(csc);
 
@@ -186,12 +191,13 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("conversions - csr_matrix_csc_matrix_roundtrip", "[conversions]") {
-    Compressed_row_matrix<double> original{Shape{5, 6},
-                                           {{Index{0, 1}, 10.0},
-                                            {Index{1, 0}, 20.0},
-                                            {Index{1, 3}, 30.0},
-                                            {Index{2, 2}, 40.0},
-                                            {Index{3, 5}, 50.0}}};
+    Compressed_row_matrix<double> original{
+      Shape{5, 6},
+      {{Index{0, 1}, 10.0},
+       {Index{1, 0}, 20.0},
+       {Index{1, 3}, 30.0},
+       {Index{2, 2}, 40.0},
+       {Index{3, 5}, 50.0}}};
 
     auto csc = sparkit::data::detail::to_compressed_column(original);
     auto roundtrip = sparkit::data::detail::to_compressed_row(csc);

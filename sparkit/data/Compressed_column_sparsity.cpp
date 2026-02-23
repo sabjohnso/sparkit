@@ -14,20 +14,20 @@
 namespace sparkit::data::detail {
 
   Compressed_column_sparsity::Compressed_column_sparsity(
-      Shape shape, std::vector<Index> indices)
+    Shape shape, std::vector<Index> indices)
       : pimpl(new Impl(shape, std::move(indices))) {}
 
   Compressed_column_sparsity::Compressed_column_sparsity(
-      Shape shape, std::initializer_list<Index> const& input)
+    Shape shape, std::initializer_list<Index> const& input)
       : Compressed_column_sparsity(
-            shape, std::vector<Index>(begin(input), end(input))) {}
+          shape, std::vector<Index>(begin(input), end(input))) {}
 
   Compressed_column_sparsity::Compressed_column_sparsity(
-      Compressed_column_sparsity const& input)
+    Compressed_column_sparsity const& input)
       : pimpl(new Impl(*input.pimpl)) {}
 
   Compressed_column_sparsity::Compressed_column_sparsity(
-      Compressed_column_sparsity&& input)
+    Compressed_column_sparsity&& input)
       : pimpl(input.pimpl) {
     input.pimpl = nullptr;
   }
@@ -36,7 +36,7 @@ namespace sparkit::data::detail {
 
   Compressed_column_sparsity&
   Compressed_column_sparsity::operator=(
-      Compressed_column_sparsity const& input) {
+    Compressed_column_sparsity const& input) {
     if (this != &input) {
       delete pimpl;
       pimpl = new Impl(*input.pimpl);

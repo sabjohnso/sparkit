@@ -69,10 +69,10 @@ namespace sparkit::testing {
     CHECK(idx.empty());
   }
 
-  TEST_CASE("coordinate_sparsity - indices_returns_all",
-            "[coordinate_sparsity]") {
-    Coordinate_sparsity coo{Shape{5, 6},
-                            {Index{2, 3}, Index{3, 4}, Index{4, 5}}};
+  TEST_CASE(
+    "coordinate_sparsity - indices_returns_all", "[coordinate_sparsity]") {
+    Coordinate_sparsity coo{
+      Shape{5, 6}, {Index{2, 3}, Index{3, 4}, Index{4, 5}}};
 
     auto idx = coo.indices();
     REQUIRE(std::ssize(idx) == 3);
@@ -90,15 +90,17 @@ namespace sparkit::testing {
 
   // -- CSR tests --
 
-  TEST_CASE("compressed_row_sparsity - construction_from_initializer_list",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - construction_from_initializer_list",
+    "[compressed_row_sparsity]") {
     Compressed_row_sparsity csr{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
     CHECK(csr.shape() == Shape(4, 5));
     CHECK(csr.size() == 2);
   }
 
-  TEST_CASE("compressed_row_sparsity - construction_empty",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - construction_empty",
+    "[compressed_row_sparsity]") {
     Compressed_row_sparsity csr{Shape{3, 3}, {}};
     CHECK(csr.shape() == Shape(3, 3));
     CHECK(csr.size() == 0);
@@ -106,11 +108,12 @@ namespace sparkit::testing {
 
   // -- Red 2: CSR structure accessors --
 
-  TEST_CASE("compressed_row_sparsity - row_ptr_and_col_ind_structure",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - row_ptr_and_col_ind_structure",
+    "[compressed_row_sparsity]") {
     // 5x6 matrix with entries at (2,2), (2,4), (3,5)
-    Compressed_row_sparsity csr{Shape{5, 6},
-                                {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
+    Compressed_row_sparsity csr{
+      Shape{5, 6}, {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
 
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
@@ -136,11 +139,12 @@ namespace sparkit::testing {
     CHECK(ci[2] == 5);
   }
 
-  TEST_CASE("compressed_row_sparsity - col_ind_sorted_within_rows",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - col_ind_sorted_within_rows",
+    "[compressed_row_sparsity]") {
     // Indices given out of order within a row
-    Compressed_row_sparsity csr{Shape{4, 6},
-                                {Index{2, 5}, Index{2, 2}, Index{2, 4}}};
+    Compressed_row_sparsity csr{
+      Shape{4, 6}, {Index{2, 5}, Index{2, 2}, Index{2, 4}}};
 
     auto ci = csr.col_ind();
     REQUIRE(std::ssize(ci) == 3);
@@ -149,10 +153,11 @@ namespace sparkit::testing {
     CHECK(ci[2] == 5);
   }
 
-  TEST_CASE("compressed_row_sparsity - duplicate_indices_are_collapsed",
-            "[compressed_row_sparsity]") {
-    Compressed_row_sparsity csr{Shape{4, 5},
-                                {Index{2, 3}, Index{2, 3}, Index{3, 4}}};
+  TEST_CASE(
+    "compressed_row_sparsity - duplicate_indices_are_collapsed",
+    "[compressed_row_sparsity]") {
+    Compressed_row_sparsity csr{
+      Shape{4, 5}, {Index{2, 3}, Index{2, 3}, Index{3, 4}}};
 
     CHECK(csr.size() == 2);
 
@@ -161,8 +166,9 @@ namespace sparkit::testing {
     CHECK(rp[4] == 2); // row 3 has 1 entry, cumulative = 2
   }
 
-  TEST_CASE("compressed_row_sparsity - row_ptr_empty_matrix",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - row_ptr_empty_matrix",
+    "[compressed_row_sparsity]") {
     Compressed_row_sparsity csr{Shape{3, 3}, {}};
 
     auto rp = csr.row_ptr();
@@ -174,10 +180,11 @@ namespace sparkit::testing {
     CHECK(std::ssize(csr.col_ind()) == 0);
   }
 
-  TEST_CASE("compressed_row_sparsity - single_row_multiple_entries",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - single_row_multiple_entries",
+    "[compressed_row_sparsity]") {
     Compressed_row_sparsity csr{
-        Shape{4, 8}, {Index{2, 7}, Index{2, 3}, Index{2, 2}, Index{2, 5}}};
+      Shape{4, 8}, {Index{2, 7}, Index{2, 3}, Index{2, 2}, Index{2, 5}}};
 
     CHECK(csr.size() == 4);
 
@@ -197,8 +204,9 @@ namespace sparkit::testing {
 
   // -- Red 3: Iterator range constructor --
 
-  TEST_CASE("compressed_row_sparsity - construction_from_iterator_range",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - construction_from_iterator_range",
+    "[compressed_row_sparsity]") {
     std::vector<Index> indices{Index{3, 2}, Index{2, 4}, Index{2, 2}};
     Compressed_row_sparsity csr{Shape{5, 6}, begin(indices), end(indices)};
 
@@ -215,8 +223,9 @@ namespace sparkit::testing {
 
   // -- Red 4: Copy/move semantics --
 
-  TEST_CASE("compressed_row_sparsity - copy_construction",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - copy_construction",
+    "[compressed_row_sparsity]") {
     Compressed_row_sparsity original{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
     Compressed_row_sparsity copy{original};
 
@@ -234,8 +243,9 @@ namespace sparkit::testing {
     CHECK(copy_ci.data() != orig_ci.data());
   }
 
-  TEST_CASE("compressed_row_sparsity - move_construction",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - move_construction",
+    "[compressed_row_sparsity]") {
     Compressed_row_sparsity original{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
     auto original_size = original.size();
     auto original_shape = original.shape();
@@ -246,8 +256,8 @@ namespace sparkit::testing {
     CHECK(moved.size() == original_size);
   }
 
-  TEST_CASE("compressed_row_sparsity - copy_assignment",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - copy_assignment", "[compressed_row_sparsity]") {
     Compressed_row_sparsity original{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
     Compressed_row_sparsity target{Shape{3, 3}, {}};
 
@@ -266,8 +276,8 @@ namespace sparkit::testing {
     CHECK(tgt_ci.data() != orig_ci.data());
   }
 
-  TEST_CASE("compressed_row_sparsity - move_assignment",
-            "[compressed_row_sparsity]") {
+  TEST_CASE(
+    "compressed_row_sparsity - move_assignment", "[compressed_row_sparsity]") {
     Compressed_row_sparsity original{Shape{4, 5}, {Index{2, 3}, Index{3, 4}}};
     auto original_size = original.size();
     auto original_shape = original.shape();
@@ -292,8 +302,8 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - coo_to_csr_basic", "[conversions]") {
     // 5x6 matrix with entries at (2,2), (2,4), (3,5)
-    Coordinate_sparsity coo{Shape{5, 6},
-                            {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
+    Coordinate_sparsity coo{
+      Shape{5, 6}, {Index{2, 2}, Index{2, 4}, Index{3, 5}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(coo);
 

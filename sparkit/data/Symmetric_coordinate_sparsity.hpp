@@ -36,8 +36,8 @@ namespace sparkit::data::detail {
       std::for_each(first, last, [this](Index index) { add(index); });
     }
 
-    Symmetric_coordinate_sparsity(Shape shape,
-                                  std::initializer_list<Index> const& input);
+    Symmetric_coordinate_sparsity(
+      Shape shape, std::initializer_list<Index> const& input);
 
     Symmetric_coordinate_sparsity(Symmetric_coordinate_sparsity const& input);
     Symmetric_coordinate_sparsity(Symmetric_coordinate_sparsity&& input);

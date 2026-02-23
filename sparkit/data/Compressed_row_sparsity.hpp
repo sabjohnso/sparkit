@@ -47,8 +47,8 @@ namespace sparkit::data::detail {
      * @param shape  Matrix dimensions.
      * @param input  Nonzero positions.
      */
-    Compressed_row_sparsity(Shape shape,
-                            std::initializer_list<Index> const& input);
+    Compressed_row_sparsity(
+      Shape shape, std::initializer_list<Index> const& input);
 
     /**
      * @brief Construct from a shape and an iterator range of indices.

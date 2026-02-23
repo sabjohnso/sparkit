@@ -26,26 +26,27 @@ namespace sparkit::testing {
   // -- sCSR construction --
 
   TEST_CASE(
-      "symmetric_compressed_row_sparsity - construction_from_lower_triangle",
-      "[symmetric_compressed_row_sparsity]") {
+    "symmetric_compressed_row_sparsity - construction_from_lower_triangle",
+    "[symmetric_compressed_row_sparsity]") {
     // 4x4 symmetric matrix with lower-triangle entries:
     // (0,0), (1,0), (1,1), (2,1), (3,3)
     Symmetric_compressed_row_sparsity scsr{
-        Shape{4, 4},
-        {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{3, 3}}};
 
     CHECK(scsr.shape() == Shape(4, 4));
     CHECK(scsr.size() == 5);
   }
 
-  TEST_CASE("symmetric_compressed_row_sparsity - "
-            "construction_normalizes_upper_to_lower",
-            "[symmetric_compressed_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_compressed_row_sparsity - "
+    "construction_normalizes_upper_to_lower",
+    "[symmetric_compressed_row_sparsity]") {
     // Provide upper-triangle indices — should be normalized to lower triangle
     // (0,1) -> (1,0), (1,2) -> (2,1)
     Symmetric_compressed_row_sparsity scsr{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 1}, Index{1, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0}, Index{0, 1}, Index{1, 1}, Index{1, 2}, Index{3, 3}}};
 
     CHECK(scsr.size() == 5);
 
@@ -71,8 +72,9 @@ namespace sparkit::testing {
     CHECK(ci[rp[3]] == 3);
   }
 
-  TEST_CASE("symmetric_compressed_row_sparsity - construction_empty",
-            "[symmetric_compressed_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_compressed_row_sparsity - construction_empty",
+    "[symmetric_compressed_row_sparsity]") {
     Symmetric_compressed_row_sparsity scsr{Shape{3, 3}, {}};
     CHECK(scsr.shape() == Shape(3, 3));
     CHECK(scsr.size() == 0);
@@ -80,8 +82,9 @@ namespace sparkit::testing {
 
   // -- Row pointer and col_ind structure --
 
-  TEST_CASE("symmetric_compressed_row_sparsity - row_ptr_and_col_ind_structure",
-            "[symmetric_compressed_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_compressed_row_sparsity - row_ptr_and_col_ind_structure",
+    "[symmetric_compressed_row_sparsity]") {
     // 5x5 tridiagonal symmetric matrix (lower triangle only)
     // Row 0: (0,0)
     // Row 1: (1,0), (1,1)
@@ -89,9 +92,16 @@ namespace sparkit::testing {
     // Row 3: (3,2), (3,3)
     // Row 4: (4,3), (4,4)
     Symmetric_compressed_row_sparsity scsr{
-        Shape{5, 5},
-        {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2},
-         Index{3, 2}, Index{3, 3}, Index{4, 3}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 1},
+       Index{2, 2},
+       Index{3, 2},
+       Index{3, 3},
+       Index{4, 3},
+       Index{4, 4}}};
 
     auto rp = scsr.row_ptr();
     REQUIRE(std::ssize(rp) == 6);
@@ -117,21 +127,23 @@ namespace sparkit::testing {
 
   // -- Duplicate handling --
 
-  TEST_CASE("symmetric_compressed_row_sparsity - duplicate_indices_collapsed",
-            "[symmetric_compressed_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_compressed_row_sparsity - duplicate_indices_collapsed",
+    "[symmetric_compressed_row_sparsity]") {
     // (0,1) and (1,0) both normalize to (1,0) — should yield 1 entry
     Symmetric_compressed_row_sparsity scsr{
-        Shape{3, 3}, {Index{0, 1}, Index{1, 0}, Index{2, 2}}};
+      Shape{3, 3}, {Index{0, 1}, Index{1, 0}, Index{2, 2}}};
 
     CHECK(scsr.size() == 2);
   }
 
   // -- Diagonal only --
 
-  TEST_CASE("symmetric_compressed_row_sparsity - diagonal_only",
-            "[symmetric_compressed_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_compressed_row_sparsity - diagonal_only",
+    "[symmetric_compressed_row_sparsity]") {
     Symmetric_compressed_row_sparsity scsr{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     CHECK(scsr.size() == 4);
 
@@ -148,10 +160,11 @@ namespace sparkit::testing {
 
   // -- Copy/move --
 
-  TEST_CASE("symmetric_compressed_row_sparsity - copy_construction",
-            "[symmetric_compressed_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_compressed_row_sparsity - copy_construction",
+    "[symmetric_compressed_row_sparsity]") {
     Symmetric_compressed_row_sparsity original{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 0}, Index{1, 1}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 0}, Index{1, 1}}};
     Symmetric_compressed_row_sparsity copy{original};
 
     CHECK(copy.shape() == original.shape());
@@ -159,10 +172,11 @@ namespace sparkit::testing {
     CHECK(copy.col_ind().data() != original.col_ind().data());
   }
 
-  TEST_CASE("symmetric_compressed_row_sparsity - move_construction",
-            "[symmetric_compressed_row_sparsity]") {
+  TEST_CASE(
+    "symmetric_compressed_row_sparsity - move_construction",
+    "[symmetric_compressed_row_sparsity]") {
     Symmetric_compressed_row_sparsity original{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 0}, Index{1, 1}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 0}, Index{1, 1}}};
     auto original_size = original.size();
 
     Symmetric_compressed_row_sparsity moved{std::move(original)};
@@ -171,12 +185,12 @@ namespace sparkit::testing {
 
   // -- CSR <-> sCSR conversions --
 
-  TEST_CASE("conversions - scsr_to_csr_expands_both_triangles",
-            "[conversions]") {
+  TEST_CASE(
+    "conversions - scsr_to_csr_expands_both_triangles", "[conversions]") {
     // Lower triangle: (0,0), (1,0), (1,1), (2,1), (2,2)
     Symmetric_compressed_row_sparsity scsr{
-        Shape{3, 3},
-        {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2}}};
+      Shape{3, 3},
+      {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(scsr);
 
@@ -185,13 +199,18 @@ namespace sparkit::testing {
     CHECK(csr.size() == 7);
   }
 
-  TEST_CASE("conversions - csr_to_scsr_filters_lower_triangle",
-            "[conversions]") {
+  TEST_CASE(
+    "conversions - csr_to_scsr_filters_lower_triangle", "[conversions]") {
     // Full symmetric CSR: 7 entries
-    Compressed_row_sparsity csr{Shape{3, 3},
-                                {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                 Index{1, 1}, Index{1, 2}, Index{2, 1},
-                                 Index{2, 2}}};
+    Compressed_row_sparsity csr{
+      Shape{3, 3},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2}}};
 
     auto scsr = sparkit::data::detail::to_symmetric_compressed_row(csr);
 
@@ -201,9 +220,14 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - scsr_csr_roundtrip", "[conversions]") {
     Symmetric_compressed_row_sparsity original{
-        Shape{4, 4},
-        {Index{0, 0}, Index{1, 0}, Index{1, 1}, Index{2, 1}, Index{2, 2},
-         Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 1},
+       Index{2, 2},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(original);
     auto roundtrip = sparkit::data::detail::to_symmetric_compressed_row(csr);

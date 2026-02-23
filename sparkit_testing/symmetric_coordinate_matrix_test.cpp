@@ -23,27 +23,31 @@ namespace sparkit::testing {
 
   // -- sCOO matrix core --
 
-  TEST_CASE("symmetric_coordinate_matrix - construction_from_entries",
-            "[symmetric_coordinate_matrix]") {
-    Symmetric_coordinate_matrix<double> mat{Shape{3, 3},
-                                            {{Index{0, 0}, 1.0},
-                                             {Index{1, 0}, 2.0},
-                                             {Index{1, 1}, 3.0},
-                                             {Index{2, 1}, 4.0},
-                                             {Index{2, 2}, 5.0}}};
+  TEST_CASE(
+    "symmetric_coordinate_matrix - construction_from_entries",
+    "[symmetric_coordinate_matrix]") {
+    Symmetric_coordinate_matrix<double> mat{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 1}, 4.0},
+       {Index{2, 2}, 5.0}}};
 
     CHECK(mat.shape() == Shape(3, 3));
     CHECK(mat.size() == 5);
   }
 
-  TEST_CASE("symmetric_coordinate_matrix - element_access_both_triangles",
-            "[symmetric_coordinate_matrix]") {
-    Symmetric_coordinate_matrix<double> mat{Shape{3, 3},
-                                            {{Index{0, 0}, 1.0},
-                                             {Index{1, 0}, 2.0},
-                                             {Index{1, 1}, 3.0},
-                                             {Index{2, 1}, 4.0},
-                                             {Index{2, 2}, 5.0}}};
+  TEST_CASE(
+    "symmetric_coordinate_matrix - element_access_both_triangles",
+    "[symmetric_coordinate_matrix]") {
+    Symmetric_coordinate_matrix<double> mat{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 1}, 4.0},
+       {Index{2, 2}, 5.0}}};
 
     // Lower triangle
     CHECK(mat(0, 0) == Catch::Approx(1.0));
@@ -61,8 +65,9 @@ namespace sparkit::testing {
     CHECK(mat(2, 0) == Catch::Approx(0.0));
   }
 
-  TEST_CASE("symmetric_coordinate_matrix - add_normalizes",
-            "[symmetric_coordinate_matrix]") {
+  TEST_CASE(
+    "symmetric_coordinate_matrix - add_normalizes",
+    "[symmetric_coordinate_matrix]") {
     Symmetric_coordinate_matrix<double> mat{Shape{3, 3}};
 
     mat.add(Index{0, 1}, 7.0); // upper -> stored as (1,0)
@@ -71,10 +76,11 @@ namespace sparkit::testing {
     CHECK(mat.size() == 1);
   }
 
-  TEST_CASE("symmetric_coordinate_matrix - remove_normalizes",
-            "[symmetric_coordinate_matrix]") {
+  TEST_CASE(
+    "symmetric_coordinate_matrix - remove_normalizes",
+    "[symmetric_coordinate_matrix]") {
     Symmetric_coordinate_matrix<double> mat{
-        Shape{3, 3}, {{Index{1, 0}, 2.0}, {Index{2, 2}, 5.0}}};
+      Shape{3, 3}, {{Index{1, 0}, 2.0}, {Index{2, 2}, 5.0}}};
     CHECK(mat.size() == 2);
 
     mat.remove(Index{0, 1}); // normalized to (1,0)
@@ -82,14 +88,16 @@ namespace sparkit::testing {
     CHECK(mat(1, 0) == Catch::Approx(0.0));
   }
 
-  TEST_CASE("symmetric_coordinate_matrix - construction_from_upper_entries",
-            "[symmetric_coordinate_matrix]") {
-    Symmetric_coordinate_matrix<double> mat{Shape{3, 3},
-                                            {{Index{0, 0}, 1.0},
-                                             {Index{0, 1}, 2.0},
-                                             {Index{1, 1}, 3.0},
-                                             {Index{0, 2}, 4.0},
-                                             {Index{2, 2}, 5.0}}};
+  TEST_CASE(
+    "symmetric_coordinate_matrix - construction_from_upper_entries",
+    "[symmetric_coordinate_matrix]") {
+    Symmetric_coordinate_matrix<double> mat{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{0, 2}, 4.0},
+       {Index{2, 2}, 5.0}}};
 
     CHECK(mat(1, 0) == Catch::Approx(2.0));
     CHECK(mat(0, 1) == Catch::Approx(2.0));
@@ -100,12 +108,13 @@ namespace sparkit::testing {
   // -- sCOO matrix -> sCSR matrix conversion --
 
   TEST_CASE("conversions - scoo_matrix_to_scsr_matrix_basic", "[conversions]") {
-    Symmetric_coordinate_matrix<double> scoo{Shape{3, 3},
-                                             {{Index{0, 0}, 1.0},
-                                              {Index{1, 0}, 2.0},
-                                              {Index{1, 1}, 3.0},
-                                              {Index{2, 1}, 4.0},
-                                              {Index{2, 2}, 5.0}}};
+    Symmetric_coordinate_matrix<double> scoo{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 1}, 4.0},
+       {Index{2, 2}, 5.0}}};
 
     auto scsr = sparkit::data::detail::to_symmetric_compressed_row(scoo);
 
@@ -118,14 +127,15 @@ namespace sparkit::testing {
 
   // -- sCOO matrix -> CSR matrix conversion --
 
-  TEST_CASE("conversions - scoo_matrix_to_csr_matrix_expands",
-            "[conversions]") {
-    Symmetric_coordinate_matrix<double> scoo{Shape{3, 3},
-                                             {{Index{0, 0}, 1.0},
-                                              {Index{1, 0}, 2.0},
-                                              {Index{1, 1}, 3.0},
-                                              {Index{2, 1}, 4.0},
-                                              {Index{2, 2}, 5.0}}};
+  TEST_CASE(
+    "conversions - scoo_matrix_to_csr_matrix_expands", "[conversions]") {
+    Symmetric_coordinate_matrix<double> scoo{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 1}, 4.0},
+       {Index{2, 2}, 5.0}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(scoo);
 

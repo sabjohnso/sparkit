@@ -55,7 +55,7 @@ namespace sparkit::data::detail {
   private:
     Shape shape_; ///< Matrix dimensions.
     std::vector<size_type>
-        col_ptr_; ///< Column offsets, length shape_.column()+1.
+      col_ptr_; ///< Column offsets, length shape_.column()+1.
     std::vector<size_type> row_ind_; ///< Row indices, length nnz.
 
   }; // end of class Compressed_column_sparsity::Impl

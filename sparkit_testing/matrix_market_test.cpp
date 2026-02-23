@@ -38,10 +38,10 @@ namespace sparkit::testing {
     CHECK(banner.symmetry == Matrix_market_banner::Symmetry::general);
   }
 
-  TEST_CASE("matrix_market - parse_banner_case_insensitive",
-            "[matrix_market]") {
+  TEST_CASE(
+    "matrix_market - parse_banner_case_insensitive", "[matrix_market]") {
     auto banner =
-        parse_banner("%%MatrixMarket MATRIX COORDINATE INTEGER SYMMETRIC");
+      parse_banner("%%MatrixMarket MATRIX COORDINATE INTEGER SYMMETRIC");
 
     CHECK(banner.format == Matrix_market_banner::Format::coordinate);
     CHECK(banner.field == Matrix_market_banner::Field::integer);
@@ -52,12 +52,12 @@ namespace sparkit::testing {
     CHECK_THROWS_AS(parse_banner("not a valid banner"), std::runtime_error);
 
     CHECK_THROWS_AS(
-        parse_banner("%%MatrixMarket matrix coordinate badfield general"),
-        std::runtime_error);
+      parse_banner("%%MatrixMarket matrix coordinate badfield general"),
+      std::runtime_error);
 
     CHECK_THROWS_AS(
-        parse_banner("%%MatrixMarket matrix coordinate real badsymmetry"),
-        std::runtime_error);
+      parse_banner("%%MatrixMarket matrix coordinate real badsymmetry"),
+      std::runtime_error);
   }
 
   // -- Reading --
@@ -123,10 +123,10 @@ namespace sparkit::testing {
 
   TEST_CASE("matrix_market - read_integer", "[matrix_market]") {
     std::istringstream input{
-        "%%MatrixMarket matrix coordinate integer general\n"
-        "3 3 2\n"
-        "1 2 7\n"
-        "3 1 3\n"};
+      "%%MatrixMarket matrix coordinate integer general\n"
+      "3 3 2\n"
+      "1 2 7\n"
+      "3 1 3\n"};
 
     auto mat = read_matrix_market<double>(input);
 
@@ -137,11 +137,11 @@ namespace sparkit::testing {
 
   TEST_CASE("matrix_market - read_pattern", "[matrix_market]") {
     std::istringstream input{
-        "%%MatrixMarket matrix coordinate pattern general\n"
-        "3 3 3\n"
-        "1 1\n"
-        "2 2\n"
-        "3 3\n"};
+      "%%MatrixMarket matrix coordinate pattern general\n"
+      "3 3 3\n"
+      "1 1\n"
+      "2 2\n"
+      "3 3\n"};
 
     auto mat = read_matrix_market<double>(input);
 
@@ -168,8 +168,8 @@ namespace sparkit::testing {
 
   TEST_CASE("matrix_market - write_known_matrix", "[matrix_market]") {
     Compressed_row_matrix<double> mat{
-        Shape{3, 4},
-        {{Index{0, 1}, 4.5}, {Index{1, 2}, 7.0}, {Index{2, 0}, 2.5}}};
+      Shape{3, 4},
+      {{Index{0, 1}, 4.5}, {Index{1, 2}, 7.0}, {Index{2, 0}, 2.5}}};
 
     std::ostringstream output;
     write_matrix_market(output, mat);
@@ -185,12 +185,13 @@ namespace sparkit::testing {
 
   TEST_CASE("matrix_market - round_trip", "[matrix_market]") {
     // Build a CSR matrix, write it, read it back as COO, convert to CSR
-    Compressed_row_matrix<double> original{Shape{4, 5},
-                                           {{Index{0, 0}, 1.0},
-                                            {Index{0, 3}, 2.0},
-                                            {Index{1, 1}, 3.0},
-                                            {Index{2, 4}, 4.0},
-                                            {Index{3, 2}, 5.0}}};
+    Compressed_row_matrix<double> original{
+      Shape{4, 5},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 3}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 4}, 4.0},
+       {Index{3, 2}, 5.0}}};
 
     std::ostringstream out;
     write_matrix_market(out, original);
@@ -233,9 +234,9 @@ namespace sparkit::testing {
 
   TEST_CASE("matrix_market - read_unsupported_field", "[matrix_market]") {
     std::istringstream input{
-        "%%MatrixMarket matrix coordinate complex general\n"
-        "3 3 1\n"
-        "1 1 1.0 2.0\n"};
+      "%%MatrixMarket matrix coordinate complex general\n"
+      "3 3 1\n"
+      "1 1 1.0 2.0\n"};
 
     CHECK_THROWS_AS(read_matrix_market<double>(input), std::runtime_error);
   }

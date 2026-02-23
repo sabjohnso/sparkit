@@ -24,16 +24,18 @@ namespace sparkit::testing {
 
   // -- MSR construction --
 
-  TEST_CASE("modified_sparse_row_sparsity - construction_from_initializer_list",
-            "[modified_sparse_row_sparsity]") {
-    Modified_sparse_row_sparsity msr{Shape{4, 5},
-                                     {Index{2, 2}, Index{2, 3}, Index{3, 4}}};
+  TEST_CASE(
+    "modified_sparse_row_sparsity - construction_from_initializer_list",
+    "[modified_sparse_row_sparsity]") {
+    Modified_sparse_row_sparsity msr{
+      Shape{4, 5}, {Index{2, 2}, Index{2, 3}, Index{3, 4}}};
     CHECK(msr.shape() == Shape(4, 5));
     CHECK(msr.size() == 3);
   }
 
-  TEST_CASE("modified_sparse_row_sparsity - construction_empty",
-            "[modified_sparse_row_sparsity]") {
+  TEST_CASE(
+    "modified_sparse_row_sparsity - construction_empty",
+    "[modified_sparse_row_sparsity]") {
     Modified_sparse_row_sparsity msr{Shape{3, 3}, {}};
     CHECK(msr.shape() == Shape(3, 3));
     CHECK(msr.size() == 0);
@@ -41,11 +43,12 @@ namespace sparkit::testing {
 
   // -- Diagonal / off-diagonal separation --
 
-  TEST_CASE("modified_sparse_row_sparsity - diagonal_detection",
-            "[modified_sparse_row_sparsity]") {
+  TEST_CASE(
+    "modified_sparse_row_sparsity - diagonal_detection",
+    "[modified_sparse_row_sparsity]") {
     // 4x4 matrix with diag at (0,0), (2,2) and off-diag at (1,3), (2,0)
     Modified_sparse_row_sparsity msr{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}, Index{2, 2}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}, Index{2, 2}}};
 
     CHECK(msr.diagonal_length() == 4);
     CHECK(msr.has_diagonal(0) == true);
@@ -54,11 +57,12 @@ namespace sparkit::testing {
     CHECK(msr.has_diagonal(3) == false);
   }
 
-  TEST_CASE("modified_sparse_row_sparsity - off_diagonal_structure",
-            "[modified_sparse_row_sparsity]") {
+  TEST_CASE(
+    "modified_sparse_row_sparsity - off_diagonal_structure",
+    "[modified_sparse_row_sparsity]") {
     // 4x4 matrix with diag at (0,0), (2,2) and off-diag at (1,3), (2,0)
     Modified_sparse_row_sparsity msr{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}, Index{2, 2}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}, Index{2, 2}}};
 
     auto rp = msr.off_diagonal_row_ptr();
     auto ci = msr.off_diagonal_col_ind();
@@ -76,10 +80,11 @@ namespace sparkit::testing {
     CHECK(ci[1] == 0); // row 2, off-diag col 0
   }
 
-  TEST_CASE("modified_sparse_row_sparsity - all_diagonal",
-            "[modified_sparse_row_sparsity]") {
-    Modified_sparse_row_sparsity msr{Shape{3, 3},
-                                     {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
+  TEST_CASE(
+    "modified_sparse_row_sparsity - all_diagonal",
+    "[modified_sparse_row_sparsity]") {
+    Modified_sparse_row_sparsity msr{
+      Shape{3, 3}, {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
 
     CHECK(msr.has_diagonal(0) == true);
     CHECK(msr.has_diagonal(1) == true);
@@ -89,10 +94,11 @@ namespace sparkit::testing {
     CHECK(ci.empty());
   }
 
-  TEST_CASE("modified_sparse_row_sparsity - no_diagonal",
-            "[modified_sparse_row_sparsity]") {
-    Modified_sparse_row_sparsity msr{Shape{3, 3},
-                                     {Index{0, 1}, Index{1, 0}, Index{2, 0}}};
+  TEST_CASE(
+    "modified_sparse_row_sparsity - no_diagonal",
+    "[modified_sparse_row_sparsity]") {
+    Modified_sparse_row_sparsity msr{
+      Shape{3, 3}, {Index{0, 1}, Index{1, 0}, Index{2, 0}}};
 
     CHECK(msr.has_diagonal(0) == false);
     CHECK(msr.has_diagonal(1) == false);
@@ -101,11 +107,12 @@ namespace sparkit::testing {
     CHECK(std::ssize(msr.off_diagonal_col_ind()) == 3);
   }
 
-  TEST_CASE("modified_sparse_row_sparsity - rectangular_matrix",
-            "[modified_sparse_row_sparsity]") {
+  TEST_CASE(
+    "modified_sparse_row_sparsity - rectangular_matrix",
+    "[modified_sparse_row_sparsity]") {
     // 3x5 matrix — diagonal length is min(3,5) = 3
-    Modified_sparse_row_sparsity msr{Shape{3, 5},
-                                     {Index{0, 0}, Index{1, 4}, Index{2, 2}}};
+    Modified_sparse_row_sparsity msr{
+      Shape{3, 5}, {Index{0, 0}, Index{1, 4}, Index{2, 2}}};
 
     CHECK(msr.diagonal_length() == 3);
     CHECK(msr.has_diagonal(0) == true);
@@ -115,20 +122,22 @@ namespace sparkit::testing {
 
   // -- Duplicate handling --
 
-  TEST_CASE("modified_sparse_row_sparsity - duplicates_collapsed",
-            "[modified_sparse_row_sparsity]") {
-    Modified_sparse_row_sparsity msr{Shape{3, 3},
-                                     {Index{1, 1}, Index{1, 1}, Index{0, 2}}};
+  TEST_CASE(
+    "modified_sparse_row_sparsity - duplicates_collapsed",
+    "[modified_sparse_row_sparsity]") {
+    Modified_sparse_row_sparsity msr{
+      Shape{3, 3}, {Index{1, 1}, Index{1, 1}, Index{0, 2}}};
 
     CHECK(msr.size() == 2);
   }
 
   // -- Copy/move --
 
-  TEST_CASE("modified_sparse_row_sparsity - copy_construction",
-            "[modified_sparse_row_sparsity]") {
+  TEST_CASE(
+    "modified_sparse_row_sparsity - copy_construction",
+    "[modified_sparse_row_sparsity]") {
     Modified_sparse_row_sparsity original{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}}};
     Modified_sparse_row_sparsity copy{original};
 
     CHECK(copy.shape() == original.shape());
@@ -140,10 +149,11 @@ namespace sparkit::testing {
     CHECK(copy_ci.data() != orig_ci.data());
   }
 
-  TEST_CASE("modified_sparse_row_sparsity - move_construction",
-            "[modified_sparse_row_sparsity]") {
-    Modified_sparse_row_sparsity original{Shape{4, 4},
-                                          {Index{0, 0}, Index{1, 3}}};
+  TEST_CASE(
+    "modified_sparse_row_sparsity - move_construction",
+    "[modified_sparse_row_sparsity]") {
+    Modified_sparse_row_sparsity original{
+      Shape{4, 4}, {Index{0, 0}, Index{1, 3}}};
     auto original_size = original.size();
 
     Modified_sparse_row_sparsity moved{std::move(original)};
@@ -154,7 +164,7 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - csr_to_msr_basic", "[conversions]") {
     Compressed_row_sparsity csr{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}, Index{2, 2}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}, Index{2, 2}}};
 
     auto msr = sparkit::data::detail::to_modified_sparse_row(csr);
 
@@ -172,7 +182,7 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - msr_to_csr_basic", "[conversions]") {
     Modified_sparse_row_sparsity msr{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}, Index{2, 2}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 3}, Index{2, 0}, Index{2, 2}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(msr);
 
@@ -189,10 +199,15 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("conversions - csr_msr_roundtrip", "[conversions]") {
-    Compressed_row_sparsity original{Shape{5, 5},
-                                     {Index{0, 0}, Index{0, 3}, Index{1, 1},
-                                      Index{2, 0}, Index{2, 2}, Index{3, 4},
-                                      Index{4, 4}}};
+    Compressed_row_sparsity original{
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 3},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 4},
+       Index{4, 4}}};
 
     auto msr = sparkit::data::detail::to_modified_sparse_row(original);
     auto roundtrip = sparkit::data::detail::to_compressed_row(msr);

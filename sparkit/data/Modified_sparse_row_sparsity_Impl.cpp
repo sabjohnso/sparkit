@@ -7,14 +7,15 @@
 
 namespace sparkit::data::detail {
 
-  Modified_sparse_row_sparsity::Impl::Impl(Shape shape,
-                                           std::vector<Index> indices)
-      : shape_(shape), total_size_(0),
-        has_diagonal_(
-            static_cast<std::size_t>(std::min(shape.row(), shape.column())),
-            false),
-        off_diagonal_row_ptr_(static_cast<std::size_t>(shape.row() + 1), 0),
-        off_diagonal_col_ind_() {
+  Modified_sparse_row_sparsity::Impl::Impl(
+    Shape shape, std::vector<Index> indices)
+      : shape_(shape)
+      , total_size_(0)
+      , has_diagonal_(
+          static_cast<std::size_t>(std::min(shape.row(), shape.column())),
+          false)
+      , off_diagonal_row_ptr_(static_cast<std::size_t>(shape.row() + 1), 0)
+      , off_diagonal_col_ind_() {
     // Sort by (row, column)
     std::sort(begin(indices), end(indices), [](Index const& a, Index const& b) {
       return a.row() != b.row() ? a.row() < b.row() : a.column() < b.column();
@@ -47,8 +48,8 @@ namespace sparkit::data::detail {
 
     // Build off-diagonal col_ind
     off_diagonal_col_ind_.resize(static_cast<std::size_t>(running));
-    std::vector<size_type> work(off_diagonal_row_ptr_.begin(),
-                                off_diagonal_row_ptr_.end());
+    std::vector<size_type> work(
+      off_diagonal_row_ptr_.begin(), off_diagonal_row_ptr_.end());
 
     for (auto const& idx : indices) {
       if (idx.row() == idx.column() && idx.row() < diag_len) {

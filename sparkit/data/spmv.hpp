@@ -235,8 +235,8 @@ namespace sparkit::data::detail {
 
   template <typename T>
   std::vector<T>
-  multiply_transpose(Compressed_column_matrix<T> const& A,
-                     std::span<T const> x) {
+  multiply_transpose(
+    Compressed_column_matrix<T> const& A, std::span<T const> x) {
     auto cols = A.shape().column();
     auto cp = A.col_ptr();
     auto ri = A.row_ind();
@@ -259,8 +259,8 @@ namespace sparkit::data::detail {
 
   template <typename T>
   std::vector<T>
-  multiply_transpose(Modified_sparse_row_matrix<T> const& A,
-                     std::span<T const> x) {
+  multiply_transpose(
+    Modified_sparse_row_matrix<T> const& A, std::span<T const> x) {
     auto cols = A.shape().column();
     auto diag = A.diagonal();
     auto diag_len = A.sparsity().diagonal_length();
@@ -355,8 +355,8 @@ namespace sparkit::data::detail {
 
   template <typename T>
   std::vector<T>
-  multiply_transpose(Block_sparse_row_matrix<T> const& A,
-                     std::span<T const> x) {
+  multiply_transpose(
+    Block_sparse_row_matrix<T> const& A, std::span<T const> x) {
     auto ncol = A.shape().column();
     auto nrow = A.shape().row();
     auto br = A.sparsity().block_rows();
@@ -375,8 +375,8 @@ namespace sparkit::data::detail {
         for (config::size_type r = 0; r < br; ++r) {
           for (config::size_type c = 0; c < bc; ++c) {
             y[static_cast<std::size_t>(J * bc + c)] +=
-                vals[block_base + static_cast<std::size_t>(r * bc + c)] *
-                x[I * br + r];
+              vals[block_base + static_cast<std::size_t>(r * bc + c)] *
+              x[I * br + r];
           }
         }
       }
@@ -416,8 +416,8 @@ namespace sparkit::data::detail {
 
   template <typename T>
   std::vector<T>
-  multiply_transpose(Symmetric_compressed_row_matrix<T> const& A,
-                     std::span<T const> x) {
+  multiply_transpose(
+    Symmetric_compressed_row_matrix<T> const& A, std::span<T const> x) {
     return multiply(A, x);
   }
 

@@ -43,7 +43,7 @@ namespace sparkit::data::detail {
       // Off-diagonal entries: j < i
       for (auto p = rp[i]; p < rp[i + 1] - 1; ++p) {
         x[static_cast<std::size_t>(i)] -=
-            vals[p] * x[static_cast<std::size_t>(ci[p])];
+          vals[p] * x[static_cast<std::size_t>(ci[p])];
       }
 
       // Diagonal: last entry in row
@@ -88,7 +88,7 @@ namespace sparkit::data::detail {
       // Off-diagonal entries: j > i
       for (auto p = rp[i] + 1; p < rp[i + 1]; ++p) {
         x[static_cast<std::size_t>(i)] -=
-            vals[p] * x[static_cast<std::size_t>(ci[p])];
+          vals[p] * x[static_cast<std::size_t>(ci[p])];
       }
 
       x[static_cast<std::size_t>(i)] /= vals[diag_pos];
@@ -109,13 +109,13 @@ namespace sparkit::data::detail {
 
   template <typename T>
   std::vector<T>
-  forward_solve_transpose(Compressed_row_matrix<T> const& L,
-                          std::span<T const> b) {
+  forward_solve_transpose(
+    Compressed_row_matrix<T> const& L, std::span<T const> b) {
     auto n = L.shape().row();
 
     if (L.shape().row() != L.shape().column()) {
       throw std::invalid_argument(
-          "forward_solve_transpose requires a square matrix");
+        "forward_solve_transpose requires a square matrix");
     }
 
     auto rp = L.row_ptr();
@@ -134,7 +134,7 @@ namespace sparkit::data::detail {
       // Off-diagonal: L(i,j) for j < i  =>  L^T(j,i) = L(i,j)
       for (auto p = rp[i]; p < rp[i + 1] - 1; ++p) {
         x[static_cast<std::size_t>(ci[p])] -=
-            vals[p] * x[static_cast<std::size_t>(i)];
+          vals[p] * x[static_cast<std::size_t>(i)];
       }
     }
 

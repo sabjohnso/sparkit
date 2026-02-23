@@ -25,17 +25,19 @@ namespace sparkit::data::detail {
     /**
      * @brief Construct from sparsity, diagonal values, and off-diagonal values.
      */
-    Modified_sparse_row_matrix(Modified_sparse_row_sparsity sparsity,
-                               std::vector<T> diagonal,
-                               std::vector<T> off_diagonal_values)
-        : sparsity_(std::move(sparsity)), diagonal_(std::move(diagonal)),
-          off_diagonal_values_(std::move(off_diagonal_values)) {}
+    Modified_sparse_row_matrix(
+      Modified_sparse_row_sparsity sparsity,
+      std::vector<T> diagonal,
+      std::vector<T> off_diagonal_values)
+        : sparsity_(std::move(sparsity))
+        , diagonal_(std::move(diagonal))
+        , off_diagonal_values_(std::move(off_diagonal_values)) {}
 
     /**
      * @brief Construct from a shape and an entry list.
      */
-    Modified_sparse_row_matrix(Shape shape,
-                               std::initializer_list<Entry<T>> const& input)
+    Modified_sparse_row_matrix(
+      Shape shape, std::initializer_list<Entry<T>> const& input)
         : Modified_sparse_row_matrix(from_entries(shape, input)) {}
 
     size_type
@@ -104,8 +106,8 @@ namespace sparkit::data::detail {
       auto same_index = [](auto const& a, auto const& b) {
         return a.index == b.index;
       };
-      sorted.erase(std::unique(sorted.begin(), sorted.end(), same_index),
-                   sorted.end());
+      sorted.erase(
+        std::unique(sorted.begin(), sorted.end(), same_index), sorted.end());
 
       auto diag_len = std::min(shape.row(), shape.column());
 
@@ -120,13 +122,14 @@ namespace sparkit::data::detail {
         indices.push_back(entry.index);
       }
 
-      Modified_sparse_row_sparsity sparsity{shape, indices.begin(),
-                                            indices.end()};
+      Modified_sparse_row_sparsity sparsity{
+        shape, indices.begin(), indices.end()};
 
       // Fill diagonal values
       for (auto const& entry : sorted) {
-        if (entry.index.row() == entry.index.column() &&
-            entry.index.row() < diag_len) {
+        if (
+          entry.index.row() == entry.index.column() &&
+          entry.index.row() < diag_len) {
           diagonal[static_cast<std::size_t>(entry.index.row())] = entry.value;
         }
       }
@@ -137,8 +140,9 @@ namespace sparkit::data::detail {
       off_diag_values.resize(static_cast<std::size_t>(ci.size()), T{0});
 
       for (auto const& entry : sorted) {
-        if (entry.index.row() == entry.index.column() &&
-            entry.index.row() < diag_len) {
+        if (
+          entry.index.row() == entry.index.column() &&
+          entry.index.row() < diag_len) {
           continue;
         }
         // Find position in off-diagonal col_ind
@@ -155,7 +159,7 @@ namespace sparkit::data::detail {
       }
 
       return Modified_sparse_row_matrix{
-          std::move(sparsity), std::move(diagonal), std::move(off_diag_values)};
+        std::move(sparsity), std::move(diagonal), std::move(off_diag_values)};
     }
 
     Modified_sparse_row_sparsity sparsity_;

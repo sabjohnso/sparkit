@@ -30,7 +30,8 @@ namespace sparkit::data::detail {
      * diagonal are stored contiguously.
      */
     Diagonal_matrix(Diagonal_sparsity sparsity, std::vector<T> values)
-        : sparsity_(std::move(sparsity)), values_(std::move(values)) {}
+        : sparsity_(std::move(sparsity))
+        , values_(std::move(values)) {}
 
     /**
      * @brief Construct from a shape and an entry list.
@@ -108,8 +109,8 @@ namespace sparkit::data::detail {
       auto same_index = [](auto const& a, auto const& b) {
         return a.index == b.index;
       };
-      sorted.erase(std::unique(sorted.begin(), sorted.end(), same_index),
-                   sorted.end());
+      sorted.erase(
+        std::unique(sorted.begin(), sorted.end(), same_index), sorted.end());
 
       // Build sparsity from indices
       std::vector<Index> indices;
@@ -131,7 +132,7 @@ namespace sparkit::data::detail {
         auto offset = entry.index.column() - entry.index.row();
         auto it = std::lower_bound(off.begin(), off.end(), offset);
         auto diag_idx =
-            static_cast<std::size_t>(std::distance(off.begin(), it));
+          static_cast<std::size_t>(std::distance(off.begin(), it));
 
         size_type pos = 0;
         for (std::size_t d = 0; d < diag_idx; ++d) {

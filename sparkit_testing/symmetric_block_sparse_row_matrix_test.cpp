@@ -27,47 +27,51 @@ namespace sparkit::testing {
 
   // -- sBSR matrix core --
 
-  TEST_CASE("symmetric_block_sparse_row_matrix - construction_from_entries",
-            "[symmetric_block_sparse_row_matrix]") {
+  TEST_CASE(
+    "symmetric_block_sparse_row_matrix - construction_from_entries",
+    "[symmetric_block_sparse_row_matrix]") {
     // 4x4 symmetric: blocks (0,0), (1,0), (1,1)
-    Symmetric_block_sparse_row_matrix<double> mat{Shape{4, 4},
-                                                  2,
-                                                  2,
-                                                  {{Index{0, 0}, 1.0},
-                                                   {Index{0, 1}, 2.0},
-                                                   {Index{1, 0}, 2.0},
-                                                   {Index{1, 1}, 3.0},
-                                                   {Index{2, 0}, 4.0},
-                                                   {Index{2, 1}, 5.0},
-                                                   {Index{3, 0}, 6.0},
-                                                   {Index{3, 1}, 7.0},
-                                                   {Index{2, 2}, 8.0},
-                                                   {Index{2, 3}, 9.0},
-                                                   {Index{3, 2}, 9.0},
-                                                   {Index{3, 3}, 10.0}}};
+    Symmetric_block_sparse_row_matrix<double> mat{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 1}, 5.0},
+       {Index{3, 0}, 6.0},
+       {Index{3, 1}, 7.0},
+       {Index{2, 2}, 8.0},
+       {Index{2, 3}, 9.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     CHECK(mat.shape() == Shape(4, 4));
     // 3 blocks * 4 positions = 12
     CHECK(mat.size() == 12);
   }
 
-  TEST_CASE("symmetric_block_sparse_row_matrix - element_access_lower_triangle",
-            "[symmetric_block_sparse_row_matrix]") {
-    Symmetric_block_sparse_row_matrix<double> mat{Shape{4, 4},
-                                                  2,
-                                                  2,
-                                                  {{Index{0, 0}, 1.0},
-                                                   {Index{0, 1}, 2.0},
-                                                   {Index{1, 0}, 2.0},
-                                                   {Index{1, 1}, 3.0},
-                                                   {Index{2, 0}, 4.0},
-                                                   {Index{2, 1}, 5.0},
-                                                   {Index{3, 0}, 6.0},
-                                                   {Index{3, 1}, 7.0},
-                                                   {Index{2, 2}, 8.0},
-                                                   {Index{2, 3}, 9.0},
-                                                   {Index{3, 2}, 9.0},
-                                                   {Index{3, 3}, 10.0}}};
+  TEST_CASE(
+    "symmetric_block_sparse_row_matrix - element_access_lower_triangle",
+    "[symmetric_block_sparse_row_matrix]") {
+    Symmetric_block_sparse_row_matrix<double> mat{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 1}, 5.0},
+       {Index{3, 0}, 6.0},
+       {Index{3, 1}, 7.0},
+       {Index{2, 2}, 8.0},
+       {Index{2, 3}, 9.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     // Block (0,0) — diagonal
     CHECK(mat(0, 0) == Catch::Approx(1.0));
@@ -86,23 +90,25 @@ namespace sparkit::testing {
     CHECK(mat(3, 3) == Catch::Approx(10.0));
   }
 
-  TEST_CASE("symmetric_block_sparse_row_matrix - element_access_upper_triangle",
-            "[symmetric_block_sparse_row_matrix]") {
-    Symmetric_block_sparse_row_matrix<double> mat{Shape{4, 4},
-                                                  2,
-                                                  2,
-                                                  {{Index{0, 0}, 1.0},
-                                                   {Index{0, 1}, 2.0},
-                                                   {Index{1, 0}, 2.0},
-                                                   {Index{1, 1}, 3.0},
-                                                   {Index{2, 0}, 4.0},
-                                                   {Index{2, 1}, 5.0},
-                                                   {Index{3, 0}, 6.0},
-                                                   {Index{3, 1}, 7.0},
-                                                   {Index{2, 2}, 8.0},
-                                                   {Index{2, 3}, 9.0},
-                                                   {Index{3, 2}, 9.0},
-                                                   {Index{3, 3}, 10.0}}};
+  TEST_CASE(
+    "symmetric_block_sparse_row_matrix - element_access_upper_triangle",
+    "[symmetric_block_sparse_row_matrix]") {
+    Symmetric_block_sparse_row_matrix<double> mat{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 1}, 5.0},
+       {Index{3, 0}, 6.0},
+       {Index{3, 1}, 7.0},
+       {Index{2, 2}, 8.0},
+       {Index{2, 3}, 9.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     // Block (0,1) — mirror of block (1,0), read with transposed local indices
     // (0,1) stores block (1,0) which has:
@@ -122,21 +128,22 @@ namespace sparkit::testing {
   // -- sBSR matrix <-> CSR matrix conversions --
 
   TEST_CASE("conversions - sbsr_matrix_to_csr_matrix_basic", "[conversions]") {
-    Symmetric_block_sparse_row_matrix<double> sbsr{Shape{4, 4},
-                                                   2,
-                                                   2,
-                                                   {{Index{0, 0}, 1.0},
-                                                    {Index{0, 1}, 2.0},
-                                                    {Index{1, 0}, 2.0},
-                                                    {Index{1, 1}, 3.0},
-                                                    {Index{2, 0}, 4.0},
-                                                    {Index{2, 1}, 5.0},
-                                                    {Index{3, 0}, 6.0},
-                                                    {Index{3, 1}, 7.0},
-                                                    {Index{2, 2}, 8.0},
-                                                    {Index{2, 3}, 9.0},
-                                                    {Index{3, 2}, 9.0},
-                                                    {Index{3, 3}, 10.0}}};
+    Symmetric_block_sparse_row_matrix<double> sbsr{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 1}, 5.0},
+       {Index{3, 0}, 6.0},
+       {Index{3, 1}, 7.0},
+       {Index{2, 2}, 8.0},
+       {Index{2, 3}, 9.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(sbsr);
 
@@ -149,23 +156,24 @@ namespace sparkit::testing {
 
   TEST_CASE("conversions - csr_matrix_to_sbsr_matrix_basic", "[conversions]") {
     // Full symmetric 4x4 matrix
-    Compressed_row_matrix<double> csr{Shape{4, 4},
-                                      {{Index{0, 0}, 1.0},
-                                       {Index{0, 1}, 2.0},
-                                       {Index{0, 2}, 4.0},
-                                       {Index{0, 3}, 6.0},
-                                       {Index{1, 0}, 2.0},
-                                       {Index{1, 1}, 3.0},
-                                       {Index{1, 2}, 5.0},
-                                       {Index{1, 3}, 7.0},
-                                       {Index{2, 0}, 4.0},
-                                       {Index{2, 1}, 5.0},
-                                       {Index{2, 2}, 8.0},
-                                       {Index{2, 3}, 9.0},
-                                       {Index{3, 0}, 6.0},
-                                       {Index{3, 1}, 7.0},
-                                       {Index{3, 2}, 9.0},
-                                       {Index{3, 3}, 10.0}}};
+    Compressed_row_matrix<double> csr{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 4.0},
+       {Index{0, 3}, 6.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 5.0},
+       {Index{1, 3}, 7.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 1}, 5.0},
+       {Index{2, 2}, 8.0},
+       {Index{2, 3}, 9.0},
+       {Index{3, 0}, 6.0},
+       {Index{3, 1}, 7.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     auto sbsr = sparkit::data::detail::to_symmetric_block_sparse_row(csr, 2, 2);
 
@@ -177,25 +185,26 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("conversions - sbsr_matrix_csr_matrix_roundtrip", "[conversions]") {
-    Symmetric_block_sparse_row_matrix<double> original{Shape{4, 4},
-                                                       2,
-                                                       2,
-                                                       {{Index{0, 0}, 1.0},
-                                                        {Index{0, 1}, 2.0},
-                                                        {Index{1, 0}, 2.0},
-                                                        {Index{1, 1}, 3.0},
-                                                        {Index{2, 0}, 4.0},
-                                                        {Index{2, 1}, 5.0},
-                                                        {Index{3, 0}, 6.0},
-                                                        {Index{3, 1}, 7.0},
-                                                        {Index{2, 2}, 8.0},
-                                                        {Index{2, 3}, 9.0},
-                                                        {Index{3, 2}, 9.0},
-                                                        {Index{3, 3}, 10.0}}};
+    Symmetric_block_sparse_row_matrix<double> original{
+      Shape{4, 4},
+      2,
+      2,
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 1}, 5.0},
+       {Index{3, 0}, 6.0},
+       {Index{3, 1}, 7.0},
+       {Index{2, 2}, 8.0},
+       {Index{2, 3}, 9.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     auto csr = sparkit::data::detail::to_compressed_row(original);
     auto roundtrip =
-        sparkit::data::detail::to_symmetric_block_sparse_row(csr, 2, 2);
+      sparkit::data::detail::to_symmetric_block_sparse_row(csr, 2, 2);
 
     CHECK(roundtrip.shape() == original.shape());
     CHECK(roundtrip(0, 0) == Catch::Approx(1.0));

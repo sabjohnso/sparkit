@@ -2,7 +2,9 @@
 
 namespace sparkit::data::detail {
 
-  Index::Index(size_type row, size_type column) : row_(row), column_(column) {
+  Index::Index(size_type row, size_type column)
+      : row_(row)
+      , column_(column) {
     if (row_ < 0 || column_ < 0) { throw logic_error("invalid matrix index"); }
   }
 

@@ -8,11 +8,13 @@
 namespace sparkit::data::detail {
 
   Diagonal_sparsity::Impl::Impl(Shape shape, std::vector<size_type> offsets)
-      : shape_(shape), offsets_(std::move(offsets)), total_size_(0) {
+      : shape_(shape)
+      , offsets_(std::move(offsets))
+      , total_size_(0) {
     // Sort and deduplicate offsets
     std::sort(offsets_.begin(), offsets_.end());
-    offsets_.erase(std::unique(offsets_.begin(), offsets_.end()),
-                   offsets_.end());
+    offsets_.erase(
+      std::unique(offsets_.begin(), offsets_.end()), offsets_.end());
 
     // Compute total size: number of valid positions on each diagonal
     auto nrow = shape_.row();

@@ -38,8 +38,8 @@ namespace sparkit::data::detail {
     iss >> header >> object >> format_str >> field_str >> symmetry_str;
 
     if (to_lower(header) != "%%matrixmarket") {
-      throw std::runtime_error("matrix market: invalid banner header: " +
-                               header);
+      throw std::runtime_error(
+        "matrix market: invalid banner header: " + header);
     }
 
     format_str = to_lower(format_str);
@@ -77,8 +77,8 @@ namespace sparkit::data::detail {
     } else if (symmetry_str == "hermitian") {
       banner.symmetry = Matrix_market_banner::Symmetry::hermitian;
     } else {
-      throw std::runtime_error("matrix market: unknown symmetry: " +
-                               symmetry_str);
+      throw std::runtime_error(
+        "matrix market: unknown symmetry: " + symmetry_str);
     }
 
     return banner;

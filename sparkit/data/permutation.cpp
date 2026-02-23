@@ -30,14 +30,15 @@ namespace sparkit::data::detail {
     std::vector<config::size_type> inv(n);
     for (std::size_t old_idx = 0; old_idx < n; ++old_idx) {
       inv[static_cast<std::size_t>(perm[old_idx])] =
-          static_cast<config::size_type>(old_idx);
+        static_cast<config::size_type>(old_idx);
     }
     return inv;
   }
 
   Compressed_row_sparsity
-  rperm(Compressed_row_sparsity const& sp,
-        std::span<config::size_type const> perm) {
+  rperm(
+    Compressed_row_sparsity const& sp,
+    std::span<config::size_type const> perm) {
     auto inv = inverse_permutation(perm);
     auto rp = sp.row_ptr();
     auto ci = sp.col_ind();
@@ -57,8 +58,9 @@ namespace sparkit::data::detail {
   }
 
   Compressed_row_sparsity
-  cperm(Compressed_row_sparsity const& sp,
-        std::span<config::size_type const> perm) {
+  cperm(
+    Compressed_row_sparsity const& sp,
+    std::span<config::size_type const> perm) {
     auto rp = sp.row_ptr();
     auto ci = sp.col_ind();
     auto nrow = sp.shape().row();
@@ -83,8 +85,9 @@ namespace sparkit::data::detail {
   }
 
   Compressed_row_sparsity
-  dperm(Compressed_row_sparsity const& sp,
-        std::span<config::size_type const> perm) {
+  dperm(
+    Compressed_row_sparsity const& sp,
+    std::span<config::size_type const> perm) {
     auto inv = inverse_permutation(perm);
     auto rp = sp.row_ptr();
     auto ci = sp.col_ind();

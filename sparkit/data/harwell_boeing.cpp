@@ -35,7 +35,7 @@ namespace sparkit::data::detail {
     // Line 1: Title (A72) + Key (A8)
     if (!std::getline(is, line)) {
       throw std::runtime_error(
-          "harwell boeing: unexpected end of input reading header line 1");
+        "harwell boeing: unexpected end of input reading header line 1");
     }
 
     if (line.size() >= 72) {
@@ -49,18 +49,18 @@ namespace sparkit::data::detail {
     // Line 2: TOTCRD, PTRCRD, INDCRD, VALCRD, RHSCRD (5I14)
     if (!std::getline(is, line)) {
       throw std::runtime_error(
-          "harwell boeing: unexpected end of input reading header line 2");
+        "harwell boeing: unexpected end of input reading header line 2");
     }
     {
       std::istringstream iss{line};
       iss >> header.totcrd >> header.ptrcrd >> header.indcrd >> header.valcrd >>
-          header.rhscrd;
+        header.rhscrd;
     }
 
     // Line 3: MXTYPE (A3) + NROW, NCOL, NNZERO, NELTVL (4I14)
     if (!std::getline(is, line)) {
       throw std::runtime_error(
-          "harwell boeing: unexpected end of input reading header line 3");
+        "harwell boeing: unexpected end of input reading header line 3");
     }
     {
       // MXTYPE is first 3 characters
@@ -76,7 +76,7 @@ namespace sparkit::data::detail {
     // Line 4: Format specs (2A16, 2A20)
     if (!std::getline(is, line)) {
       throw std::runtime_error(
-          "harwell boeing: unexpected end of input reading header line 4");
+        "harwell boeing: unexpected end of input reading header line 4");
     }
     {
       // Pad line to at least 72 characters
@@ -126,8 +126,8 @@ namespace sparkit::data::detail {
     auto open = fmt.find('(');
     auto close = fmt.find(')');
     if (open == std::string::npos || close == std::string::npos) {
-      throw std::runtime_error("harwell boeing: invalid Fortran format: " +
-                               fmt);
+      throw std::runtime_error(
+        "harwell boeing: invalid Fortran format: " + fmt);
     }
 
     std::string inner = fmt.substr(open + 1, close - open - 1);
@@ -153,19 +153,19 @@ namespace sparkit::data::detail {
     }
 
     if (repeat_end == pos || repeat_end >= inner.size()) {
-      throw std::runtime_error("harwell boeing: invalid Fortran format: " +
-                               fmt);
+      throw std::runtime_error(
+        "harwell boeing: invalid Fortran format: " + fmt);
     }
 
     config::size_type repeat = std::stol(inner.substr(pos, repeat_end - pos));
 
     // Parse type character
     char type = static_cast<char>(
-        std::toupper(static_cast<unsigned char>(inner[repeat_end])));
-    if (type != 'I' && type != 'F' && type != 'E' && type != 'D' &&
-        type != 'G') {
-      throw std::runtime_error("harwell boeing: invalid Fortran format type: " +
-                               fmt);
+      std::toupper(static_cast<unsigned char>(inner[repeat_end])));
+    if (
+      type != 'I' && type != 'F' && type != 'E' && type != 'D' && type != 'G') {
+      throw std::runtime_error(
+        "harwell boeing: invalid Fortran format type: " + fmt);
     }
 
     // Parse width (and optional .decimals)
@@ -185,8 +185,8 @@ namespace sparkit::data::detail {
   }
 
   std::vector<config::size_type>
-  read_fortran_integers(std::istream& is, Fortran_format const& fmt,
-                        config::size_type count) {
+  read_fortran_integers(
+    std::istream& is, Fortran_format const& fmt, config::size_type count) {
     using size_type = config::size_type;
 
     std::vector<size_type> result;
@@ -200,7 +200,7 @@ namespace sparkit::data::detail {
     while (read_so_far < count) {
       if (!std::getline(is, line)) {
         throw std::runtime_error(
-            "harwell boeing: unexpected end of input reading integers");
+          "harwell boeing: unexpected end of input reading integers");
       }
 
       size_type fields_on_line = std::min(fields_per_line, count - read_so_far);
@@ -209,8 +209,8 @@ namespace sparkit::data::detail {
         auto start = static_cast<std::size_t>(i * field_width);
         if (start >= line.size()) break;
 
-        auto len = std::min(static_cast<std::size_t>(field_width),
-                            line.size() - start);
+        auto len =
+          std::min(static_cast<std::size_t>(field_width), line.size() - start);
         std::string field = line.substr(start, len);
 
         result.push_back(static_cast<size_type>(std::stol(field)));

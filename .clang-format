@@ -14,7 +14,7 @@ BasedOnStyle: LLVM
 IndentWidth: 2
 TabWidth: 2
 UseTab: Never
-ContinuationIndentWidth: 4
+ContinuationIndentWidth: 2
 ConstructorInitializerIndentWidth: 4
 AccessModifierOffset: -2
 IndentCaseLabels: true
@@ -80,7 +80,7 @@ AlignConsecutiveDeclarations:
   Enabled: false
 AlignConsecutiveMacros:
   Enabled: false
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: AlwaysBreak
 AlignTrailingComments:
   Kind: Always
   OverEmptyLines: 0
@@ -101,7 +101,8 @@ KeepEmptyLines:
 
 # --- Breaking ---
 BreakAfterReturnType: All
-BreakConstructorInitializers: BeforeColon
+BreakConstructorInitializers: BeforeComma
+PackConstructorInitializers: Never
 BreakInheritanceList: BeforeColon
 BreakStringLiterals: true
 # Fowler keeps declarations on separate lines for readability;
@@ -109,8 +110,8 @@ BreakStringLiterals: true
 BreakTemplateDeclarations: Yes
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
-BinPackArguments: true
-BinPackParameters: BinPack
+BinPackArguments: false
+BinPackParameters: OnePerLine
 
 # --- Includes ---
 SortIncludes: CaseInsensitive

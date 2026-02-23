@@ -7,19 +7,26 @@
 
 namespace sparkit::data::detail {
 
-  Coordinate_sparsity::Impl::Impl(Shape shape) : shape_(shape), nonzeros_{} {}
+  Coordinate_sparsity::Impl::Impl(Shape shape)
+      : shape_(shape)
+      , nonzeros_{} {}
 
-  Coordinate_sparsity::Impl::Impl(Impl const& input) : shape_(input.shape_) {
-    std::copy(begin(input.nonzeros_), end(input.nonzeros_),
-              std::inserter(nonzeros_, end(nonzeros_)));
+  Coordinate_sparsity::Impl::Impl(Impl const& input)
+      : shape_(input.shape_) {
+    std::copy(
+      begin(input.nonzeros_),
+      end(input.nonzeros_),
+      std::inserter(nonzeros_, end(nonzeros_)));
   }
 
   Coordinate_sparsity::Impl&
   Coordinate_sparsity::Impl::operator=(const Coordinate_sparsity::Impl& input) {
     shape_ = input.shape_;
     nonzeros_.clear();
-    std::copy(begin(input.nonzeros_), end(input.nonzeros_),
-              std::inserter(nonzeros_, std::end(nonzeros_)));
+    std::copy(
+      begin(input.nonzeros_),
+      end(input.nonzeros_),
+      std::inserter(nonzeros_, std::end(nonzeros_)));
     return *this;
   }
 

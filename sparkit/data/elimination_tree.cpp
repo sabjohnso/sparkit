@@ -37,8 +37,8 @@ namespace sparkit::data::detail {
     std::vector<size_type> col_ptr(static_cast<std::size_t>(n + 1), 0);
     for (size_type j = 0; j < n; ++j) {
       col_ptr[static_cast<std::size_t>(j + 1)] =
-          col_ptr[static_cast<std::size_t>(j)] +
-          count[static_cast<std::size_t>(j)];
+        col_ptr[static_cast<std::size_t>(j)] +
+        count[static_cast<std::size_t>(j)];
     }
 
     // Pass 2: fill row indices using work copy of col_ptr
@@ -74,7 +74,8 @@ namespace sparkit::data::detail {
 
     for (size_type j = 0; j < n; ++j) {
       for (auto p = col_ptr[static_cast<std::size_t>(j)];
-           p < col_ptr[static_cast<std::size_t>(j + 1)]; ++p) {
+           p < col_ptr[static_cast<std::size_t>(j + 1)];
+           ++p) {
         auto i = row_ind[static_cast<std::size_t>(p)];
 
         // Walk from i toward j following ancestor pointers
@@ -123,7 +124,7 @@ namespace sparkit::data::detail {
         if (child != -1) {
           // Advance to next child for next visit
           head[static_cast<std::size_t>(node)] =
-              next[static_cast<std::size_t>(child)];
+            next[static_cast<std::size_t>(child)];
           stack.push_back(child);
         } else {
           // All children visited; emit this node
@@ -137,8 +138,8 @@ namespace sparkit::data::detail {
   }
 
   std::vector<size_type>
-  cholesky_column_counts(Compressed_row_sparsity const& sp,
-                         std::span<size_type const> parent) {
+  cholesky_column_counts(
+    Compressed_row_sparsity const& sp, std::span<size_type const> parent) {
     auto n = sp.shape().row();
     auto sym = symmetrize_pattern(sp);
     auto rp = sym.row_ptr();

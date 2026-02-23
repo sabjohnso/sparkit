@@ -65,8 +65,9 @@ namespace sparkit::testing {
 
   // Check that L * L^T == A entry-by-entry with tolerance.
   static void
-  check_reconstruction(Compressed_row_matrix<double> const& L,
-                       Compressed_row_matrix<double> const& A) {
+  check_reconstruction(
+    Compressed_row_matrix<double> const& L,
+    Compressed_row_matrix<double> const& A) {
     auto Lt = transpose(L);
     auto LLt = multiply(L, Lt);
 
@@ -114,9 +115,11 @@ namespace sparkit::testing {
   TEST_CASE("numeric cholesky - diagonal", "[numeric_cholesky]") {
     // A = diag(4, 9, 16, 25)  ->  L = diag(2, 3, 4, 5)
     Compressed_row_matrix<double> A{
-        Shape{4, 4},
-        {Entry<double>{Index{0, 0}, 4.0}, Entry<double>{Index{1, 1}, 9.0},
-         Entry<double>{Index{2, 2}, 16.0}, Entry<double>{Index{3, 3}, 25.0}}};
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{1, 1}, 9.0},
+       Entry<double>{Index{2, 2}, 16.0},
+       Entry<double>{Index{3, 3}, 25.0}}};
 
     auto L = cholesky(A);
 
@@ -133,9 +136,11 @@ namespace sparkit::testing {
   TEST_CASE("numeric cholesky - small 2x2", "[numeric_cholesky]") {
     // A = [[4, 2], [2, 5]]  ->  L = [[2, 0], [1, 2]]
     Compressed_row_matrix<double> A{
-        Shape{2, 2},
-        {Entry<double>{Index{0, 0}, 4.0}, Entry<double>{Index{0, 1}, 2.0},
-         Entry<double>{Index{1, 0}, 2.0}, Entry<double>{Index{1, 1}, 5.0}}};
+      Shape{2, 2},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{0, 1}, 2.0},
+       Entry<double>{Index{1, 0}, 2.0},
+       Entry<double>{Index{1, 1}, 5.0}}};
 
     auto L = cholesky(A);
 
@@ -148,8 +153,8 @@ namespace sparkit::testing {
     CHECK(L(1, 1) == Catch::Approx(2.0));
   }
 
-  TEST_CASE("numeric cholesky - tridiagonal reconstruction",
-            "[numeric_cholesky]") {
+  TEST_CASE(
+    "numeric cholesky - tridiagonal reconstruction", "[numeric_cholesky]") {
     auto A = make_tridiag_4();
     auto L = cholesky(A);
     check_reconstruction(L, A);
@@ -174,8 +179,8 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("numeric cholesky - pattern matches symbolic",
-            "[numeric_cholesky]") {
+  TEST_CASE(
+    "numeric cholesky - pattern matches symbolic", "[numeric_cholesky]") {
     auto A = make_tridiag_4();
     auto L_pattern = symbolic_cholesky(A.sparsity());
     auto L = cholesky(A);
@@ -195,8 +200,8 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("numeric cholesky - separate symbolic numeric",
-            "[numeric_cholesky]") {
+  TEST_CASE(
+    "numeric cholesky - separate symbolic numeric", "[numeric_cholesky]") {
     auto A = make_tridiag_4();
     auto L_pattern = symbolic_cholesky(A.sparsity());
     auto L_separate = numeric_cholesky(A, L_pattern);
@@ -236,8 +241,8 @@ namespace sparkit::testing {
           entries.push_back(Entry<double>{Index{node, node + grid}, -1.0});
           ++degree;
         }
-        entries.push_back(Entry<double>{Index{node, node},
-                                        static_cast<double>(degree) + 5.0});
+        entries.push_back(
+          Entry<double>{Index{node, node}, static_cast<double>(degree) + 5.0});
       }
     }
 
@@ -247,10 +252,11 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("numeric cholesky - rectangular rejected", "[numeric_cholesky]") {
-    Compressed_row_matrix<double> A{Shape{3, 4},
-                                    {Entry<double>{Index{0, 0}, 1.0},
-                                     Entry<double>{Index{1, 1}, 1.0},
-                                     Entry<double>{Index{2, 2}, 1.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 4},
+      {Entry<double>{Index{0, 0}, 1.0},
+       Entry<double>{Index{1, 1}, 1.0},
+       Entry<double>{Index{2, 2}, 1.0}}};
 
     CHECK_THROWS_AS(cholesky(A), std::invalid_argument);
   }
@@ -258,15 +264,17 @@ namespace sparkit::testing {
   TEST_CASE("numeric cholesky - not positive definite", "[numeric_cholesky]") {
     // A = [[1, 2], [2, 1]] is symmetric but not positive definite
     Compressed_row_matrix<double> A{
-        Shape{2, 2},
-        {Entry<double>{Index{0, 0}, 1.0}, Entry<double>{Index{0, 1}, 2.0},
-         Entry<double>{Index{1, 0}, 2.0}, Entry<double>{Index{1, 1}, 1.0}}};
+      Shape{2, 2},
+      {Entry<double>{Index{0, 0}, 1.0},
+       Entry<double>{Index{0, 1}, 2.0},
+       Entry<double>{Index{1, 0}, 2.0},
+       Entry<double>{Index{1, 1}, 1.0}}};
 
     CHECK_THROWS_AS(cholesky(A), std::domain_error);
   }
 
-  TEST_CASE("numeric cholesky - diagonal values positive",
-            "[numeric_cholesky]") {
+  TEST_CASE(
+    "numeric cholesky - diagonal values positive", "[numeric_cholesky]") {
     auto A = make_tridiag_4();
     auto L = cholesky(A);
 

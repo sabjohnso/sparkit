@@ -48,8 +48,8 @@ namespace sparkit::testing {
     CHECK_FALSE(is_valid_permutation(p));
   }
 
-  TEST_CASE("permutation - is_valid_permutation out of range",
-            "[permutation]") {
+  TEST_CASE(
+    "permutation - is_valid_permutation out of range", "[permutation]") {
     std::vector<size_type> p{0, 3, 1};
     CHECK_FALSE(is_valid_permutation(p));
   }
@@ -97,11 +97,12 @@ namespace sparkit::testing {
 
   TEST_CASE("permutation - rperm identity", "[permutation]") {
     // A = [[1,2],[0,3],[4,0]]
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{2, 0}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0}}};
 
     std::vector<size_type> p{0, 1, 2};
     auto B = rperm(A, p);
@@ -121,13 +122,14 @@ namespace sparkit::testing {
     // Result: row 0 of B = old row inv[0] = old row 1 = [0,3,4]
     //         row 1 of B = old row inv[1] = old row 2 = [5,0,6]
     //         row 2 of B = old row inv[2] = old row 0 = [1,2,0]
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<size_type> p{2, 0, 1};
     auto B = rperm(A, p);
@@ -153,9 +155,14 @@ namespace sparkit::testing {
 
   TEST_CASE("permutation - rperm sparsity", "[permutation]") {
     // Test sparsity-only rperm
-    Compressed_row_sparsity sp{Shape{3, 3},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 1},
-                                Index{1, 2}, Index{2, 0}, Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 3},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 0},
+       Index{2, 2}}};
 
     std::vector<size_type> p{2, 0, 1};
     auto result = rperm(sp, p);
@@ -182,11 +189,12 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("permutation - cperm identity", "[permutation]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{2, 0}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0}}};
 
     std::vector<size_type> p{0, 1, 2};
     auto B = cperm(A, p);
@@ -214,13 +222,14 @@ namespace sparkit::testing {
     //   A(1,2)=4 -> B(1, perm[2])=B(1,1)=4
     //   A(2,0)=5 -> B(2, perm[0])=B(2,2)=5
     //   A(2,2)=6 -> B(2, perm[2])=B(2,1)=6
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<size_type> p{2, 0, 1};
     auto B = cperm(A, p);
@@ -240,9 +249,14 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("permutation - cperm sparsity", "[permutation]") {
-    Compressed_row_sparsity sp{Shape{3, 3},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 1},
-                                Index{1, 2}, Index{2, 0}, Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 3},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 0},
+       Index{2, 2}}};
 
     // perm = {2,0,1}: col 0->2, col 1->0, col 2->1
     std::vector<size_type> p{2, 0, 1};
@@ -270,13 +284,14 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("permutation - dperm identity", "[permutation]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<size_type> p{0, 1, 2};
     auto B = dperm(A, p);
@@ -291,13 +306,14 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("permutation - dperm equals rperm of cperm", "[permutation]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0}}};
 
     std::vector<size_type> p{2, 0, 1};
 

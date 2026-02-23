@@ -54,12 +54,12 @@ namespace sparkit::data::detail {
 
     if (banner.format != Matrix_market_banner::Format::coordinate) {
       throw std::runtime_error(
-          "matrix market: only coordinate format is supported");
+        "matrix market: only coordinate format is supported");
     }
 
     if (banner.field == Matrix_market_banner::Field::complex) {
       throw std::runtime_error(
-          "matrix market: complex field is not yet supported");
+        "matrix market: complex field is not yet supported");
     }
 
     while (std::getline(is, line)) {
@@ -75,9 +75,9 @@ namespace sparkit::data::detail {
     }
 
     bool const is_pattern =
-        (banner.field == Matrix_market_banner::Field::pattern);
+      (banner.field == Matrix_market_banner::Field::pattern);
     bool const is_symmetric =
-        (banner.symmetry == Matrix_market_banner::Symmetry::symmetric);
+      (banner.symmetry == Matrix_market_banner::Symmetry::symmetric);
 
     std::vector<Entry<T>> entries;
     entries.reserve(static_cast<std::size_t>(is_symmetric ? nnz * 2 : nnz));
@@ -107,8 +107,8 @@ namespace sparkit::data::detail {
       }
     }
 
-    return Coordinate_matrix<T>{Shape{rows, cols}, entries.begin(),
-                                entries.end()};
+    return Coordinate_matrix<T>{
+      Shape{rows, cols}, entries.begin(), entries.end()};
   }
 
   template <typename T>
@@ -116,8 +116,8 @@ namespace sparkit::data::detail {
   read_matrix_market(std::filesystem::path const& path) {
     std::ifstream file{path};
     if (!file) {
-      throw std::runtime_error("matrix market: cannot open file: " +
-                               path.string());
+      throw std::runtime_error(
+        "matrix market: cannot open file: " + path.string());
     }
     return read_matrix_market<T>(file);
   }
@@ -130,9 +130,10 @@ namespace sparkit::data::detail {
     using size_type = config::size_type;
 
     os << format_banner(
-              Matrix_market_banner{Matrix_market_banner::Format::coordinate,
-                                   Matrix_market_banner::Field::real,
-                                   Matrix_market_banner::Symmetry::general})
+            Matrix_market_banner{
+              Matrix_market_banner::Format::coordinate,
+              Matrix_market_banner::Field::real,
+              Matrix_market_banner::Symmetry::general})
        << '\n';
 
     os << A.shape().row() << ' ' << A.shape().column() << ' ' << A.size()
@@ -151,12 +152,12 @@ namespace sparkit::data::detail {
 
   template <typename T>
   void
-  write_matrix_market(std::filesystem::path const& path,
-                      Compressed_row_matrix<T> const& A) {
+  write_matrix_market(
+    std::filesystem::path const& path, Compressed_row_matrix<T> const& A) {
     std::ofstream file{path};
     if (!file) {
-      throw std::runtime_error("matrix market: cannot open file: " +
-                               path.string());
+      throw std::runtime_error(
+        "matrix market: cannot open file: " + path.string());
     }
     write_matrix_market(file, A);
   }

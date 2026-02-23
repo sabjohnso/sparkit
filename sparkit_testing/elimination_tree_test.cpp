@@ -78,7 +78,7 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - etree diagonal", "[elimination_tree]") {
     // 4x4 diagonal matrix: no off-diagonal entries
     Compressed_row_sparsity sp{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     auto parent = elimination_tree(sp);
 
@@ -92,9 +92,17 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - etree tridiagonal", "[elimination_tree]") {
     // 4x4 tridiagonal: 0-1-2-3
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto parent = elimination_tree(sp);
 
@@ -109,10 +117,20 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - etree arrow", "[elimination_tree]") {
     // 5x5 arrow: node 0 is hub, connected to all
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto parent = elimination_tree(sp);
 
@@ -130,20 +148,26 @@ namespace sparkit::testing {
     CHECK(parent[4] == -1);
   }
 
-  TEST_CASE("elimination tree - etree rectangular rejected",
-            "[elimination_tree]") {
-    Compressed_row_sparsity sp{Shape{3, 4},
-                               {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
+  TEST_CASE(
+    "elimination tree - etree rectangular rejected", "[elimination_tree]") {
+    Compressed_row_sparsity sp{
+      Shape{3, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
 
     CHECK_THROWS_AS(elimination_tree(sp), std::invalid_argument);
   }
 
   TEST_CASE("elimination tree - etree disconnected", "[elimination_tree]") {
     // Two 2x2 blocks: {0,1} and {2,3}
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 1}, Index{2, 2}, Index{2, 3},
-                                Index{3, 2}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto parent = elimination_tree(sp);
 
@@ -179,7 +203,7 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - etree small", "[elimination_tree]") {
     // 2x2 with off-diagonal
     Compressed_row_sparsity sp{
-        Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
+      Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
 
     auto parent = elimination_tree(sp);
 
@@ -191,11 +215,23 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - etree parent greater", "[elimination_tree]") {
     // 6x6 tridiagonal
     Compressed_row_sparsity sp{
-        Shape{6, 6},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3},
-         Index{3, 4}, Index{4, 3}, Index{4, 4}, Index{4, 5}, Index{5, 4},
-         Index{5, 5}}};
+      Shape{6, 6},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3},
+       Index{3, 4},
+       Index{4, 3},
+       Index{4, 4},
+       Index{4, 5},
+       Index{5, 4},
+       Index{5, 5}}};
 
     auto parent = elimination_tree(sp);
 
@@ -211,15 +247,27 @@ namespace sparkit::testing {
   // tree_postorder
   // ================================================================
 
-  TEST_CASE("elimination tree - postorder valid permutation",
-            "[elimination_tree]") {
+  TEST_CASE(
+    "elimination tree - postorder valid permutation", "[elimination_tree]") {
     // 6x6 tridiagonal -> chain etree
     Compressed_row_sparsity sp{
-        Shape{6, 6},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3},
-         Index{3, 4}, Index{4, 3}, Index{4, 4}, Index{4, 5}, Index{5, 4},
-         Index{5, 5}}};
+      Shape{6, 6},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3},
+       Index{3, 4},
+       Index{4, 3},
+       Index{4, 4},
+       Index{4, 5},
+       Index{5, 4},
+       Index{5, 5}}};
 
     auto parent = elimination_tree(sp);
     auto post = tree_postorder(parent);
@@ -228,14 +276,25 @@ namespace sparkit::testing {
     CHECK(is_valid_permutation(post));
   }
 
-  TEST_CASE("elimination tree - postorder children before parents",
-            "[elimination_tree]") {
+  TEST_CASE(
+    "elimination tree - postorder children before parents",
+    "[elimination_tree]") {
     // Arrow matrix: star tree (all nodes parent to a chain ending at root)
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto parent = elimination_tree(sp);
     auto post = tree_postorder(parent);
@@ -253,8 +312,9 @@ namespace sparkit::testing {
     for (size_type i = 0; i < 5; ++i) {
       auto p = parent[static_cast<std::size_t>(i)];
       if (p != -1) {
-        CHECK(position[static_cast<std::size_t>(i)] <
-              position[static_cast<std::size_t>(p)]);
+        CHECK(
+          position[static_cast<std::size_t>(i)] <
+          position[static_cast<std::size_t>(p)]);
       }
     }
   }
@@ -262,9 +322,17 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - postorder chain", "[elimination_tree]") {
     // Chain etree (tridiagonal): postorder is identity [0,1,...,n-1]
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto parent = elimination_tree(sp);
     auto post = tree_postorder(parent);
@@ -279,7 +347,7 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - postorder all roots", "[elimination_tree]") {
     // Diagonal matrix: all nodes are roots (forest of singletons)
     Compressed_row_sparsity sp{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     auto parent = elimination_tree(sp);
     auto post = tree_postorder(parent);
@@ -295,7 +363,7 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - counts diagonal", "[elimination_tree]") {
     // 4x4 diagonal: each column has only the diagonal
     Compressed_row_sparsity sp{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     auto parent = elimination_tree(sp);
     auto counts = cholesky_column_counts(sp, parent);
@@ -309,9 +377,17 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - counts tridiagonal", "[elimination_tree]") {
     // 4x4 tridiagonal
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto parent = elimination_tree(sp);
     auto counts = cholesky_column_counts(sp, parent);
@@ -331,10 +407,20 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - counts arrow", "[elimination_tree]") {
     // 5x5 arrow: hub at node 0 connected to all
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto parent = elimination_tree(sp);
     auto counts = cholesky_column_counts(sp, parent);
@@ -353,15 +439,28 @@ namespace sparkit::testing {
     CHECK(counts[4] == 1);
   }
 
-  TEST_CASE("elimination tree - counts sum equals symbolic nnz tridiagonal",
-            "[elimination_tree]") {
+  TEST_CASE(
+    "elimination tree - counts sum equals symbolic nnz tridiagonal",
+    "[elimination_tree]") {
     // 6x6 tridiagonal
     Compressed_row_sparsity sp{
-        Shape{6, 6},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3},
-         Index{3, 4}, Index{4, 3}, Index{4, 4}, Index{4, 5}, Index{5, 4},
-         Index{5, 5}}};
+      Shape{6, 6},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3},
+       Index{3, 4},
+       Index{4, 3},
+       Index{4, 4},
+       Index{4, 5},
+       Index{5, 4},
+       Index{5, 5}}};
 
     auto parent = elimination_tree(sp);
     auto counts = cholesky_column_counts(sp, parent);
@@ -375,10 +474,20 @@ namespace sparkit::testing {
   TEST_CASE("elimination tree - counts sum arrow", "[elimination_tree]") {
     // 5x5 arrow
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto parent = elimination_tree(sp);
     auto counts = cholesky_column_counts(sp, parent);

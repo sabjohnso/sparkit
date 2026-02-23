@@ -14,20 +14,20 @@
 namespace sparkit::data::detail {
 
   Modified_sparse_row_sparsity::Modified_sparse_row_sparsity(
-      Shape shape, std::vector<Index> indices)
+    Shape shape, std::vector<Index> indices)
       : pimpl(new Impl(shape, std::move(indices))) {}
 
   Modified_sparse_row_sparsity::Modified_sparse_row_sparsity(
-      Shape shape, std::initializer_list<Index> const& input)
+    Shape shape, std::initializer_list<Index> const& input)
       : Modified_sparse_row_sparsity(
-            shape, std::vector<Index>(begin(input), end(input))) {}
+          shape, std::vector<Index>(begin(input), end(input))) {}
 
   Modified_sparse_row_sparsity::Modified_sparse_row_sparsity(
-      Modified_sparse_row_sparsity const& input)
+    Modified_sparse_row_sparsity const& input)
       : pimpl(new Impl(*input.pimpl)) {}
 
   Modified_sparse_row_sparsity::Modified_sparse_row_sparsity(
-      Modified_sparse_row_sparsity&& input)
+    Modified_sparse_row_sparsity&& input)
       : pimpl(input.pimpl) {
     input.pimpl = nullptr;
   }
@@ -38,7 +38,7 @@ namespace sparkit::data::detail {
 
   Modified_sparse_row_sparsity&
   Modified_sparse_row_sparsity::operator=(
-      Modified_sparse_row_sparsity const& input) {
+    Modified_sparse_row_sparsity const& input) {
     if (this != &input) {
       delete pimpl;
       pimpl = new Impl(*input.pimpl);
@@ -48,7 +48,7 @@ namespace sparkit::data::detail {
 
   Modified_sparse_row_sparsity&
   Modified_sparse_row_sparsity::operator=(
-      Modified_sparse_row_sparsity&& input) {
+    Modified_sparse_row_sparsity&& input) {
     if (this != &input) {
       delete pimpl;
       pimpl = input.pimpl;

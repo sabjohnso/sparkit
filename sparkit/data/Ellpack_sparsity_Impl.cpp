@@ -8,7 +8,10 @@
 namespace sparkit::data::detail {
 
   Ellpack_sparsity::Impl::Impl(Shape shape, std::vector<Index> indices)
-      : shape_(shape), total_size_(0), max_nnz_per_row_(0), col_ind_() {
+      : shape_(shape)
+      , total_size_(0)
+      , max_nnz_per_row_(0)
+      , col_ind_() {
     auto nrow = shape.row();
 
     // Sort by (row, column) and deduplicate
@@ -30,15 +33,16 @@ namespace sparkit::data::detail {
     max_nnz_per_row_ = *std::max_element(row_counts.begin(), row_counts.end());
 
     // Allocate padded array with sentinel -1
-    col_ind_.assign(static_cast<std::size_t>(nrow * max_nnz_per_row_),
-                    size_type{-1});
+    col_ind_.assign(
+      static_cast<std::size_t>(nrow * max_nnz_per_row_), size_type{-1});
 
     // Fill in column indices
     std::vector<size_type> pos(static_cast<std::size_t>(nrow), 0);
     for (auto const& idx : indices) {
       auto r = static_cast<std::size_t>(idx.row());
-      col_ind_[r * static_cast<std::size_t>(max_nnz_per_row_) +
-               static_cast<std::size_t>(pos[r])] = idx.column();
+      col_ind_
+        [r * static_cast<std::size_t>(max_nnz_per_row_) +
+         static_cast<std::size_t>(pos[r])] = idx.column();
       ++pos[r];
     }
   }

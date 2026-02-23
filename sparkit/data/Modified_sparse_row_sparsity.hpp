@@ -31,8 +31,8 @@ namespace sparkit::data::detail {
   public:
     using size_type = config::size_type;
 
-    Modified_sparse_row_sparsity(Shape shape,
-                                 std::initializer_list<Index> const& input);
+    Modified_sparse_row_sparsity(
+      Shape shape, std::initializer_list<Index> const& input);
 
     template <typename Iter>
     Modified_sparse_row_sparsity(Shape shape, Iter first, Iter last)

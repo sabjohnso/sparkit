@@ -14,14 +14,14 @@
 
 namespace sparkit::data::detail {
 
-  Diagonal_sparsity::Diagonal_sparsity(Shape shape,
-                                       std::vector<size_type> offsets)
+  Diagonal_sparsity::Diagonal_sparsity(
+    Shape shape, std::vector<size_type> offsets)
       : pimpl(new Impl(shape, std::move(offsets))) {}
 
   Diagonal_sparsity::Diagonal_sparsity(
-      Shape shape, std::initializer_list<size_type> const& offsets)
+    Shape shape, std::initializer_list<size_type> const& offsets)
       : Diagonal_sparsity(
-            shape, std::vector<size_type>(offsets.begin(), offsets.end())) {}
+          shape, std::vector<size_type>(offsets.begin(), offsets.end())) {}
 
   Diagonal_sparsity::Diagonal_sparsity(Shape shape, std::vector<Index> indices)
       : pimpl(nullptr) {
@@ -35,9 +35,9 @@ namespace sparkit::data::detail {
   }
 
   Diagonal_sparsity::Diagonal_sparsity(
-      Shape shape, std::initializer_list<Index> const& input)
-      : Diagonal_sparsity(shape,
-                          std::vector<Index>(input.begin(), input.end())) {}
+    Shape shape, std::initializer_list<Index> const& input)
+      : Diagonal_sparsity(
+          shape, std::vector<Index>(input.begin(), input.end())) {}
 
   Diagonal_sparsity::Diagonal_sparsity(Diagonal_sparsity const& input)
       : pimpl(new Impl(*input.pimpl)) {}

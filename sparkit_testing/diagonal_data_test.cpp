@@ -25,8 +25,9 @@ namespace sparkit::testing {
 
   // -- DIA construction from offsets --
 
-  TEST_CASE("diagonal_sparsity - construction_from_offsets_tridiagonal",
-            "[diagonal_sparsity]") {
+  TEST_CASE(
+    "diagonal_sparsity - construction_from_offsets_tridiagonal",
+    "[diagonal_sparsity]") {
     // 4x4 tridiagonal: offsets -1, 0, 1
     Diagonal_sparsity dia{Shape{4, 4}, {-1, 0, 1}};
     CHECK(dia.shape() == Shape(4, 4));
@@ -35,8 +36,9 @@ namespace sparkit::testing {
     CHECK(dia.size() == 10);
   }
 
-  TEST_CASE("diagonal_sparsity - construction_from_offsets_main_diagonal_only",
-            "[diagonal_sparsity]") {
+  TEST_CASE(
+    "diagonal_sparsity - construction_from_offsets_main_diagonal_only",
+    "[diagonal_sparsity]") {
     Diagonal_sparsity dia{Shape{5, 5}, {0}};
     CHECK(dia.num_diagonals() == 1);
     CHECK(dia.size() == 5);
@@ -62,12 +64,16 @@ namespace sparkit::testing {
 
   // -- Construction from indices --
 
-  TEST_CASE("diagonal_sparsity - construction_from_indices",
-            "[diagonal_sparsity]") {
+  TEST_CASE(
+    "diagonal_sparsity - construction_from_indices", "[diagonal_sparsity]") {
     Diagonal_sparsity dia{
-        Shape{4, 4},
-        {Index{0, 0}, Index{1, 1}, Index{2, 2},   // main diagonal
-         Index{0, 1}, Index{1, 2}, Index{2, 3}}}; // super diagonal
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{1, 1},
+       Index{2, 2}, // main diagonal
+       Index{0, 1},
+       Index{1, 2},
+       Index{2, 3}}}; // super diagonal
 
     CHECK(dia.num_diagonals() == 2);
     auto off = dia.offsets();
@@ -100,8 +106,8 @@ namespace sparkit::testing {
 
   // -- Duplicate offsets collapsed --
 
-  TEST_CASE("diagonal_sparsity - duplicate_offsets_collapsed",
-            "[diagonal_sparsity]") {
+  TEST_CASE(
+    "diagonal_sparsity - duplicate_offsets_collapsed", "[diagonal_sparsity]") {
     Diagonal_sparsity dia{Shape{4, 4}, {0, 1, 0, 1}};
     CHECK(dia.num_diagonals() == 2);
   }
@@ -134,9 +140,17 @@ namespace sparkit::testing {
   TEST_CASE("conversions - csr_to_dia_basic", "[conversions]") {
     // 4x4 tridiagonal
     Compressed_row_sparsity csr{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto dia = sparkit::data::detail::to_diagonal(csr);
 
@@ -161,9 +175,17 @@ namespace sparkit::testing {
   TEST_CASE("conversions - csr_dia_roundtrip", "[conversions]") {
     // 4x4 tridiagonal
     Compressed_row_sparsity original{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto dia = sparkit::data::detail::to_diagonal(original);
     auto roundtrip = sparkit::data::detail::to_compressed_row(dia);

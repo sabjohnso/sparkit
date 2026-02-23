@@ -23,8 +23,8 @@ namespace sparkit::data::detail {
       }
     }
 
-    return Compressed_column_sparsity(csr.shape(), indices.begin(),
-                                      indices.end());
+    return Compressed_column_sparsity(
+      csr.shape(), indices.begin(), indices.end());
   }
 
   Compressed_row_sparsity
@@ -60,8 +60,8 @@ namespace sparkit::data::detail {
       }
     }
 
-    return Modified_sparse_row_sparsity(csr.shape(), indices.begin(),
-                                        indices.end());
+    return Modified_sparse_row_sparsity(
+      csr.shape(), indices.begin(), indices.end());
   }
 
   Compressed_row_sparsity
@@ -175,8 +175,10 @@ namespace sparkit::data::detail {
   }
 
   Block_sparse_row_sparsity
-  to_block_sparse_row(Compressed_row_sparsity const& csr, size_type block_rows,
-                      size_type block_cols) {
+  to_block_sparse_row(
+    Compressed_row_sparsity const& csr,
+    size_type block_rows,
+    size_type block_cols) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto nrow = csr.shape().row();
@@ -190,8 +192,8 @@ namespace sparkit::data::detail {
       }
     }
 
-    return Block_sparse_row_sparsity(csr.shape(), block_rows, block_cols,
-                                     indices.begin(), indices.end());
+    return Block_sparse_row_sparsity(
+      csr.shape(), block_rows, block_cols, indices.begin(), indices.end());
   }
 
   Compressed_row_sparsity
@@ -241,8 +243,8 @@ namespace sparkit::data::detail {
       }
     }
 
-    return Jagged_diagonal_sparsity(csr.shape(), indices.begin(),
-                                    indices.end());
+    return Jagged_diagonal_sparsity(
+      csr.shape(), indices.begin(), indices.end());
   }
 
   Compressed_row_sparsity
@@ -306,15 +308,15 @@ namespace sparkit::data::detail {
       }
     }
 
-    return Symmetric_compressed_row_sparsity(shape, indices.begin(),
-                                             indices.end());
+    return Symmetric_compressed_row_sparsity(
+      shape, indices.begin(), indices.end());
   }
 
   Symmetric_compressed_row_sparsity
   to_symmetric_compressed_row(Symmetric_coordinate_sparsity const& scoo) {
     auto idx = scoo.indices();
-    return Symmetric_compressed_row_sparsity(scoo.shape(), begin(idx),
-                                             end(idx));
+    return Symmetric_compressed_row_sparsity(
+      scoo.shape(), begin(idx), end(idx));
   }
 
   Compressed_row_sparsity
@@ -325,8 +327,10 @@ namespace sparkit::data::detail {
   }
 
   Symmetric_block_sparse_row_sparsity
-  to_symmetric_block_sparse_row(Compressed_row_sparsity const& csr,
-                                size_type block_rows, size_type block_cols) {
+  to_symmetric_block_sparse_row(
+    Compressed_row_sparsity const& csr,
+    size_type block_rows,
+    size_type block_cols) {
     auto rp = csr.row_ptr();
     auto ci = csr.col_ind();
     auto nrow = csr.shape().row();
@@ -341,7 +345,7 @@ namespace sparkit::data::detail {
     }
 
     return Symmetric_block_sparse_row_sparsity(
-        csr.shape(), block_rows, block_cols, indices.begin(), indices.end());
+      csr.shape(), block_rows, block_cols, indices.begin(), indices.end());
   }
 
   Compressed_row_sparsity

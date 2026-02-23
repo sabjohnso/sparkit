@@ -7,10 +7,11 @@
 
 namespace sparkit::data::detail {
 
-  Compressed_column_sparsity::Impl::Impl(Shape shape,
-                                         std::vector<Index> indices)
-      : shape_(shape),
-        col_ptr_(static_cast<std::size_t>(shape.column() + 1), 0), row_ind_() {
+  Compressed_column_sparsity::Impl::Impl(
+    Shape shape, std::vector<Index> indices)
+      : shape_(shape)
+      , col_ptr_(static_cast<std::size_t>(shape.column() + 1), 0)
+      , row_ind_() {
     // Sort by (column, row)
     std::sort(begin(indices), end(indices), [](Index const& a, Index const& b) {
       return a.column() != b.column() ? a.column() < b.column()

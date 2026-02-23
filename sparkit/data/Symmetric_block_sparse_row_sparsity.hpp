@@ -32,21 +32,25 @@ namespace sparkit::data::detail {
     using size_type = config::size_type;
 
     Symmetric_block_sparse_row_sparsity(
-        Shape shape, size_type block_rows, size_type block_cols,
-        std::initializer_list<Index> const& input);
+      Shape shape,
+      size_type block_rows,
+      size_type block_cols,
+      std::initializer_list<Index> const& input);
 
     template <typename Iter>
-    Symmetric_block_sparse_row_sparsity(Shape shape, size_type block_rows,
-                                        size_type block_cols, Iter first,
-                                        Iter last)
-        : Symmetric_block_sparse_row_sparsity(shape, block_rows, block_cols,
-                                              std::vector<Index>(first, last)) {
-    }
+    Symmetric_block_sparse_row_sparsity(
+      Shape shape,
+      size_type block_rows,
+      size_type block_cols,
+      Iter first,
+      Iter last)
+        : Symmetric_block_sparse_row_sparsity(
+            shape, block_rows, block_cols, std::vector<Index>(first, last)) {}
 
     Symmetric_block_sparse_row_sparsity(
-        Symmetric_block_sparse_row_sparsity const& input);
+      Symmetric_block_sparse_row_sparsity const& input);
     Symmetric_block_sparse_row_sparsity(
-        Symmetric_block_sparse_row_sparsity&& input);
+      Symmetric_block_sparse_row_sparsity&& input);
 
     Symmetric_block_sparse_row_sparsity&
     operator=(Symmetric_block_sparse_row_sparsity const& input);
@@ -95,9 +99,11 @@ namespace sparkit::data::detail {
     col_ind() const;
 
   private:
-    Symmetric_block_sparse_row_sparsity(Shape shape, size_type block_rows,
-                                        size_type block_cols,
-                                        std::vector<Index> indices);
+    Symmetric_block_sparse_row_sparsity(
+      Shape shape,
+      size_type block_rows,
+      size_type block_cols,
+      std::vector<Index> indices);
 
     class Impl;
     Impl* pimpl;

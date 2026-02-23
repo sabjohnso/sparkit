@@ -8,20 +8,25 @@
 namespace sparkit::data::detail {
 
   Symmetric_coordinate_sparsity::Impl::Impl(Shape shape)
-      : shape_(shape), nonzeros_{} {}
+      : shape_(shape)
+      , nonzeros_{} {}
 
   Symmetric_coordinate_sparsity::Impl::Impl(Impl const& input)
       : shape_(input.shape_) {
-    std::copy(begin(input.nonzeros_), end(input.nonzeros_),
-              std::inserter(nonzeros_, end(nonzeros_)));
+    std::copy(
+      begin(input.nonzeros_),
+      end(input.nonzeros_),
+      std::inserter(nonzeros_, end(nonzeros_)));
   }
 
   Symmetric_coordinate_sparsity::Impl&
   Symmetric_coordinate_sparsity::Impl::operator=(Impl const& input) {
     shape_ = input.shape_;
     nonzeros_.clear();
-    std::copy(begin(input.nonzeros_), end(input.nonzeros_),
-              std::inserter(nonzeros_, end(nonzeros_)));
+    std::copy(
+      begin(input.nonzeros_),
+      end(input.nonzeros_),
+      std::inserter(nonzeros_, end(nonzeros_)));
     return *this;
   }
 

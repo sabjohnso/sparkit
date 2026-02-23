@@ -32,8 +32,8 @@ namespace nlohmann {
     static sparkit::data::detail::Index
     from_json(json const& j) {
       return sparkit::data::detail::Index{
-          j[0].get<sparkit::config::size_type>(),
-          j[1].get<sparkit::config::size_type>()};
+        j[0].get<sparkit::config::size_type>(),
+        j[1].get<sparkit::config::size_type>()};
     }
 
     static void
@@ -47,8 +47,8 @@ namespace nlohmann {
     static sparkit::data::detail::Entry<T>
     from_json(json const& j) {
       return sparkit::data::detail::Entry<T>{
-          j.at("index").get<sparkit::data::detail::Index>(),
-          j.at("value").get<T>()};
+        j.at("index").get<sparkit::data::detail::Index>(),
+        j.at("value").get<T>()};
     }
 
     static void
@@ -106,7 +106,8 @@ namespace sparkit::data::detail {
     auto nrow = shape.row();
     for (config::size_type row = 0; row < nrow; ++row) {
       for (auto k = row_ptr[static_cast<std::size_t>(row)];
-           k < row_ptr[static_cast<std::size_t>(row + 1)]; ++k) {
+           k < row_ptr[static_cast<std::size_t>(row + 1)];
+           ++k) {
         indices.push_back(Index{row, col_ind[static_cast<std::size_t>(k)]});
       }
     }
@@ -174,7 +175,8 @@ namespace sparkit::data::detail {
     auto nrow = shape.row();
     for (config::size_type row = 0; row < nrow; ++row) {
       for (auto k = row_ptr[static_cast<std::size_t>(row)];
-           k < row_ptr[static_cast<std::size_t>(row + 1)]; ++k) {
+           k < row_ptr[static_cast<std::size_t>(row + 1)];
+           ++k) {
         indices.push_back(Index{row, col_ind[static_cast<std::size_t>(k)]});
       }
     }

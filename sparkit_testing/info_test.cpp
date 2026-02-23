@@ -41,13 +41,14 @@ namespace sparkit::testing {
   TEST_CASE("info - row_norms_1 known values", "[info]") {
     // A = [[1,-2,0],[0,3,4],[5,0,-6]]
     // row sums: |1|+|-2| = 3, |3|+|4| = 7, |5|+|-6| = 11
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, -2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, -6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, -2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, -6.0}}};
 
     auto norms = row_norms_1(A);
 
@@ -58,8 +59,8 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("info - row_norms_1 empty rows", "[info]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0}, {Index{2, 2}, 2.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3}, {{Index{0, 0}, 1.0}, {Index{2, 2}, 2.0}}};
 
     auto norms = row_norms_1(A);
 
@@ -70,8 +71,8 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("info - row_norms_1 single entry rows", "[info]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 1}, -7.0}, {Index{1, 0}, 3.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 1}, -7.0}, {Index{1, 0}, 3.0}}};
 
     auto norms = row_norms_1(A);
 
@@ -85,19 +86,20 @@ namespace sparkit::testing {
     // Row 0: 1e16 + 1.0 + 1.0 + ... (many 1.0s)
     // Naive summation loses the small terms when added to 1e16.
     // With 10 entries of 1.0, exact row sum = 1e16 + 10.
-    Compressed_row_matrix<double> A{Shape{2, 12},
-                                    {{Index{0, 0}, 1e16},
-                                     {Index{0, 1}, 1.0},
-                                     {Index{0, 2}, 1.0},
-                                     {Index{0, 3}, 1.0},
-                                     {Index{0, 4}, 1.0},
-                                     {Index{0, 5}, 1.0},
-                                     {Index{0, 6}, 1.0},
-                                     {Index{0, 7}, 1.0},
-                                     {Index{0, 8}, 1.0},
-                                     {Index{0, 9}, 1.0},
-                                     {Index{0, 10}, 1.0},
-                                     {Index{1, 11}, 1.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 12},
+      {{Index{0, 0}, 1e16},
+       {Index{0, 1}, 1.0},
+       {Index{0, 2}, 1.0},
+       {Index{0, 3}, 1.0},
+       {Index{0, 4}, 1.0},
+       {Index{0, 5}, 1.0},
+       {Index{0, 6}, 1.0},
+       {Index{0, 7}, 1.0},
+       {Index{0, 8}, 1.0},
+       {Index{0, 9}, 1.0},
+       {Index{0, 10}, 1.0},
+       {Index{1, 11}, 1.0}}};
 
     auto norms = row_norms_1(A);
 
@@ -112,13 +114,14 @@ namespace sparkit::testing {
   TEST_CASE("info - row_norms_inf known values", "[info]") {
     // A = [[1,-2,0],[0,3,4],[5,0,-6]]
     // row maxes: max(|1|,|-2|)=2, max(|3|,|4|)=4, max(|5|,|-6|)=6
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, -2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, -6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, -2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, -6.0}}};
 
     auto norms = row_norms_inf(A);
 
@@ -129,8 +132,8 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("info - row_norms_inf empty rows", "[info]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 5.0}, {Index{2, 2}, 3.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3}, {{Index{0, 0}, 5.0}, {Index{2, 2}, 3.0}}};
 
     auto norms = row_norms_inf(A);
 
@@ -147,13 +150,14 @@ namespace sparkit::testing {
   TEST_CASE("info - column_norms_1 known values", "[info]") {
     // A = [[1,-2,0],[0,3,4],[5,0,-6]]
     // col sums: |1|+|5|=6, |-2|+|3|=5, |4|+|-6|=10
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, -2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, -6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, -2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, -6.0}}};
 
     auto norms = column_norms_1(A);
 
@@ -166,19 +170,20 @@ namespace sparkit::testing {
   TEST_CASE("info - column_norms_1 compensated summation", "[info]") {
     // Column 0 receives: 1e16 then 1.0, 1.0, ..., 1.0  (10 ones).
     // Exact column sum = 1e16 + 10.
-    Compressed_row_matrix<double> A{Shape{12, 2},
-                                    {{Index{0, 0}, 1e16},
-                                     {Index{1, 0}, 1.0},
-                                     {Index{2, 0}, 1.0},
-                                     {Index{3, 0}, 1.0},
-                                     {Index{4, 0}, 1.0},
-                                     {Index{5, 0}, 1.0},
-                                     {Index{6, 0}, 1.0},
-                                     {Index{7, 0}, 1.0},
-                                     {Index{8, 0}, 1.0},
-                                     {Index{9, 0}, 1.0},
-                                     {Index{10, 0}, 1.0},
-                                     {Index{11, 1}, 1.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{12, 2},
+      {{Index{0, 0}, 1e16},
+       {Index{1, 0}, 1.0},
+       {Index{2, 0}, 1.0},
+       {Index{3, 0}, 1.0},
+       {Index{4, 0}, 1.0},
+       {Index{5, 0}, 1.0},
+       {Index{6, 0}, 1.0},
+       {Index{7, 0}, 1.0},
+       {Index{8, 0}, 1.0},
+       {Index{9, 0}, 1.0},
+       {Index{10, 0}, 1.0},
+       {Index{11, 1}, 1.0}}};
 
     auto norms = column_norms_1(A);
 
@@ -192,13 +197,14 @@ namespace sparkit::testing {
   TEST_CASE("info - column_norms_inf known values", "[info]") {
     // A = [[1,-2,0],[0,3,4],[5,0,-6]]
     // col maxes: max(|1|,|5|)=5, max(|-2|,|3|)=3, max(|4|,|-6|)=6
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, -2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, -6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, -2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, -6.0}}};
 
     auto norms = column_norms_inf(A);
 
@@ -215,11 +221,12 @@ namespace sparkit::testing {
   TEST_CASE("info - frobenius_norm known result", "[info]") {
     // A = [[1,2],[3,4]]
     // ||A||_F = sqrt(1+4+9+16) = sqrt(30)
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0}}};
 
     CHECK(frobenius_norm(A) == Catch::Approx(std::sqrt(30.0)));
   }
@@ -233,8 +240,8 @@ namespace sparkit::testing {
   TEST_CASE("info - frobenius_norm identity-like", "[info]") {
     // 3x3 identity: ||I||_F = sqrt(3)
     Compressed_row_matrix<double> I{
-        Shape{3, 3},
-        {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}, {Index{2, 2}, 1.0}}};
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0}, {Index{1, 1}, 1.0}, {Index{2, 2}, 1.0}}};
 
     CHECK(frobenius_norm(I) == Catch::Approx(std::sqrt(3.0)));
   }
@@ -243,8 +250,8 @@ namespace sparkit::testing {
     // Two entries near sqrt(DBL_MAX) ≈ 1.34e154.
     // Naive v*v overflows, but the norm itself is representable.
     auto big = 1e200;
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, big}, {Index{1, 1}, big}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 0}, big}, {Index{1, 1}, big}}};
 
     // ||A||_F = sqrt(2) * 1e200
     auto expected = std::sqrt(2.0) * big;
@@ -255,8 +262,8 @@ namespace sparkit::testing {
     // Two entries near sqrt(DBL_MIN) ≈ 1.49e-162.
     // Naive v*v underflows to zero, but the norm is nonzero.
     auto tiny = 1e-200;
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 0}, tiny}, {Index{1, 1}, tiny}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 0}, tiny}, {Index{1, 1}, tiny}}};
 
     // ||A||_F = sqrt(2) * 1e-200
     auto expected = std::sqrt(2.0) * tiny;
@@ -267,19 +274,20 @@ namespace sparkit::testing {
     // 1e16 and many 1.0 entries.  Exact sum of squares =
     // 1e32 + 10.  sqrt(1e32 + 10) ≈ 1e16 + 5e-17.
     // This primarily tests that the summation doesn't lose the small terms.
-    Compressed_row_matrix<double> A{Shape{2, 12},
-                                    {{Index{0, 0}, 1e8},
-                                     {Index{0, 1}, 1.0},
-                                     {Index{0, 2}, 1.0},
-                                     {Index{0, 3}, 1.0},
-                                     {Index{0, 4}, 1.0},
-                                     {Index{0, 5}, 1.0},
-                                     {Index{0, 6}, 1.0},
-                                     {Index{0, 7}, 1.0},
-                                     {Index{0, 8}, 1.0},
-                                     {Index{0, 9}, 1.0},
-                                     {Index{0, 10}, 1.0},
-                                     {Index{1, 11}, 1.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 12},
+      {{Index{0, 0}, 1e8},
+       {Index{0, 1}, 1.0},
+       {Index{0, 2}, 1.0},
+       {Index{0, 3}, 1.0},
+       {Index{0, 4}, 1.0},
+       {Index{0, 5}, 1.0},
+       {Index{0, 6}, 1.0},
+       {Index{0, 7}, 1.0},
+       {Index{0, 8}, 1.0},
+       {Index{0, 9}, 1.0},
+       {Index{0, 10}, 1.0},
+       {Index{1, 11}, 1.0}}};
 
     // sum of squares = 1e16 + 11
     auto expected = std::sqrt(1e16 + 11.0);
@@ -293,23 +301,25 @@ namespace sparkit::testing {
   TEST_CASE("info - norm_1 known result", "[info]") {
     // A = [[1,-2,0],[0,3,4],[5,0,-6]]
     // col sums: 6, 5, 10 → norm_1 = 10
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, -2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, -6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, -2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, -6.0}}};
 
     CHECK(norm_1(A) == Catch::Approx(10.0));
   }
 
   TEST_CASE("info - norm_1 equals max column_norms_1", "[info]") {
-    Compressed_row_matrix<double> A{Shape{2, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 2}, -3.0},
-                                     {Index{1, 0}, 2.0},
-                                     {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 2}, -3.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 4.0}}};
 
     auto cn = column_norms_1(A);
     auto expected = *std::max_element(cn.begin(), cn.end());
@@ -324,23 +334,25 @@ namespace sparkit::testing {
   TEST_CASE("info - norm_inf known result", "[info]") {
     // A = [[1,-2,0],[0,3,4],[5,0,-6]]
     // row sums: 3, 7, 11 → norm_inf = 11
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, -2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, -6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, -2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, -6.0}}};
 
     CHECK(norm_inf(A) == Catch::Approx(11.0));
   }
 
   TEST_CASE("info - norm_inf equals max row_norms_1", "[info]") {
-    Compressed_row_matrix<double> A{Shape{2, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 2}, -3.0},
-                                     {Index{1, 0}, 2.0},
-                                     {Index{1, 1}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 2}, -3.0},
+       {Index{1, 0}, 2.0},
+       {Index{1, 1}, 4.0}}};
 
     auto rn = row_norms_1(A);
     auto expected = *std::max_element(rn.begin(), rn.end());
@@ -354,8 +366,8 @@ namespace sparkit::testing {
 
   TEST_CASE("info - bandwidth diagonal matrix", "[info]") {
     Compressed_row_matrix<double> A{
-        Shape{3, 3},
-        {{Index{0, 0}, 1.0}, {Index{1, 1}, 2.0}, {Index{2, 2}, 3.0}}};
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0}, {Index{1, 1}, 2.0}, {Index{2, 2}, 3.0}}};
 
     auto [lower, upper] = bandwidth(A);
 
@@ -364,14 +376,15 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("info - bandwidth tridiagonal", "[info]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{1, 2}, 5.0},
-                                     {Index{2, 1}, 6.0},
-                                     {Index{2, 2}, 7.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{1, 2}, 5.0},
+       {Index{2, 1}, 6.0},
+       {Index{2, 2}, 7.0}}};
 
     auto [lower, upper] = bandwidth(A);
 
@@ -381,16 +394,17 @@ namespace sparkit::testing {
 
   TEST_CASE("info - bandwidth full band", "[info]") {
     // 3x3 full matrix: lower=2, upper=2
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{0, 2}, 3.0},
-                                     {Index{1, 0}, 4.0},
-                                     {Index{1, 1}, 5.0},
-                                     {Index{1, 2}, 6.0},
-                                     {Index{2, 0}, 7.0},
-                                     {Index{2, 1}, 8.0},
-                                     {Index{2, 2}, 9.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{0, 2}, 3.0},
+       {Index{1, 0}, 4.0},
+       {Index{1, 1}, 5.0},
+       {Index{1, 2}, 6.0},
+       {Index{2, 0}, 7.0},
+       {Index{2, 1}, 8.0},
+       {Index{2, 2}, 9.0}}};
 
     auto [lower, upper] = bandwidth(A);
 
@@ -403,8 +417,8 @@ namespace sparkit::testing {
     // lower: max(i-j) where i>=j = max(0,0) = 0
     // upper: max(j-i) where j>=i = max(0,3,0) = 3
     Compressed_row_matrix<double> A{
-        Shape{2, 4},
-        {{Index{0, 0}, 1.0}, {Index{0, 3}, 2.0}, {Index{1, 1}, 3.0}}};
+      Shape{2, 4},
+      {{Index{0, 0}, 1.0}, {Index{0, 3}, 2.0}, {Index{1, 1}, 3.0}}};
 
     auto [lower, upper] = bandwidth(A);
 
@@ -426,26 +440,27 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("info - diagonal_occupancy full diagonal", "[info]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{2, 0}, 4.0},
-                                     {Index{2, 2}, 5.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 2}, 5.0}}};
 
     CHECK(diagonal_occupancy(A) == 3);
   }
 
   TEST_CASE("info - diagonal_occupancy partial diagonal", "[info]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0}, {Index{2, 2}, 2.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3}, {{Index{0, 0}, 1.0}, {Index{2, 2}, 2.0}}};
 
     CHECK(diagonal_occupancy(A) == 2);
   }
 
   TEST_CASE("info - diagonal_occupancy no diagonal", "[info]") {
-    Compressed_row_matrix<double> A{Shape{2, 2},
-                                    {{Index{0, 1}, 1.0}, {Index{1, 0}, 2.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{2, 2}, {{Index{0, 1}, 1.0}, {Index{1, 0}, 2.0}}};
 
     CHECK(diagonal_occupancy(A) == 0);
   }
@@ -455,8 +470,8 @@ namespace sparkit::testing {
   // ================================================================
 
   TEST_CASE("info - diagonal_positions matches occupancy count", "[info]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0}, {Index{2, 2}, 2.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3}, {{Index{0, 0}, 1.0}, {Index{2, 2}, 2.0}}};
 
     auto pos = diagonal_positions(A);
     config::size_type count = 0;
@@ -468,11 +483,12 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("info - diagonal_positions specific positions", "[info]") {
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 2}, 3.0},
-                                     {Index{2, 2}, 4.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 2}, 3.0},
+       {Index{2, 2}, 4.0}}};
 
     auto pos = diagonal_positions(A);
 
@@ -488,15 +504,16 @@ namespace sparkit::testing {
 
   TEST_CASE("info - detect_block_size 2x2 blocked", "[info]") {
     // 4x4 matrix with perfect 2x2 block structure
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{2, 2}, 5.0},
-                                     {Index{2, 3}, 6.0},
-                                     {Index{3, 2}, 7.0},
-                                     {Index{3, 3}, 8.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 2}, 5.0},
+       {Index{2, 3}, 6.0},
+       {Index{3, 2}, 7.0},
+       {Index{3, 3}, 8.0}}};
 
     auto [br, bc] = detect_block_size(A);
 
@@ -506,12 +523,13 @@ namespace sparkit::testing {
 
   TEST_CASE("info - detect_block_size non-blocked", "[info]") {
     // Irregular pattern — no block structure
-    Compressed_row_matrix<double> A{Shape{3, 3},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 2}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{2, 0}, 4.0},
-                                     {Index{2, 2}, 5.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 2}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{2, 0}, 4.0},
+       {Index{2, 2}, 5.0}}};
 
     auto [br, bc] = detect_block_size(A);
 
@@ -522,13 +540,14 @@ namespace sparkit::testing {
   TEST_CASE("info - detect_block_size mixed", "[info]") {
     // 4x4 with some 2x2 blocks but not all — should detect (1,1) or
     // a valid block size
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{2, 2}, 5.0},
-                                     {Index{3, 3}, 6.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{2, 2}, 5.0},
+       {Index{3, 3}, 6.0}}};
 
     auto [br, bc] = detect_block_size(A);
 

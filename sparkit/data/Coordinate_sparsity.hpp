@@ -19,7 +19,8 @@ namespace sparkit::data::detail {
     using size_type = config::size_type;
 
     template <typename Iter>
-    Coordinate_sparsity(Shape shape, Iter first, Iter last) : pimpl(nullptr) {
+    Coordinate_sparsity(Shape shape, Iter first, Iter last)
+        : pimpl(nullptr) {
       init(shape);
       std::for_each(first, last, [this](Index index) { add(index); });
     }

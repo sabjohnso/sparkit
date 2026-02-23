@@ -34,8 +34,8 @@ namespace sparkit::data::detail {
     /**
      * @brief Construct from a shape and a list of diagonal offsets.
      */
-    Diagonal_sparsity(Shape shape,
-                      std::initializer_list<size_type> const& offsets);
+    Diagonal_sparsity(
+      Shape shape, std::initializer_list<size_type> const& offsets);
 
     /**
      * @brief Construct from a shape and an initializer list of indices.

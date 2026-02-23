@@ -22,13 +22,15 @@ namespace sparkit::data::detail {
   public:
     using size_type = config::size_type;
 
-    Compressed_row_matrix(Compressed_row_sparsity sparsity,
-                          std::vector<T> values)
-        : sparsity_(std::move(sparsity)), values_(std::move(values)) {}
+    Compressed_row_matrix(
+      Compressed_row_sparsity sparsity, std::vector<T> values)
+        : sparsity_(std::move(sparsity))
+        , values_(std::move(values)) {}
 
-    Compressed_row_matrix(Compressed_row_sparsity sparsity,
-                          std::initializer_list<T> const& values)
-        : sparsity_(std::move(sparsity)), values_(values) {}
+    Compressed_row_matrix(
+      Compressed_row_sparsity sparsity, std::initializer_list<T> const& values)
+        : sparsity_(std::move(sparsity))
+        , values_(values) {}
 
     template <typename F>
     Compressed_row_matrix(Compressed_row_sparsity sparsity, F f)
@@ -44,8 +46,8 @@ namespace sparkit::data::detail {
       }
     }
 
-    Compressed_row_matrix(Shape shape,
-                          std::initializer_list<Entry<T>> const& input)
+    Compressed_row_matrix(
+      Shape shape, std::initializer_list<Entry<T>> const& input)
         : Compressed_row_matrix(from_entries(shape, input)) {}
 
     size_type
@@ -106,8 +108,8 @@ namespace sparkit::data::detail {
       auto same_index = [](auto const& a, auto const& b) {
         return a.index == b.index;
       };
-      sorted.erase(std::unique(sorted.begin(), sorted.end(), same_index),
-                   sorted.end());
+      sorted.erase(
+        std::unique(sorted.begin(), sorted.end(), same_index), sorted.end());
 
       std::vector<Index> indices;
       std::vector<T> values;
@@ -120,8 +122,8 @@ namespace sparkit::data::detail {
       }
 
       return Compressed_row_matrix{
-          Compressed_row_sparsity{shape, indices.begin(), indices.end()},
-          std::move(values)};
+        Compressed_row_sparsity{shape, indices.begin(), indices.end()},
+        std::move(values)};
     }
 
     Compressed_row_sparsity sparsity_;

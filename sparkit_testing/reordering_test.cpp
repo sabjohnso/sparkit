@@ -42,7 +42,7 @@ namespace sparkit::testing {
   TEST_CASE("reordering - symmetrize already symmetric", "[reordering]") {
     // Symmetric pattern: (0,1),(1,0),(0,0),(1,1)
     Compressed_row_sparsity sp{
-        Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
+      Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
 
     auto sym = symmetrize_pattern(sp);
 
@@ -56,9 +56,14 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - symmetrize asymmetric", "[reordering]") {
     // Lower triangular: (0,0),(1,0),(1,1),(2,0),(2,1),(2,2)
-    Compressed_row_sparsity sp{Shape{3, 3},
-                               {Index{0, 0}, Index{1, 0}, Index{1, 1},
-                                Index{2, 0}, Index{2, 1}, Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 3},
+      {Index{0, 0},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 1},
+       Index{2, 2}}};
 
     auto sym = symmetrize_pattern(sp);
 
@@ -74,8 +79,8 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - symmetrize preserves diagonal", "[reordering]") {
     // Just diagonal entries
-    Compressed_row_sparsity sp{Shape{3, 3},
-                               {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 3}, {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
 
     auto sym = symmetrize_pattern(sp);
 
@@ -89,10 +94,15 @@ namespace sparkit::testing {
   TEST_CASE("reordering - adjacency degree known", "[reordering]") {
     // Path graph: 0-1-2
     // Adjacency: (0,1),(1,0),(1,2),(2,1) + diag
-    Compressed_row_sparsity sp{Shape{3, 3},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 1}, Index{1, 2}, Index{2, 1},
-                                Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 3},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2}}};
 
     auto deg = adjacency_degree(sp);
 
@@ -109,9 +119,17 @@ namespace sparkit::testing {
   TEST_CASE("reordering - pseudo peripheral node path graph", "[reordering]") {
     // Path graph: 0-1-2-3
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto node = pseudo_peripheral_node(sp);
 
@@ -126,9 +144,17 @@ namespace sparkit::testing {
   TEST_CASE("reordering - rcm valid permutation", "[reordering]") {
     // Arrow matrix: row 0 connects to all, others only to 0 and self
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{1, 0},
-         Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3}}};
 
     auto perm = reverse_cuthill_mckee(sp);
 
@@ -136,13 +162,21 @@ namespace sparkit::testing {
     CHECK(is_valid_permutation(perm));
   }
 
-  TEST_CASE("reordering - rcm identity permutation tridiagonal",
-            "[reordering]") {
+  TEST_CASE(
+    "reordering - rcm identity permutation tridiagonal", "[reordering]") {
     // Tridiagonal: already optimal bandwidth
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto perm = reverse_cuthill_mckee(sp);
 
@@ -161,10 +195,20 @@ namespace sparkit::testing {
     // Arrow pattern: node 0 is hub connected to all others
     // Original bandwidth = n-1
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     Compressed_row_matrix<double> A{sp, [](auto, auto) { return 1.0; }};
     auto [orig_lo, orig_hi] = bandwidth(A);
@@ -183,10 +227,16 @@ namespace sparkit::testing {
     // Scrambled tridiagonal: 0-3, 1-2, 2-0, 3-1
     // Actual adjacency: {0,2}, {1,3}, {2,0}, {2,1}, {3,1}, {3,2} (not symmetric
     // yet) Use a bad ordering that has large bandwidth
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 3}, Index{1, 1},
-                                Index{1, 2}, Index{2, 2}, Index{2, 3},
-                                Index{3, 0}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 3},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 0},
+       Index{3, 3}}};
 
     Compressed_row_matrix<double> A{sp, [](auto, auto) { return 1.0; }};
     auto [orig_lo, orig_hi] = bandwidth(A);
@@ -200,10 +250,16 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - rcm disconnected graph", "[reordering]") {
     // Two disconnected components: {0,1} and {2,3}
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 1}, Index{2, 2}, Index{2, 3},
-                                Index{3, 2}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto perm = reverse_cuthill_mckee(sp);
 
@@ -223,17 +279,18 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - rcm round trip values", "[reordering]") {
     // Create matrix, apply RCM permutation, verify all entries preserved
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{1, 2}, 5.0},
-                                     {Index{2, 1}, 6.0},
-                                     {Index{2, 2}, 7.0},
-                                     {Index{2, 3}, 8.0},
-                                     {Index{3, 2}, 9.0},
-                                     {Index{3, 3}, 10.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{1, 2}, 5.0},
+       {Index{2, 1}, 6.0},
+       {Index{2, 2}, 7.0},
+       {Index{2, 3}, 8.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     auto perm = reverse_cuthill_mckee(A.sparsity());
     auto B = dperm(A, perm);
@@ -304,9 +361,17 @@ namespace sparkit::testing {
   TEST_CASE("reordering - amd valid permutation", "[reordering]") {
     // Tridiagonal 4x4
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto perm = approximate_minimum_degree(sp);
 
@@ -315,8 +380,8 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("reordering - amd rectangular rejected", "[reordering]") {
-    Compressed_row_sparsity sp{Shape{3, 4},
-                               {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
 
     CHECK_THROWS(approximate_minimum_degree(sp));
   }
@@ -325,7 +390,7 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - amd diagonal matrix", "[reordering]") {
     Compressed_row_sparsity sp{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     auto perm = approximate_minimum_degree(sp);
 
@@ -335,9 +400,17 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - amd tridiagonal", "[reordering]") {
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto perm = approximate_minimum_degree(sp);
 
@@ -355,10 +428,20 @@ namespace sparkit::testing {
   TEST_CASE("reordering - amd arrow matrix", "[reordering]") {
     // Node 0 is the hub, connected to all others
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto perm = approximate_minimum_degree(sp);
 
@@ -372,10 +455,20 @@ namespace sparkit::testing {
   TEST_CASE("reordering - amd path graph", "[reordering]") {
     // Path: 0-1-2-3-4
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3},
-         Index{3, 4}, Index{4, 3}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3},
+       Index{3, 4},
+       Index{4, 3},
+       Index{4, 4}}};
 
     auto perm = approximate_minimum_degree(sp);
 
@@ -390,10 +483,16 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - amd disconnected components", "[reordering]") {
     // Two disconnected components: {0,1} and {2,3}
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 1}, Index{2, 2}, Index{2, 3},
-                                Index{3, 2}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto perm = approximate_minimum_degree(sp);
 
@@ -404,10 +503,20 @@ namespace sparkit::testing {
   TEST_CASE("reordering - amd fill reduction", "[reordering]") {
     // Arrow matrix: natural ordering creates massive fill
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto natural_fill = symbolic_cholesky_nnz(sp);
 
@@ -420,10 +529,15 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - amd symmetric input", "[reordering]") {
     // Already-symmetric 3x3 tridiagonal
-    Compressed_row_sparsity sp{Shape{3, 3},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 1}, Index{1, 2}, Index{2, 1},
-                                Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 3},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2}}};
 
     auto perm = approximate_minimum_degree(sp);
 
@@ -436,10 +550,20 @@ namespace sparkit::testing {
   TEST_CASE("reordering - amd vs rcm arrow", "[reordering]") {
     // Arrow matrix: AMD should produce less or equal fill than RCM
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto amd_perm = approximate_minimum_degree(sp);
     auto rcm_perm = reverse_cuthill_mckee(sp);
@@ -454,17 +578,18 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("reordering - amd round trip values", "[reordering]") {
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{1, 2}, 5.0},
-                                     {Index{2, 1}, 6.0},
-                                     {Index{2, 2}, 7.0},
-                                     {Index{2, 3}, 8.0},
-                                     {Index{3, 2}, 9.0},
-                                     {Index{3, 3}, 10.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{1, 2}, 5.0},
+       {Index{2, 1}, 6.0},
+       {Index{2, 2}, 7.0},
+       {Index{2, 3}, 8.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     auto perm = approximate_minimum_degree(A.sparsity());
     auto B = dperm(A, perm);
@@ -534,18 +659,25 @@ namespace sparkit::testing {
       }
     }
 
-    return Compressed_row_sparsity{Shape{ncol, ncol}, indices.begin(),
-                                   indices.end()};
+    return Compressed_row_sparsity{
+      Shape{ncol, ncol}, indices.begin(), indices.end()};
   }
 
   // -- Validation --
 
   TEST_CASE("reordering - colamd valid permutation", "[reordering]") {
     // Unsymmetric 4x4
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 1},
-                                Index{1, 2}, Index{2, 0}, Index{2, 2},
-                                Index{2, 3}, Index{3, 1}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 0},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 1},
+       Index{3, 3}}};
 
     auto perm = column_approximate_minimum_degree(sp);
 
@@ -554,10 +686,16 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("reordering - colamd rectangular", "[reordering]") {
-    Compressed_row_sparsity sp{Shape{4, 5},
-                               {Index{0, 0}, Index{0, 2}, Index{1, 1},
-                                Index{1, 3}, Index{2, 2}, Index{2, 4},
-                                Index{3, 0}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 5},
+      {Index{0, 0},
+       Index{0, 2},
+       Index{1, 1},
+       Index{1, 3},
+       Index{2, 2},
+       Index{2, 4},
+       Index{3, 0},
+       Index{3, 3}}};
 
     auto perm = column_approximate_minimum_degree(sp);
 
@@ -569,7 +707,7 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - colamd diagonal", "[reordering]") {
     Compressed_row_sparsity sp{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     auto perm = column_approximate_minimum_degree(sp);
 
@@ -579,10 +717,16 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - colamd arrow columns", "[reordering]") {
     // Column 0 appears in every row — A^T*A is an arrow with node 0 as hub
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 2}, Index{2, 0}, Index{2, 3},
-                                Index{3, 0}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 2},
+       Index{2, 0},
+       Index{2, 3},
+       Index{3, 0},
+       Index{3, 3}}};
 
     auto perm = column_approximate_minimum_degree(sp);
 
@@ -596,9 +740,17 @@ namespace sparkit::testing {
   TEST_CASE("reordering - colamd square unsymmetric", "[reordering]") {
     // Upper triangular 4x4
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{1, 1},
-         Index{1, 2}, Index{1, 3}, Index{2, 2}, Index{2, 3}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{1, 1},
+       Index{1, 2},
+       Index{1, 3},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 3}}};
 
     auto perm = column_approximate_minimum_degree(sp);
 
@@ -610,10 +762,16 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - colamd fill reduction", "[reordering]") {
     // Column 0 appears in every row (arrow in A^T*A)
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 2}, Index{2, 0}, Index{2, 3},
-                                Index{3, 0}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 2},
+       Index{2, 0},
+       Index{2, 3},
+       Index{3, 0},
+       Index{3, 3}}};
 
     auto ata = test_form_ata(sp);
     auto natural_fill = symbolic_cholesky_nnz(ata);
@@ -626,16 +784,17 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("reordering - colamd round trip cperm", "[reordering]") {
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 1}, 3.0},
-                                     {Index{1, 2}, 4.0},
-                                     {Index{2, 0}, 5.0},
-                                     {Index{2, 2}, 6.0},
-                                     {Index{2, 3}, 7.0},
-                                     {Index{3, 1}, 8.0},
-                                     {Index{3, 3}, 9.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 1}, 3.0},
+       {Index{1, 2}, 4.0},
+       {Index{2, 0}, 5.0},
+       {Index{2, 2}, 6.0},
+       {Index{2, 3}, 7.0},
+       {Index{3, 1}, 8.0},
+       {Index{3, 3}, 9.0}}};
 
     auto perm = column_approximate_minimum_degree(A.sparsity());
     auto B = cperm(A, perm);
@@ -651,10 +810,16 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - colamd disconnected columns", "[reordering]") {
     // Block diagonal: cols {0,1} and {2,3} never share a row
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 1}, Index{2, 2}, Index{2, 3},
-                                Index{3, 2}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto perm = column_approximate_minimum_degree(sp);
 
@@ -666,7 +831,7 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - colamd minimal", "[reordering]") {
     Compressed_row_sparsity sp{
-        Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
+      Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
 
     auto perm = column_approximate_minimum_degree(sp);
 
@@ -675,10 +840,15 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("reordering - colamd tall thin", "[reordering]") {
-    Compressed_row_sparsity sp{Shape{5, 2},
-                               {Index{0, 0}, Index{1, 0}, Index{1, 1},
-                                Index{2, 1}, Index{3, 0}, Index{4, 0},
-                                Index{4, 1}}};
+    Compressed_row_sparsity sp{
+      Shape{5, 2},
+      {Index{0, 0},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 1},
+       Index{3, 0},
+       Index{4, 0},
+       Index{4, 1}}};
 
     auto perm = column_approximate_minimum_degree(sp);
 
@@ -710,11 +880,23 @@ namespace sparkit::testing {
   TEST_CASE("reordering - nd valid permutation", "[reordering]") {
     // 6x6 tridiagonal
     Compressed_row_sparsity sp{
-        Shape{6, 6},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3},
-         Index{3, 4}, Index{4, 3}, Index{4, 4}, Index{4, 5}, Index{5, 4},
-         Index{5, 5}}};
+      Shape{6, 6},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3},
+       Index{3, 4},
+       Index{4, 3},
+       Index{4, 4},
+       Index{4, 5},
+       Index{5, 4},
+       Index{5, 5}}};
 
     auto perm = nested_dissection(sp);
 
@@ -723,15 +905,15 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("reordering - nd rectangular rejected", "[reordering]") {
-    Compressed_row_sparsity sp{Shape{3, 4},
-                               {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
 
     CHECK_THROWS_AS(nested_dissection(sp), std::invalid_argument);
   }
 
   TEST_CASE("reordering - nd diagonal matrix", "[reordering]") {
     Compressed_row_sparsity sp{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     auto perm = nested_dissection(sp);
 
@@ -741,9 +923,17 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - nd tridiagonal", "[reordering]") {
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto perm = nested_dissection(sp);
 
@@ -760,10 +950,20 @@ namespace sparkit::testing {
   TEST_CASE("reordering - nd arrow matrix", "[reordering]") {
     // Node 0 is the hub, connected to all others
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto perm = nested_dissection(sp);
 
@@ -777,10 +977,20 @@ namespace sparkit::testing {
   TEST_CASE("reordering - nd fill reduction", "[reordering]") {
     // Arrow matrix: natural ordering creates massive fill
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto natural_fill = symbolic_cholesky_nnz(sp);
 
@@ -794,10 +1004,21 @@ namespace sparkit::testing {
   TEST_CASE("reordering - nd disconnected graph", "[reordering]") {
     // Two disconnected 3x3 tridiagonal blocks
     Compressed_row_sparsity sp{
-        Shape{6, 6},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{3, 3}, Index{3, 4}, Index{4, 3},
-         Index{4, 4}, Index{4, 5}, Index{5, 4}, Index{5, 5}}};
+      Shape{6, 6},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{3, 3},
+       Index{3, 4},
+       Index{4, 3},
+       Index{4, 4},
+       Index{4, 5},
+       Index{5, 4},
+       Index{5, 5}}};
 
     auto perm = nested_dissection(sp);
 
@@ -806,17 +1027,18 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("reordering - nd round trip values", "[reordering]") {
-    Compressed_row_matrix<double> A{Shape{4, 4},
-                                    {{Index{0, 0}, 1.0},
-                                     {Index{0, 1}, 2.0},
-                                     {Index{1, 0}, 3.0},
-                                     {Index{1, 1}, 4.0},
-                                     {Index{1, 2}, 5.0},
-                                     {Index{2, 1}, 6.0},
-                                     {Index{2, 2}, 7.0},
-                                     {Index{2, 3}, 8.0},
-                                     {Index{3, 2}, 9.0},
-                                     {Index{3, 3}, 10.0}}};
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {{Index{0, 0}, 1.0},
+       {Index{0, 1}, 2.0},
+       {Index{1, 0}, 3.0},
+       {Index{1, 1}, 4.0},
+       {Index{1, 2}, 5.0},
+       {Index{2, 1}, 6.0},
+       {Index{2, 2}, 7.0},
+       {Index{2, 3}, 8.0},
+       {Index{3, 2}, 9.0},
+       {Index{3, 3}, 10.0}}};
 
     auto perm = nested_dissection(A.sparsity());
     auto B = dperm(A, perm);
@@ -868,7 +1090,7 @@ namespace sparkit::testing {
 
   TEST_CASE("reordering - nd small matrix", "[reordering]") {
     Compressed_row_sparsity sp{
-        Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
+      Shape{2, 2}, {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}}};
 
     auto perm = nested_dissection(sp);
 

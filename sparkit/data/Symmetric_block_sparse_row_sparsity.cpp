@@ -14,23 +14,29 @@
 namespace sparkit::data::detail {
 
   Symmetric_block_sparse_row_sparsity::Symmetric_block_sparse_row_sparsity(
-      Shape shape, size_type block_rows, size_type block_cols,
-      std::vector<Index> indices)
+    Shape shape,
+    size_type block_rows,
+    size_type block_cols,
+    std::vector<Index> indices)
       : pimpl(new Impl(shape, block_rows, block_cols, std::move(indices))) {}
 
   Symmetric_block_sparse_row_sparsity::Symmetric_block_sparse_row_sparsity(
-      Shape shape, size_type block_rows, size_type block_cols,
-      std::initializer_list<Index> const& input)
+    Shape shape,
+    size_type block_rows,
+    size_type block_cols,
+    std::initializer_list<Index> const& input)
       : Symmetric_block_sparse_row_sparsity(
-            shape, block_rows, block_cols,
-            std::vector<Index>(begin(input), end(input))) {}
+          shape,
+          block_rows,
+          block_cols,
+          std::vector<Index>(begin(input), end(input))) {}
 
   Symmetric_block_sparse_row_sparsity::Symmetric_block_sparse_row_sparsity(
-      Symmetric_block_sparse_row_sparsity const& input)
+    Symmetric_block_sparse_row_sparsity const& input)
       : pimpl(new Impl(*input.pimpl)) {}
 
   Symmetric_block_sparse_row_sparsity::Symmetric_block_sparse_row_sparsity(
-      Symmetric_block_sparse_row_sparsity&& input)
+    Symmetric_block_sparse_row_sparsity&& input)
       : pimpl(input.pimpl) {
     input.pimpl = nullptr;
   }
@@ -41,7 +47,7 @@ namespace sparkit::data::detail {
 
   Symmetric_block_sparse_row_sparsity&
   Symmetric_block_sparse_row_sparsity::operator=(
-      Symmetric_block_sparse_row_sparsity const& input) {
+    Symmetric_block_sparse_row_sparsity const& input) {
     if (this != &input) {
       delete pimpl;
       pimpl = new Impl(*input.pimpl);
@@ -51,7 +57,7 @@ namespace sparkit::data::detail {
 
   Symmetric_block_sparse_row_sparsity&
   Symmetric_block_sparse_row_sparsity::operator=(
-      Symmetric_block_sparse_row_sparsity&& input) {
+    Symmetric_block_sparse_row_sparsity&& input) {
     if (this != &input) {
       delete pimpl;
       pimpl = input.pimpl;

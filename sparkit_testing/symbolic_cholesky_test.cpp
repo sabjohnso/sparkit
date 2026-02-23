@@ -75,7 +75,7 @@ namespace sparkit::testing {
   TEST_CASE("symbolic cholesky - diagonal", "[symbolic_cholesky]") {
     // 4x4 diagonal matrix: L == A, each row has 1 entry
     Compressed_row_sparsity sp{
-        Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
+      Shape{4, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}, Index{3, 3}}};
 
     auto L = symbolic_cholesky(sp);
 
@@ -92,9 +92,17 @@ namespace sparkit::testing {
   TEST_CASE("symbolic cholesky - tridiagonal", "[symbolic_cholesky]") {
     // 4x4 tridiagonal: L is lower bidiagonal, nnz = 4 + 3 = 7
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto L = symbolic_cholesky(sp);
 
@@ -106,10 +114,20 @@ namespace sparkit::testing {
   TEST_CASE("symbolic cholesky - arrow", "[symbolic_cholesky]") {
     // 5x5 arrow: hub at node 0 connected to all -> L is dense lower triangle
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto L = symbolic_cholesky(sp);
 
@@ -120,10 +138,20 @@ namespace sparkit::testing {
   TEST_CASE("symbolic cholesky - lower triangular", "[symbolic_cholesky]") {
     // Every entry of L must have row >= col
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto L = symbolic_cholesky(sp);
 
@@ -140,11 +168,23 @@ namespace sparkit::testing {
   TEST_CASE("symbolic cholesky - nnz tridiagonal", "[symbolic_cholesky]") {
     // 6x6 tridiagonal
     Compressed_row_sparsity sp{
-        Shape{6, 6},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3},
-         Index{3, 4}, Index{4, 3}, Index{4, 4}, Index{4, 5}, Index{5, 4},
-         Index{5, 5}}};
+      Shape{6, 6},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3},
+       Index{3, 4},
+       Index{4, 3},
+       Index{4, 4},
+       Index{4, 5},
+       Index{5, 4},
+       Index{5, 5}}};
 
     auto L = symbolic_cholesky(sp);
     auto expected = symbolic_cholesky_nnz(sp);
@@ -155,10 +195,20 @@ namespace sparkit::testing {
   TEST_CASE("symbolic cholesky - nnz arrow", "[symbolic_cholesky]") {
     // 5x5 arrow
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto L = symbolic_cholesky(sp);
     auto expected = symbolic_cholesky_nnz(sp);
@@ -194,10 +244,20 @@ namespace sparkit::testing {
   TEST_CASE("symbolic cholesky - column counts match", "[symbolic_cholesky]") {
     // 5x5 arrow: per-column counts of L must match cholesky_column_counts
     Compressed_row_sparsity sp{
-        Shape{5, 5},
-        {Index{0, 0}, Index{0, 1}, Index{0, 2}, Index{0, 3}, Index{0, 4},
-         Index{1, 0}, Index{1, 1}, Index{2, 0}, Index{2, 2}, Index{3, 0},
-         Index{3, 3}, Index{4, 0}, Index{4, 4}}};
+      Shape{5, 5},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{0, 2},
+       Index{0, 3},
+       Index{0, 4},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 0},
+       Index{2, 2},
+       Index{3, 0},
+       Index{3, 3},
+       Index{4, 0},
+       Index{4, 4}}};
 
     auto L = symbolic_cholesky(sp);
     auto parent = elimination_tree(sp);
@@ -216,18 +276,27 @@ namespace sparkit::testing {
     }
 
     for (size_type j = 0; j < n; ++j) {
-      CHECK(actual_counts[static_cast<std::size_t>(j)] ==
-            expected_counts[static_cast<std::size_t>(j)]);
+      CHECK(
+        actual_counts[static_cast<std::size_t>(j)] ==
+        expected_counts[static_cast<std::size_t>(j)]);
     }
   }
 
-  TEST_CASE("symbolic cholesky - includes original entries",
-            "[symbolic_cholesky]") {
+  TEST_CASE(
+    "symbolic cholesky - includes original entries", "[symbolic_cholesky]") {
     // All lower-triangle entries of A must appear in L
     Compressed_row_sparsity sp{
-        Shape{4, 4},
-        {Index{0, 0}, Index{0, 1}, Index{1, 0}, Index{1, 1}, Index{1, 2},
-         Index{2, 1}, Index{2, 2}, Index{2, 3}, Index{3, 2}, Index{3, 3}}};
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{1, 2},
+       Index{2, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto L = symbolic_cholesky(sp);
     auto sym = symmetrize_pattern(sp);
@@ -253,18 +322,24 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("symbolic cholesky - rectangular rejected", "[symbolic_cholesky]") {
-    Compressed_row_sparsity sp{Shape{3, 4},
-                               {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
+    Compressed_row_sparsity sp{
+      Shape{3, 4}, {Index{0, 0}, Index{1, 1}, Index{2, 2}}};
 
     CHECK_THROWS_AS(symbolic_cholesky(sp), std::invalid_argument);
   }
 
   TEST_CASE("symbolic cholesky - disconnected", "[symbolic_cholesky]") {
     // Two 2x2 blocks: {0,1} and {2,3}
-    Compressed_row_sparsity sp{Shape{4, 4},
-                               {Index{0, 0}, Index{0, 1}, Index{1, 0},
-                                Index{1, 1}, Index{2, 2}, Index{2, 3},
-                                Index{3, 2}, Index{3, 3}}};
+    Compressed_row_sparsity sp{
+      Shape{4, 4},
+      {Index{0, 0},
+       Index{0, 1},
+       Index{1, 0},
+       Index{1, 1},
+       Index{2, 2},
+       Index{2, 3},
+       Index{3, 2},
+       Index{3, 3}}};
 
     auto L = symbolic_cholesky(sp);
     auto expected = symbolic_cholesky_nnz(sp);

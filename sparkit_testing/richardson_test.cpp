@@ -9,7 +9,6 @@
 //
 #include <algorithm>
 #include <cmath>
-#include <numeric>
 #include <span>
 #include <vector>
 
@@ -18,10 +17,9 @@
 //
 #include <sparkit/data/Compressed_row_matrix.hpp>
 #include <sparkit/data/incomplete_cholesky.hpp>
-#include <sparkit/data/lsqr.hpp>
+#include <sparkit/data/richardson.hpp>
 #include <sparkit/data/sparse_blas.hpp>
 #include <sparkit/data/triangular_solve.hpp>
-#include <sparkit/data/unary.hpp>
 
 namespace sparkit::testing {
 
@@ -29,15 +27,14 @@ namespace sparkit::testing {
   using sparkit::data::detail::Compressed_row_sparsity;
   using sparkit::data::detail::Entry;
   using sparkit::data::detail::Index;
-  using sparkit::data::detail::Lsqr_config;
+  using sparkit::data::detail::Richardson_config;
   using sparkit::data::detail::Shape;
 
   using sparkit::data::detail::forward_solve;
   using sparkit::data::detail::forward_solve_transpose;
   using sparkit::data::detail::incomplete_cholesky;
-  using sparkit::data::detail::lsqr;
   using sparkit::data::detail::multiply;
-  using sparkit::data::detail::transpose;
+  using sparkit::data::detail::richardson;
 
   using size_type = sparkit::config::size_type;
 
@@ -175,38 +172,11 @@ namespace sparkit::testing {
     return make_matrix(Shape{n, n}, entries);
   }
 
-  // 6x4 overdetermined system (full column rank, diagonally dominant)
-  static Compressed_row_matrix<double>
-  make_overdetermined_6x4() {
-    return make_matrix(
-      Shape{6, 4},
-      {// Row 0
-       Entry<double>{Index{0, 0}, 4.0},
-       Entry<double>{Index{0, 1}, -1.0},
-       // Row 1
-       Entry<double>{Index{1, 0}, -1.0},
-       Entry<double>{Index{1, 1}, 4.0},
-       Entry<double>{Index{1, 2}, -1.0},
-       // Row 2
-       Entry<double>{Index{2, 1}, -1.0},
-       Entry<double>{Index{2, 2}, 4.0},
-       Entry<double>{Index{2, 3}, -1.0},
-       // Row 3
-       Entry<double>{Index{3, 2}, -1.0},
-       Entry<double>{Index{3, 3}, 4.0},
-       // Row 4
-       Entry<double>{Index{4, 0}, 2.0},
-       Entry<double>{Index{4, 3}, 1.0},
-       // Row 5
-       Entry<double>{Index{5, 1}, 1.0},
-       Entry<double>{Index{5, 2}, 2.0}});
-  }
-
   // ================================================================
-  // LSQR tests for square systems (identity preconditioner)
+  // Unpreconditioned Richardson tests (identity preconditioner)
   // ================================================================
 
-  TEST_CASE("lsqr - identity", "[lsqr]") {
+  TEST_CASE("richardson - identity", "[richardson]") {
     auto A = make_matrix(
       Shape{4, 4},
       {Entry<double>{Index{0, 0}, 1.0},
@@ -214,24 +184,18 @@ namespace sparkit::testing {
        Entry<double>{Index{2, 2}, 1.0},
        Entry<double>{Index{3, 3}, 1.0}});
 
-    auto AT = transpose(A);
-
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
     std::vector<double> b = {1.0, 2.0, 3.0, 4.0};
     std::vector<double> x(4, 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-12, .max_iterations = 100};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-12, .max_iterations = 10, .omega = 1.0};
 
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
+    auto summary = richardson(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < 4; ++i) {
@@ -239,7 +203,7 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("lsqr - diagonal", "[lsqr]") {
+  TEST_CASE("richardson - diagonal", "[richardson]") {
     auto A = make_matrix(
       Shape{4, 4},
       {Entry<double>{Index{0, 0}, 2.0},
@@ -247,53 +211,42 @@ namespace sparkit::testing {
        Entry<double>{Index{2, 2}, 4.0},
        Entry<double>{Index{3, 3}, 5.0}});
 
-    auto AT = transpose(A);
-
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
     std::vector<double> b = {6.0, 12.0, 20.0, 30.0};
     std::vector<double> x(4, 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-12, .max_iterations = 100};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-10, .max_iterations = 200, .omega = 0.3};
 
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
+    auto summary = richardson(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
-    CHECK(x[0] == Catch::Approx(3.0).margin(1e-10));
-    CHECK(x[1] == Catch::Approx(4.0).margin(1e-10));
-    CHECK(x[2] == Catch::Approx(5.0).margin(1e-10));
-    CHECK(x[3] == Catch::Approx(6.0).margin(1e-10));
+    CHECK(x[0] == Catch::Approx(3.0).margin(1e-8));
+    CHECK(x[1] == Catch::Approx(4.0).margin(1e-8));
+    CHECK(x[2] == Catch::Approx(5.0).margin(1e-8));
+    CHECK(x[3] == Catch::Approx(6.0).margin(1e-8));
   }
 
-  TEST_CASE("lsqr - symmetric tridiag 4x4", "[lsqr]") {
+  TEST_CASE("richardson - symmetric tridiag 4x4", "[richardson]") {
     auto A = make_tridiag_4();
-    auto AT = transpose(A);
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
     std::vector<double> x_true = {1.0, 2.0, 3.0, 4.0};
     auto b = multiply(A, std::span<double const>{x_true});
     std::vector<double> x(4, 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-12, .max_iterations = 100};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-10, .max_iterations = 300, .omega = 0.3};
 
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
+    auto summary = richardson(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < 4; ++i) {
@@ -301,27 +254,22 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("lsqr - nonsymmetric 4x4", "[lsqr]") {
+  TEST_CASE("richardson - nonsymmetric 4x4", "[richardson]") {
     auto A = make_nonsymmetric_4();
-    auto AT = transpose(A);
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
     std::vector<double> x_true = {1.0, 2.0, 3.0, 4.0};
     auto b = multiply(A, std::span<double const>{x_true});
     std::vector<double> x(4, 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-12, .max_iterations = 100};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-10, .max_iterations = 300, .omega = 0.2};
 
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
+    auto summary = richardson(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < 4; ++i) {
@@ -329,18 +277,12 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("lsqr - grid 16-node", "[lsqr]") {
+  TEST_CASE("richardson - grid 16-node", "[richardson]") {
     auto A = make_grid_16();
-    auto AT = transpose(A);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
@@ -350,10 +292,11 @@ namespace sparkit::testing {
     }
     auto b = multiply(A, std::span<double const>{x_true});
     std::vector<double> x(static_cast<std::size_t>(n), 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-10, .max_iterations = 200};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-8, .max_iterations = 1000, .omega = 0.2};
 
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
+    auto summary = richardson(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
@@ -361,18 +304,12 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("lsqr - convection-diffusion 16-node", "[lsqr]") {
+  TEST_CASE("richardson - convection-diffusion 16-node", "[richardson]") {
     auto A = make_convdiff_16();
-    auto AT = transpose(A);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
@@ -382,10 +319,11 @@ namespace sparkit::testing {
     }
     auto b = multiply(A, std::span<double const>{x_true});
     std::vector<double> x(static_cast<std::size_t>(n), 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-10, .max_iterations = 200};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-8, .max_iterations = 1000, .omega = 0.1};
 
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
+    auto summary = richardson(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
@@ -397,26 +335,21 @@ namespace sparkit::testing {
   // Edge cases
   // ================================================================
 
-  TEST_CASE("lsqr - zero rhs", "[lsqr]") {
+  TEST_CASE("richardson - zero rhs", "[richardson]") {
     auto A = make_tridiag_4();
-    auto AT = transpose(A);
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
     std::vector<double> b = {0.0, 0.0, 0.0, 0.0};
     std::vector<double> x(4, 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-12, .max_iterations = 100};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-12, .max_iterations = 100, .omega = 0.3};
 
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
+    auto summary = richardson(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     REQUIRE(summary.converged);
     for (std::size_t i = 0; i < 4; ++i) {
@@ -424,18 +357,12 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("lsqr - max iterations exceeded", "[lsqr]") {
+  TEST_CASE("richardson - max iterations exceeded", "[richardson]") {
     auto A = make_grid_16();
-    auto AT = transpose(A);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
@@ -445,95 +372,25 @@ namespace sparkit::testing {
     }
     auto b = multiply(A, std::span<double const>{x_true});
     std::vector<double> x(static_cast<std::size_t>(n), 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-14, .max_iterations = 2};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-14, .max_iterations = 5, .omega = 0.2};
 
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
+    auto summary = richardson(
+      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, identity, identity);
 
     CHECK_FALSE(summary.converged);
-    CHECK(summary.computed_iterations <= 2);
+    CHECK(summary.computed_iterations <= 5);
   }
 
   // ================================================================
-  // Overdetermined (least-squares) system
+  // Right-preconditioned Richardson tests (IC(0))
   // ================================================================
 
-  TEST_CASE("lsqr - overdetermined system", "[lsqr]") {
-    auto A = make_overdetermined_6x4();
-    auto AT = transpose(A);
-
-    auto apply_A = [&A](auto first, auto last, auto out) {
-      auto result = multiply(A, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    // b = A * [1, 2, 3, 4]^T -- consistent system, so LS solution is exact
-    std::vector<double> x_true = {1.0, 2.0, 3.0, 4.0};
-    auto b = multiply(A, std::span<double const>{x_true});
-
-    std::vector<double> x(4, 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-10, .max_iterations = 100};
-
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
-
-    REQUIRE(summary.converged);
-    for (std::size_t i = 0; i < 4; ++i) {
-      CHECK(x[i] == Catch::Approx(x_true[i]).margin(1e-6));
-    }
-  }
-
-  TEST_CASE("lsqr - residual collection", "[lsqr]") {
-    auto A = make_grid_16();
-    auto AT = transpose(A);
-    size_type const n = 16;
-
-    auto apply_A = [&A](auto first, auto last, auto out) {
-      auto result = multiply(A, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    std::vector<double> x_true;
-    for (size_type i = 0; i < n; ++i) {
-      x_true.push_back(static_cast<double>(i + 1));
-    }
-    auto b = multiply(A, std::span<double const>{x_true});
-    std::vector<double> x(static_cast<std::size_t>(n), 0.0);
-    Lsqr_config<double> cfg{
-      .tolerance = 1e-10, .max_iterations = 200, .collect_residuals = true};
-
-    auto summary = lsqr(
-      b.begin(), b.end(), x.begin(), x.end(), cfg, apply_A, apply_AT, identity);
-
-    REQUIRE(summary.converged);
-    CHECK(summary.iteration_residuals.size() > 0);
-  }
-
-  // ================================================================
-  // Preconditioned LSQR tests (IC(0), right preconditioning)
-  // ================================================================
-
-  TEST_CASE("preconditioned lsqr - tridiag", "[lsqr]") {
+  TEST_CASE("right-preconditioned richardson - tridiag", "[richardson]") {
     auto A = make_tridiag_4();
-    auto AT = transpose(A);
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
@@ -548,16 +405,17 @@ namespace sparkit::testing {
     };
 
     std::vector<double> x(4, 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-12, .max_iterations = 100};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-10, .max_iterations = 100, .omega = 0.3};
 
-    auto summary = lsqr(
+    auto summary = richardson(
       b.begin(),
       b.end(),
       x.begin(),
       x.end(),
       cfg,
       apply_A,
-      apply_AT,
+      identity,
       apply_inv_M);
 
     REQUIRE(summary.converged);
@@ -566,18 +424,12 @@ namespace sparkit::testing {
     }
   }
 
-  TEST_CASE("preconditioned lsqr - grid", "[lsqr]") {
+  TEST_CASE("right-preconditioned richardson - grid", "[richardson]") {
     auto A = make_grid_16();
-    auto AT = transpose(A);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
-      std::copy(result.begin(), result.end(), out);
-    };
-
-    auto apply_AT = [&AT](auto first, auto last, auto out) {
-      auto result = multiply(AT, std::span<double const>{first, last});
       std::copy(result.begin(), result.end(), out);
     };
 
@@ -595,16 +447,17 @@ namespace sparkit::testing {
     };
 
     std::vector<double> x(static_cast<std::size_t>(n), 0.0);
-    Lsqr_config<double> cfg{.tolerance = 1e-10, .max_iterations = 200};
+    Richardson_config<double> cfg{
+      .tolerance = 1e-8, .max_iterations = 300, .omega = 0.2};
 
-    auto summary = lsqr(
+    auto summary = richardson(
       b.begin(),
       b.end(),
       x.begin(),
       x.end(),
       cfg,
       apply_A,
-      apply_AT,
+      identity,
       apply_inv_M);
 
     REQUIRE(summary.converged);

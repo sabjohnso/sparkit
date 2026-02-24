@@ -17,12 +17,12 @@
 namespace sparkit::data::detail {
 
   /**
-   * @brief Configuration for CGS solver.
+   * @brief Configuration for the Chebyshev iteration solver.
    *
    * @tparam T  Value type matching the linear system.
    */
   template <typename T>
-  struct Cgs_config {
+  struct Chebyshev_config {
     /**
      * @brief Relative convergence tolerance:
      *  @f$ \|r\|_2 / \|b\|_2 < \text{tolerance} @f$.
@@ -30,54 +30,75 @@ namespace sparkit::data::detail {
     T tolerance{};
 
     /**
-     * @brief Hard upper bound on total matrix-vector products.
+     * @brief Hard upper bound on total iterations.
      */
     size_type max_iterations{};
 
     /**
      * @brief When true, each step's residual norm is appended to
-     *  Cgs_summary::iteration_residuals.
+     *  Chebyshev_summary::iteration_residuals.
      */
     bool collect_residuals{};
+
+    /**
+     * @brief Lower bound on eigenvalues of @f$ M^{-1}A @f$.
+     */
+    T lambda_min{};
+
+    /**
+     * @brief Upper bound on eigenvalues of @f$ M^{-1}A @f$.
+     */
+    T lambda_max{};
   };
 
   /**
-   * @brief Convergence summary returned by the CGS solver.
+   * @brief Convergence summary returned by the Chebyshev solver.
    *
    * @tparam T  Value type (e.g. double).
    */
   template <typename T>
-  struct Cgs_summary {
+  struct Chebyshev_summary {
     /** Final residual 2-norm. */
     T residual_norm{};
 
-    /** Number of matrix-vector products actually performed. */
+    /** Number of iterations actually performed. */
     size_type computed_iterations{};
 
     /** True when relative residual fell below tolerance. */
     bool converged{};
 
     /** Per-step residual norms (populated when
-     *  Cgs_config::collect_residuals is true). */
+     *  Chebyshev_config::collect_residuals is true). */
     std::vector<T> iteration_residuals{};
   };
 
   /**
-   * @brief CGS (Conjugate Gradient Squared) solver with left and right
+   * @brief Preconditioned Chebyshev iteration solver with left and right
    *  preconditioning.
    *
-   * Solves a general (possibly nonsymmetric) linear system @f$ Ax = b @f$
-   * using the Conjugate Gradient Squared method (Templates book,
-   * Algorithm 7.5). The combined preconditioner is @f$ M = M_L M_R @f$,
-   * applied as @f$ z = M_R^{-1}(M_L^{-1}(r)) @f$.
+   * Solves a linear system @f$ Ax = b @f$ using the Chebyshev iteration
+   * with optional preconditioning (Templates book, Algorithm 5.2).
+   * The combined preconditioner is @f$ M = M_L M_R @f$, applied as
+   * @f$ z = M_R^{-1}(M_L^{-1}(r)) @f$. Chebyshev iteration accelerates
+   * Richardson iteration using polynomial coefficients derived from
+   * eigenvalue bounds, requiring no inner products.
    *
-   * CGS avoids the transpose operator required by BiCG by "squaring" the
-   * BiCG polynomial. Each iteration performs two matrix-vector products
-   * with A. Convergence can be irregular but each iteration is cheaper
-   * than BiCGSTAB (no stabilization step).
+   * @f{align*}{
+   *   r_0 &= b - Ax_0 \\
+   *   z_k &= M_R^{-1}(M_L^{-1}(r_k)) \\
+   *   p_1 &= z_0, \quad \alpha_1 = 1/d \\
+   *   p_k &= z_{k-1} + \beta_k p_{k-1}, \quad k \geq 2 \\
+   *   x_k &= x_{k-1} + \alpha_k p_k \\
+   *   r_k &= r_{k-1} - \alpha_k A p_k
+   * @f}
    *
-   * Both @f$ M_L @f$ and @f$ M_R @f$ are assumed symmetric so that
-   * @f$ M^{-T} = M^{-1} @f$. This covers IC(0), Jacobi, and SSOR.
+   * where @f$ d = (\lambda_{\max} + \lambda_{\min}) / 2 @f$,
+   * @f$ c = (\lambda_{\max} - \lambda_{\min}) / 2 @f$,
+   * @f$ \beta_k = (c \alpha_{k-1} / 2)^2 @f$, and
+   * @f$ \alpha_k = 1 / (d - \beta_k) @f$.
+   *
+   * @note The eigenvalue bounds apply to the combined preconditioned
+   *  operator @f$ M^{-1}A @f$.
    *
    * @tparam T                    Value type (e.g. double).
    * @tparam BIter                Iterator over the right-hand side @a b.
@@ -89,7 +110,7 @@ namespace sparkit::data::detail {
    * @tparam RightPreconditioner  Callable implementing
    *                              @f$ w \leftarrow M_R^{-1}p @f$.
    *
-   * @see cgs  Free-function convenience wrapper.
+   * @see chebyshev  Free-function convenience wrapper.
    */
   template <
     typename T,
@@ -98,14 +119,14 @@ namespace sparkit::data::detail {
     typename LinearOperator,
     typename LeftPreconditioner,
     typename RightPreconditioner>
-  class CgsSolver {
+  class ChebyshevSolver {
   public:
-    CgsSolver(
+    ChebyshevSolver(
       BIter bfirst,
       BIter blast,
       XIter xfirst,
       XIter xlast,
-      Cgs_config<T> cfg,
+      Chebyshev_config<T> cfg,
       LinearOperator linear_operator,
       LeftPreconditioner left_preconditioner,
       RightPreconditioner right_preconditioner)
@@ -124,7 +145,7 @@ namespace sparkit::data::detail {
     /**
      * @brief Return a summary of the solution process.
      */
-    Cgs_summary<T>
+    Chebyshev_summary<T>
     summary() const {
       return summary_;
     }
@@ -133,6 +154,7 @@ namespace sparkit::data::detail {
     void
     init() {
       compute_size();
+      compute_spectral_parameters();
       allocate_storage();
       initialize_residual_norms();
     }
@@ -143,16 +165,18 @@ namespace sparkit::data::detail {
     }
 
     void
+    compute_spectral_parameters() {
+      d_ = (cfg_.lambda_max + cfg_.lambda_min) / T{2};
+      c_ = (cfg_.lambda_max - cfg_.lambda_min) / T{2};
+    }
+
+    void
     allocate_storage() {
       auto un = static_cast<std::size_t>(n_);
       r_.assign(un, T{0});
-      r_hat_.assign(un, T{0});
+      z_.assign(un, T{0});
       p_.assign(un, T{0});
-      u_.assign(un, T{0});
-      q_.assign(un, T{0});
-      q_hat_.assign(un, T{0});
-      u_hat_.assign(un, T{0});
-      p_hat_.assign(un, T{0});
+      w_.assign(un, T{0});
       tmp_.assign(un, T{0});
     }
 
@@ -173,12 +197,9 @@ namespace sparkit::data::detail {
       }
 
       compute_initial_residual();
-      initialize_shadow_residual();
-      initialize_search_directions();
-      rho_ = dot(r_hat_, r_);
 
       while (has_budget() && !summary_.converged) {
-        cgs_step();
+        chebyshev_step();
       }
     }
 
@@ -190,127 +211,77 @@ namespace sparkit::data::detail {
     void
     compute_initial_residual() {
       auto un = static_cast<std::size_t>(n_);
-      linear_operator_(xfirst_, xlast_, tmp_.begin());
+      linear_operator_(xfirst_, xlast_, w_.begin());
       auto bit = bfirst_;
       for (std::size_t i = 0; i < un; ++i, ++bit) {
-        r_[i] = *bit - tmp_[i];
+        r_[i] = *bit - w_[i];
       }
     }
 
     void
-    initialize_shadow_residual() {
-      std::copy(r_.begin(), r_.end(), r_hat_.begin());
+    chebyshev_step() {
+      apply_preconditioner();
+      compute_direction();
+      compute_matvec();
+      update_solution();
+      update_residual();
+      ++summary_.computed_iterations;
+      check_convergence();
     }
 
     void
-    initialize_search_directions() {
-      std::copy(r_.begin(), r_.end(), p_.begin());
-      std::copy(r_.begin(), r_.end(), u_.begin());
+    apply_preconditioner() {
+      left_preconditioner_(r_.cbegin(), r_.cend(), tmp_.begin());
+      right_preconditioner_(tmp_.cbegin(), tmp_.cend(), z_.begin());
     }
 
     void
-    cgs_step() {
-      compute_q_hat();
-      T alpha = compute_alpha();
-
-      compute_q(alpha);
-      compute_u_hat();
-      apply_preconditioner_to_u_hat();
-      update_solution(alpha);
-      compute_residual_update(alpha);
-
-      summary_.computed_iterations += 2;
-
-      if (check_convergence()) return;
-
-      T rho_new = dot(r_hat_, r_);
-      if (rho_new == T{0}) return;
-
-      T beta = rho_new / rho_;
-      update_search_directions(beta);
-      rho_ = rho_new;
-    }
-
-    void
-    compute_q_hat() {
-      left_preconditioner_(p_.cbegin(), p_.cend(), tmp_.begin());
-      right_preconditioner_(tmp_.cbegin(), tmp_.cend(), p_hat_.begin());
-      linear_operator_(p_hat_.begin(), p_hat_.end(), q_hat_.begin());
-    }
-
-    T
-    compute_alpha() const {
-      return rho_ / dot(r_hat_, q_hat_);
-    }
-
-    void
-    compute_q(T alpha) {
+    compute_direction() {
       auto un = static_cast<std::size_t>(n_);
-      for (std::size_t i = 0; i < un; ++i) {
-        q_[i] = u_[i] - alpha * q_hat_[i];
+      if (summary_.computed_iterations == 0) {
+        std::copy(z_.begin(), z_.end(), p_.begin());
+        alpha_ = T{1} / d_;
+      } else {
+        T beta = c_ * alpha_prev_ / T{2};
+        beta = beta * beta;
+        alpha_ = T{1} / (d_ - beta);
+        for (std::size_t i = 0; i < un; ++i) {
+          p_[i] = z_[i] + beta * p_[i];
+        }
       }
+      alpha_prev_ = alpha_;
     }
 
     void
-    compute_u_hat() {
-      auto un = static_cast<std::size_t>(n_);
-      for (std::size_t i = 0; i < un; ++i) {
-        u_hat_[i] = u_[i] + q_[i];
-      }
+    compute_matvec() {
+      linear_operator_(p_.begin(), p_.end(), w_.begin());
     }
 
     void
-    apply_preconditioner_to_u_hat() {
-      left_preconditioner_(u_hat_.cbegin(), u_hat_.cend(), tmp_.begin());
-      right_preconditioner_(tmp_.cbegin(), tmp_.cend(), p_hat_.begin());
-    }
-
-    void
-    update_solution(T alpha) {
+    update_solution() {
       auto un = static_cast<std::size_t>(n_);
       auto xit = xfirst_;
       for (std::size_t i = 0; i < un; ++i, ++xit) {
-        *xit += alpha * p_hat_[i];
+        *xit += alpha_ * p_[i];
       }
     }
 
     void
-    compute_residual_update(T alpha) {
-      linear_operator_(p_hat_.begin(), p_hat_.end(), tmp_.begin());
+    update_residual() {
       auto un = static_cast<std::size_t>(n_);
       for (std::size_t i = 0; i < un; ++i) {
-        r_[i] -= alpha * tmp_[i];
+        r_[i] -= alpha_ * w_[i];
       }
     }
 
-    bool
+    void
     check_convergence() {
       T r_norm = compute_norm(r_.begin(), r_.end());
       summary_.residual_norm = r_norm;
       if (cfg_.collect_residuals) {
         summary_.iteration_residuals.push_back(r_norm);
       }
-      if (r_norm / bnorm_ < cfg_.tolerance) {
-        summary_.converged = true;
-        return true;
-      }
-      return false;
-    }
-
-    void
-    update_search_directions(T beta) {
-      auto un = static_cast<std::size_t>(n_);
-      for (std::size_t i = 0; i < un; ++i) {
-        u_[i] = r_[i] + beta * q_[i];
-      }
-      for (std::size_t i = 0; i < un; ++i) {
-        p_[i] = u_[i] + beta * (q_[i] + beta * p_[i]);
-      }
-    }
-
-    T
-    dot(std::vector<T> const& a, std::vector<T> const& b) const {
-      return std::inner_product(a.begin(), a.end(), b.begin(), T{0});
+      if (r_norm / bnorm_ < cfg_.tolerance) { summary_.converged = true; }
     }
 
     template <typename Iter>
@@ -324,29 +295,28 @@ namespace sparkit::data::detail {
     BIter blast_;
     XIter xfirst_;
     XIter xlast_;
-    Cgs_config<T> cfg_;
+    Chebyshev_config<T> cfg_;
     LinearOperator linear_operator_;
     LeftPreconditioner left_preconditioner_;
     RightPreconditioner right_preconditioner_;
     size_type n_;
-    Cgs_summary<T> summary_{};
+    Chebyshev_summary<T> summary_{};
     T bnorm_{};
-    T rho_{};
+    T d_{};
+    T c_{};
+    T alpha_{};
+    T alpha_prev_{};
     std::vector<T> r_{};
-    std::vector<T> r_hat_{};
+    std::vector<T> z_{};
     std::vector<T> p_{};
-    std::vector<T> u_{};
-    std::vector<T> q_{};
-    std::vector<T> q_hat_{};
-    std::vector<T> u_hat_{};
-    std::vector<T> p_hat_{};
+    std::vector<T> w_{};
     std::vector<T> tmp_{};
   };
 
   /**
-   * @brief Solve @f$ Ax = b @f$ with the preconditioned CGS method.
+   * @brief Solve @f$ Ax = b @f$ with preconditioned Chebyshev iteration.
    *
-   * Convenience wrapper that constructs a CgsSolver, runs it to
+   * Convenience wrapper that constructs a ChebyshevSolver, runs it to
    * completion, and returns the convergence summary. The solution is
    * written in-place into @c [xfirst, xlast).
    *
@@ -361,7 +331,7 @@ namespace sparkit::data::detail {
    *                             @f$ z \leftarrow M_L^{-1}r @f$.
    * @param right_preconditioner Output-iterator callable implementing
    *                             @f$ w \leftarrow M_R^{-1}p @f$.
-   * @return Cgs_summary with convergence diagnostics.
+   * @return Chebyshev_summary with convergence diagnostics.
    */
   template <
     typename BIter,
@@ -370,17 +340,17 @@ namespace sparkit::data::detail {
     typename LinearOperator,
     typename LeftPreconditioner,
     typename RightPreconditioner>
-  Cgs_summary<T>
-  cgs(
+  Chebyshev_summary<T>
+  chebyshev(
     BIter bfirst,
     BIter blast,
     XIter xfirst,
     XIter xlast,
-    Cgs_config<T> cfg,
+    Chebyshev_config<T> cfg,
     LinearOperator linear_operator,
     LeftPreconditioner left_preconditioner,
     RightPreconditioner right_preconditioner) {
-    auto solver = CgsSolver(
+    auto solver = ChebyshevSolver(
       bfirst,
       blast,
       xfirst,

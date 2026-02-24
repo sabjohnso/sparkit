@@ -63,13 +63,21 @@ namespace sparkit::data::detail {
   };
 
   /**
-   * @brief QMR (Quasi-Minimal Residual) solver.
+   * @brief QMR (Quasi-Minimal Residual) solver with left and right
+   *  preconditioning.
    *
    * Solves a general (possibly nonsymmetric) linear system @f$ Ax = b @f$
    * using the Quasi-Minimal Residual method (Freund & Nachtigal, 1991).
    * The algorithm is based on Lanczos biorthogonalization with
    * quasi-residual minimization, following the Templates book
    * (Algorithm 7.6).
+   *
+   * The combined preconditioner is @f$ M = M_L M_R @f$, applied as
+   * @f$ z = M_R^{-1}(M_L^{-1}(r)) @f$. The Lanczos process operates on
+   * @f$ M^{-1}A @f$ and its adjoint @f$ A^T M^{-T} @f$.
+   *
+   * Both @f$ M_L @f$ and @f$ M_R @f$ are assumed symmetric so that
+   * @f$ M^{-T} = M^{-1} @f$. This covers IC(0), Jacobi, and SSOR.
    *
    * QMR produces a smoother convergence curve than BiCG and avoids
    * the erratic residual behavior of BiCG.
@@ -82,12 +90,17 @@ namespace sparkit::data::detail {
    *  quasi-residual norm to decrease while the true solution stagnates,
    *  giving false convergence.
    *
-   * @tparam T                 Value type (e.g. double).
-   * @tparam BIter             Iterator over the right-hand side @a b.
-   * @tparam XIter             Iterator over the solution vector @a x.
-   * @tparam LinearOperator    Callable implementing @f$ y \leftarrow Ax @f$.
-   * @tparam TransposeOperator Callable implementing
-   *                           @f$ y \leftarrow A^T x @f$.
+   * @tparam T                    Value type (e.g. double).
+   * @tparam BIter                Iterator over the right-hand side @a b.
+   * @tparam XIter                Iterator over the solution vector @a x.
+   * @tparam LinearOperator       Callable implementing
+   *                              @f$ y \leftarrow Ax @f$.
+   * @tparam TransposeOperator    Callable implementing
+   *                              @f$ y \leftarrow A^T x @f$.
+   * @tparam LeftPreconditioner   Callable implementing
+   *                              @f$ z \leftarrow M_L^{-1}r @f$.
+   * @tparam RightPreconditioner  Callable implementing
+   *                              @f$ w \leftarrow M_R^{-1}p @f$.
    *
    * @see qmr  Free-function convenience wrapper.
    */
@@ -96,7 +109,9 @@ namespace sparkit::data::detail {
     typename BIter,
     typename XIter,
     typename LinearOperator,
-    typename TransposeOperator>
+    typename TransposeOperator,
+    typename LeftPreconditioner,
+    typename RightPreconditioner>
   class QmrSolver {
   public:
     QmrSolver(
@@ -106,14 +121,18 @@ namespace sparkit::data::detail {
       XIter xlast,
       Qmr_config<T> cfg,
       LinearOperator linear_operator,
-      TransposeOperator transpose_operator)
+      TransposeOperator transpose_operator,
+      LeftPreconditioner left_preconditioner,
+      RightPreconditioner right_preconditioner)
         : bfirst_{bfirst}
         , blast_{blast}
         , xfirst_{xfirst}
         , xlast_{xlast}
         , cfg_{cfg}
         , linear_operator_{linear_operator}
-        , transpose_operator_{transpose_operator} {
+        , transpose_operator_{transpose_operator}
+        , left_preconditioner_{left_preconditioner}
+        , right_preconditioner_{right_preconditioner} {
       init();
       run();
     }
@@ -149,6 +168,7 @@ namespace sparkit::data::detail {
       p_.assign(un, T{0});
       q_.assign(un, T{0});
       d_.assign(un, T{0});
+      z_.assign(un, T{0});
       work_.assign(un, T{0});
     }
 
@@ -184,13 +204,19 @@ namespace sparkit::data::detail {
     initialize_lanczos() {
       auto un = static_cast<std::size_t>(n_);
 
-      // r0 = b - A*x
+      // r0 = b - A*x (unpreconditioned residual)
       linear_operator_(xfirst_, xlast_, work_.begin());
       auto bit = bfirst_;
       for (std::size_t i = 0; i < un; ++i, ++bit) {
-        v_tilde_[i] = *bit - work_[i];
+        work_[i] = *bit - work_[i];
       }
-      std::copy(v_tilde_.begin(), v_tilde_.end(), w_tilde_.begin());
+
+      // v_tilde = M_R^{-1}(M_L^{-1}(r0)) — primal chain
+      left_preconditioner_(work_.cbegin(), work_.cend(), z_.begin());
+      right_preconditioner_(z_.cbegin(), z_.cend(), v_tilde_.begin());
+      // w_tilde = M_L^{-1}(M_R^{-1}(r0)) — adjoint (reversed) chain
+      right_preconditioner_(work_.cbegin(), work_.cend(), z_.begin());
+      left_preconditioner_(z_.cbegin(), z_.cend(), w_tilde_.begin());
 
       rho_ = compute_norm(v_tilde_.begin(), v_tilde_.end());
       xi_ = compute_norm(w_tilde_.begin(), w_tilde_.end());
@@ -257,19 +283,25 @@ namespace sparkit::data::detail {
     compute_lanczos_step() {
       auto un = static_cast<std::size_t>(n_);
 
-      // a_p = A * p
+      // Forward: z_ = M_R^{-1}(M_L^{-1}(A * p))
       linear_operator_(p_.begin(), p_.end(), work_.begin());
-      epsilon_ = dot(q_, work_);
+      left_preconditioner_(work_.cbegin(), work_.cend(), v_tilde_.begin());
+      right_preconditioner_(v_tilde_.cbegin(), v_tilde_.cend(), z_.begin());
+      // v_tilde_ used as safe intermediate; overwritten below
+      epsilon_ = dot(q_, z_);
 
       T beta = epsilon_ / dot(w_, v_);
 
-      // v_tilde = A*p - beta*v
+      // v_tilde = z_ - beta * v
       for (std::size_t i = 0; i < un; ++i) {
-        v_tilde_[i] = work_[i] - beta * v_[i];
+        v_tilde_[i] = z_[i] - beta * v_[i];
       }
 
-      // w_tilde = A^T*q - beta*w
-      transpose_operator_(q_.begin(), q_.end(), work_.begin());
+      // Backward: w_tilde = A^T * M_L^{-1}(M_R^{-1}(q)) - beta * w
+      right_preconditioner_(q_.cbegin(), q_.cend(), z_.begin());
+      left_preconditioner_(z_.cbegin(), z_.cend(), w_tilde_.begin());
+      // w_tilde_ used as safe intermediate; overwritten below
+      transpose_operator_(w_tilde_.begin(), w_tilde_.end(), work_.begin());
       for (std::size_t i = 0; i < un; ++i) {
         w_tilde_[i] = work_[i] - beta * w_[i];
       }
@@ -376,6 +408,8 @@ namespace sparkit::data::detail {
     Qmr_config<T> cfg_;
     LinearOperator linear_operator_;
     TransposeOperator transpose_operator_;
+    LeftPreconditioner left_preconditioner_;
+    RightPreconditioner right_preconditioner_;
     size_type n_;
     Qmr_summary<T> summary_{};
     T bnorm_{};
@@ -396,25 +430,30 @@ namespace sparkit::data::detail {
     std::vector<T> p_{};
     std::vector<T> q_{};
     std::vector<T> d_{};
+    std::vector<T> z_{};
     std::vector<T> work_{};
   };
 
   /**
-   * @brief Solve @f$ Ax = b @f$ with the QMR method.
+   * @brief Solve @f$ Ax = b @f$ with the preconditioned QMR method.
    *
    * Convenience wrapper that constructs a QmrSolver, runs it to
    * completion, and returns the convergence summary. The solution is
    * written in-place into @c [xfirst, xlast).
    *
-   * @param bfirst             Start of right-hand side @a b.
-   * @param blast              Past-the-end of @a b.
-   * @param xfirst             Start of initial guess / solution @a x.
-   * @param xlast              Past-the-end of @a x.
-   * @param cfg                Solver configuration.
-   * @param linear_operator    Output-iterator callable implementing
-   *                           @f$ y \leftarrow Ax @f$.
-   * @param transpose_operator Output-iterator callable implementing
-   *                           @f$ y \leftarrow A^T x @f$.
+   * @param bfirst               Start of right-hand side @a b.
+   * @param blast                Past-the-end of @a b.
+   * @param xfirst               Start of initial guess / solution @a x.
+   * @param xlast                Past-the-end of @a x.
+   * @param cfg                  Solver configuration.
+   * @param linear_operator      Output-iterator callable implementing
+   *                             @f$ y \leftarrow Ax @f$.
+   * @param transpose_operator   Output-iterator callable implementing
+   *                             @f$ y \leftarrow A^T x @f$.
+   * @param left_preconditioner  Output-iterator callable implementing
+   *                             @f$ z \leftarrow M_L^{-1}r @f$.
+   * @param right_preconditioner Output-iterator callable implementing
+   *                             @f$ w \leftarrow M_R^{-1}p @f$.
    * @return Qmr_summary with convergence diagnostics.
    */
   template <
@@ -422,7 +461,9 @@ namespace sparkit::data::detail {
     typename XIter,
     typename T,
     typename LinearOperator,
-    typename TransposeOperator>
+    typename TransposeOperator,
+    typename LeftPreconditioner,
+    typename RightPreconditioner>
   Qmr_summary<T>
   qmr(
     BIter bfirst,
@@ -431,9 +472,19 @@ namespace sparkit::data::detail {
     XIter xlast,
     Qmr_config<T> cfg,
     LinearOperator linear_operator,
-    TransposeOperator transpose_operator) {
+    TransposeOperator transpose_operator,
+    LeftPreconditioner left_preconditioner,
+    RightPreconditioner right_preconditioner) {
     auto solver = QmrSolver(
-      bfirst, blast, xfirst, xlast, cfg, linear_operator, transpose_operator);
+      bfirst,
+      blast,
+      xfirst,
+      xlast,
+      cfg,
+      linear_operator,
+      transpose_operator,
+      left_preconditioner,
+      right_preconditioner);
     return solver.summary();
   }
 

@@ -63,11 +63,20 @@ namespace sparkit::data::detail {
   };
 
   /**
-   * @brief LSQR solver for least-squares problems.
+   * @brief LSQR solver for least-squares problems with right
+   * preconditioning.
    *
    * Solves @f$ \min_x \|Ax - b\|_2 @f$ using the LSQR algorithm
    * (Paige & Saunders, 1982). For square nonsingular systems, this
    * is equivalent to solving @f$ Ax = b @f$.
+   *
+   * Right preconditioning solves
+   * @f$ \min_y \|A M^{-1} y - b\|_2 @f$, then recovers
+   * @f$ x = M^{-1} y @f$. This preserves the least-squares structure
+   * (left preconditioning would change the norm).
+   *
+   * The preconditioner @f$ M @f$ is assumed symmetric so that
+   * @f$ M^{-T} = M^{-1} @f$. This covers IC(0), Jacobi, and SSOR.
    *
    * The algorithm is based on Lanczos bidiagonalization and requires
    * both @f$ A @f$ and @f$ A^T @f$ as callable operators. Each
@@ -79,6 +88,8 @@ namespace sparkit::data::detail {
    * @tparam LinearOperator    Callable implementing @f$ y \leftarrow Ax @f$.
    * @tparam TransposeOperator Callable implementing
    *                           @f$ y \leftarrow A^T x @f$.
+   * @tparam Preconditioner    Callable implementing
+   *                           @f$ z \leftarrow M^{-1}r @f$.
    *
    * @see lsqr  Free-function convenience wrapper.
    */
@@ -87,7 +98,8 @@ namespace sparkit::data::detail {
     typename BIter,
     typename XIter,
     typename LinearOperator,
-    typename TransposeOperator>
+    typename TransposeOperator,
+    typename Preconditioner>
   class LsqrSolver {
   public:
     LsqrSolver(
@@ -97,14 +109,16 @@ namespace sparkit::data::detail {
       XIter xlast,
       Lsqr_config<T> cfg,
       LinearOperator linear_operator,
-      TransposeOperator transpose_operator)
+      TransposeOperator transpose_operator,
+      Preconditioner preconditioner)
         : bfirst_{bfirst}
         , blast_{blast}
         , xfirst_{xfirst}
         , xlast_{xlast}
         , cfg_{cfg}
         , linear_operator_{linear_operator}
-        , transpose_operator_{transpose_operator} {
+        , transpose_operator_{transpose_operator}
+        , preconditioner_{preconditioner} {
       init();
       run();
     }
@@ -138,6 +152,7 @@ namespace sparkit::data::detail {
       u_.assign(um, T{0});
       v_.assign(un, T{0});
       w_.assign(un, T{0});
+      z_.assign(un, T{0});
       u_work_.assign(um, T{0});
       v_work_.assign(un, T{0});
     }
@@ -163,6 +178,8 @@ namespace sparkit::data::detail {
       while (has_budget() && !summary_.converged) {
         lsqr_step();
       }
+
+      recover_solution();
     }
 
     bool
@@ -181,12 +198,14 @@ namespace sparkit::data::detail {
       beta_ = compute_norm(u_.begin(), u_.end());
       scale_vector(u_, T{1} / beta_);
 
-      // v_1 = A^T * u_1 / ||A^T * u_1||
+      // v_work = A^T * u_1
       transpose_operator_(u_.cbegin(), u_.cend(), v_work_.begin());
-      alpha_ = compute_norm(v_work_.begin(), v_work_.end());
+      // z_ = M^{-1} * v_work
+      preconditioner_(v_work_.cbegin(), v_work_.cend(), z_.begin());
+      alpha_ = compute_norm(z_.begin(), z_.end());
       auto un = static_cast<std::size_t>(n_);
       for (std::size_t i = 0; i < un; ++i) {
-        v_[i] = v_work_[i] / alpha_;
+        v_[i] = z_[i] / alpha_;
       }
 
       // Initialize search direction
@@ -214,8 +233,9 @@ namespace sparkit::data::detail {
       auto um = static_cast<std::size_t>(m_);
       auto un = static_cast<std::size_t>(n_);
 
-      // u_work = A * v - alpha * u
-      linear_operator_(v_.cbegin(), v_.cend(), u_work_.begin());
+      // Forward: u_work = A * M^{-1} * v - alpha * u
+      preconditioner_(v_.cbegin(), v_.cend(), z_.begin());
+      linear_operator_(z_.cbegin(), z_.cend(), u_work_.begin());
       for (std::size_t i = 0; i < um; ++i) {
         u_work_[i] -= alpha_ * u_[i];
       }
@@ -224,10 +244,11 @@ namespace sparkit::data::detail {
         u_[i] = u_work_[i] / beta_;
       }
 
-      // v_work = A^T * u - beta * v
+      // Backward: v_work = M^{-1} * A^T * u - beta * v
       transpose_operator_(u_.cbegin(), u_.cend(), v_work_.begin());
+      preconditioner_(v_work_.cbegin(), v_work_.cend(), z_.begin());
       for (std::size_t i = 0; i < un; ++i) {
-        v_work_[i] -= beta_ * v_[i];
+        v_work_[i] = z_[i] - beta_ * v_[i];
       }
       alpha_ = compute_norm(v_work_.begin(), v_work_.end());
       for (std::size_t i = 0; i < un; ++i) {
@@ -285,6 +306,23 @@ namespace sparkit::data::detail {
       }
     }
 
+    void
+    recover_solution() {
+      // The iteration accumulated y (in the right-preconditioned system
+      // min||AM^{-1}y - b||). Recover x = M^{-1} * y.
+      auto un = static_cast<std::size_t>(n_);
+      std::vector<T> y(un, T{0});
+      auto xit = xfirst_;
+      for (std::size_t i = 0; i < un; ++i, ++xit) {
+        y[i] = *xit;
+      }
+      preconditioner_(y.cbegin(), y.cend(), z_.begin());
+      xit = xfirst_;
+      for (std::size_t i = 0; i < un; ++i, ++xit) {
+        *xit = z_[i];
+      }
+    }
+
     template <typename Iter>
     static T
     compute_norm(Iter first, Iter last) {
@@ -306,6 +344,7 @@ namespace sparkit::data::detail {
     Lsqr_config<T> cfg_;
     LinearOperator linear_operator_;
     TransposeOperator transpose_operator_;
+    Preconditioner preconditioner_;
     size_type m_;
     size_type n_;
     Lsqr_summary<T> summary_{};
@@ -322,12 +361,14 @@ namespace sparkit::data::detail {
     std::vector<T> u_{};
     std::vector<T> v_{};
     std::vector<T> w_{};
+    std::vector<T> z_{};
     std::vector<T> u_work_{};
     std::vector<T> v_work_{};
   };
 
   /**
-   * @brief Solve @f$ \min_x \|Ax - b\|_2 @f$ with the LSQR method.
+   * @brief Solve @f$ \min_x \|Ax - b\|_2 @f$ with the preconditioned
+   * LSQR method.
    *
    * Convenience wrapper that constructs an LsqrSolver, runs it to
    * completion, and returns the convergence summary. The solution is
@@ -342,6 +383,8 @@ namespace sparkit::data::detail {
    *                           @f$ y \leftarrow Ax @f$.
    * @param transpose_operator Output-iterator callable implementing
    *                           @f$ y \leftarrow A^T x @f$.
+   * @param preconditioner     Output-iterator callable implementing
+   *                           @f$ z \leftarrow M^{-1}r @f$.
    * @return Lsqr_summary with convergence diagnostics.
    */
   template <
@@ -349,7 +392,8 @@ namespace sparkit::data::detail {
     typename XIter,
     typename T,
     typename LinearOperator,
-    typename TransposeOperator>
+    typename TransposeOperator,
+    typename Preconditioner>
   Lsqr_summary<T>
   lsqr(
     BIter bfirst,
@@ -358,9 +402,17 @@ namespace sparkit::data::detail {
     XIter xlast,
     Lsqr_config<T> cfg,
     LinearOperator linear_operator,
-    TransposeOperator transpose_operator) {
+    TransposeOperator transpose_operator,
+    Preconditioner preconditioner) {
     auto solver = LsqrSolver(
-      bfirst, blast, xfirst, xlast, cfg, linear_operator, transpose_operator);
+      bfirst,
+      blast,
+      xfirst,
+      xlast,
+      cfg,
+      linear_operator,
+      transpose_operator,
+      preconditioner);
     return solver.summary();
   }
 

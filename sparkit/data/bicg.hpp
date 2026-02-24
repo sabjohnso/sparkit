@@ -63,20 +63,34 @@ namespace sparkit::data::detail {
   };
 
   /**
-   * @brief BiCG (Biconjugate Gradient) solver.
+   * @brief BiCG (Biconjugate Gradient) solver with left and right
+   *  preconditioning.
    *
    * Solves a general (possibly nonsymmetric) linear system @f$ Ax = b @f$
    * using the biconjugate gradient method (Templates book, Algorithm 7.3).
+   * The combined preconditioner is @f$ M = M_L M_R @f$, applied as:
+   * - Primal: @f$ z = M_R^{-1}(M_L^{-1}(r)) @f$ (left first, then right)
+   * - Adjoint: @f$ \tilde{z} = M_L^{-1}(M_R^{-1}(\tilde{r})) @f$
+   *   (reversed order, since @f$ M^{-T} = M_L^{-T} M_R^{-T} @f$ and
+   *   both factors are symmetric)
    *
    * This method requires both @f$ A @f$ and @f$ A^T @f$ as callable
    * operators. Each iteration uses one matvec with A and one with A^T.
    *
-   * @tparam T                 Value type (e.g. double).
-   * @tparam BIter             Iterator over the right-hand side @a b.
-   * @tparam XIter             Iterator over the solution vector @a x.
-   * @tparam LinearOperator    Callable implementing @f$ y \leftarrow Ax @f$.
-   * @tparam TransposeOperator Callable implementing
-   *                           @f$ y \leftarrow A^T x @f$.
+   * Both @f$ M_L @f$ and @f$ M_R @f$ are assumed symmetric so that
+   * @f$ M^{-T} = M^{-1} @f$. This covers IC(0), Jacobi, and SSOR.
+   *
+   * @tparam T                    Value type (e.g. double).
+   * @tparam BIter                Iterator over the right-hand side @a b.
+   * @tparam XIter                Iterator over the solution vector @a x.
+   * @tparam LinearOperator       Callable implementing
+   *                              @f$ y \leftarrow Ax @f$.
+   * @tparam TransposeOperator    Callable implementing
+   *                              @f$ y \leftarrow A^T x @f$.
+   * @tparam LeftPreconditioner   Callable implementing
+   *                              @f$ z \leftarrow M_L^{-1}r @f$.
+   * @tparam RightPreconditioner  Callable implementing
+   *                              @f$ w \leftarrow M_R^{-1}p @f$.
    *
    * @see bicg  Free-function convenience wrapper.
    */
@@ -85,7 +99,9 @@ namespace sparkit::data::detail {
     typename BIter,
     typename XIter,
     typename LinearOperator,
-    typename TransposeOperator>
+    typename TransposeOperator,
+    typename LeftPreconditioner,
+    typename RightPreconditioner>
   class BicgSolver {
   public:
     BicgSolver(
@@ -95,14 +111,18 @@ namespace sparkit::data::detail {
       XIter xlast,
       Bicg_config<T> cfg,
       LinearOperator linear_operator,
-      TransposeOperator transpose_operator)
+      TransposeOperator transpose_operator,
+      LeftPreconditioner left_preconditioner,
+      RightPreconditioner right_preconditioner)
         : bfirst_{bfirst}
         , blast_{blast}
         , xfirst_{xfirst}
         , xlast_{xlast}
         , cfg_{cfg}
         , linear_operator_{linear_operator}
-        , transpose_operator_{transpose_operator} {
+        , transpose_operator_{transpose_operator}
+        , left_preconditioner_{left_preconditioner}
+        , right_preconditioner_{right_preconditioner} {
       init();
       run();
     }
@@ -133,10 +153,13 @@ namespace sparkit::data::detail {
       auto un = static_cast<std::size_t>(n_);
       r_.assign(un, T{0});
       r_tilde_.assign(un, T{0});
+      z_.assign(un, T{0});
+      z_tilde_.assign(un, T{0});
       p_.assign(un, T{0});
       p_tilde_.assign(un, T{0});
       q_.assign(un, T{0});
       q_tilde_.assign(un, T{0});
+      tmp_.assign(un, T{0});
     }
 
     void
@@ -157,8 +180,9 @@ namespace sparkit::data::detail {
 
       compute_initial_residual();
       initialize_shadow_residual();
+      apply_preconditioner();
       initialize_search_directions();
-      rho_ = dot(r_tilde_, r_);
+      rho_ = dot(r_tilde_, z_);
 
       while (has_budget() && !summary_.converged) {
         bicg_step();
@@ -173,11 +197,10 @@ namespace sparkit::data::detail {
     void
     compute_initial_residual() {
       auto un = static_cast<std::size_t>(n_);
-      std::vector<T> tmp(un, T{0});
-      linear_operator_(xfirst_, xlast_, tmp.begin());
+      linear_operator_(xfirst_, xlast_, tmp_.begin());
       auto bit = bfirst_;
       for (std::size_t i = 0; i < un; ++i, ++bit) {
-        r_[i] = *bit - tmp[i];
+        r_[i] = *bit - tmp_[i];
       }
     }
 
@@ -187,9 +210,19 @@ namespace sparkit::data::detail {
     }
 
     void
+    apply_preconditioner() {
+      // Primal: left first, then right
+      left_preconditioner_(r_.cbegin(), r_.cend(), tmp_.begin());
+      right_preconditioner_(tmp_.cbegin(), tmp_.cend(), z_.begin());
+      // Adjoint: reversed order (right first, then left)
+      right_preconditioner_(r_tilde_.cbegin(), r_tilde_.cend(), tmp_.begin());
+      left_preconditioner_(tmp_.cbegin(), tmp_.cend(), z_tilde_.begin());
+    }
+
+    void
     initialize_search_directions() {
-      std::copy(r_.begin(), r_.end(), p_.begin());
-      std::copy(r_tilde_.begin(), r_tilde_.end(), p_tilde_.begin());
+      std::copy(z_.begin(), z_.end(), p_.begin());
+      std::copy(z_tilde_.begin(), z_tilde_.end(), p_tilde_.begin());
     }
 
     void
@@ -206,7 +239,8 @@ namespace sparkit::data::detail {
 
       if (check_convergence()) return;
 
-      T rho_new = dot(r_tilde_, r_);
+      apply_preconditioner();
+      T rho_new = dot(r_tilde_, z_);
       if (rho_new == T{0}) return;
 
       T beta = rho_new / rho_;
@@ -263,10 +297,10 @@ namespace sparkit::data::detail {
     update_search_directions(T beta) {
       auto un = static_cast<std::size_t>(n_);
       for (std::size_t i = 0; i < un; ++i) {
-        p_[i] = r_[i] + beta * p_[i];
+        p_[i] = z_[i] + beta * p_[i];
       }
       for (std::size_t i = 0; i < un; ++i) {
-        p_tilde_[i] = r_tilde_[i] + beta * p_tilde_[i];
+        p_tilde_[i] = z_tilde_[i] + beta * p_tilde_[i];
       }
     }
 
@@ -289,34 +323,43 @@ namespace sparkit::data::detail {
     Bicg_config<T> cfg_;
     LinearOperator linear_operator_;
     TransposeOperator transpose_operator_;
+    LeftPreconditioner left_preconditioner_;
+    RightPreconditioner right_preconditioner_;
     size_type n_;
     Bicg_summary<T> summary_{};
     T bnorm_{};
     T rho_{};
     std::vector<T> r_{};
     std::vector<T> r_tilde_{};
+    std::vector<T> z_{};
+    std::vector<T> z_tilde_{};
     std::vector<T> p_{};
     std::vector<T> p_tilde_{};
     std::vector<T> q_{};
     std::vector<T> q_tilde_{};
+    std::vector<T> tmp_{};
   };
 
   /**
-   * @brief Solve @f$ Ax = b @f$ with the BiCG method.
+   * @brief Solve @f$ Ax = b @f$ with the preconditioned BiCG method.
    *
    * Convenience wrapper that constructs a BicgSolver, runs it to
    * completion, and returns the convergence summary. The solution is
    * written in-place into @c [xfirst, xlast).
    *
-   * @param bfirst             Start of right-hand side @a b.
-   * @param blast              Past-the-end of @a b.
-   * @param xfirst             Start of initial guess / solution @a x.
-   * @param xlast              Past-the-end of @a x.
-   * @param cfg                Solver configuration.
-   * @param linear_operator    Output-iterator callable implementing
-   *                           @f$ y \leftarrow Ax @f$.
-   * @param transpose_operator Output-iterator callable implementing
-   *                           @f$ y \leftarrow A^T x @f$.
+   * @param bfirst               Start of right-hand side @a b.
+   * @param blast                Past-the-end of @a b.
+   * @param xfirst               Start of initial guess / solution @a x.
+   * @param xlast                Past-the-end of @a x.
+   * @param cfg                  Solver configuration.
+   * @param linear_operator      Output-iterator callable implementing
+   *                             @f$ y \leftarrow Ax @f$.
+   * @param transpose_operator   Output-iterator callable implementing
+   *                             @f$ y \leftarrow A^T x @f$.
+   * @param left_preconditioner  Output-iterator callable implementing
+   *                             @f$ z \leftarrow M_L^{-1}r @f$.
+   * @param right_preconditioner Output-iterator callable implementing
+   *                             @f$ w \leftarrow M_R^{-1}p @f$.
    * @return Bicg_summary with convergence diagnostics.
    */
   template <
@@ -324,7 +367,9 @@ namespace sparkit::data::detail {
     typename XIter,
     typename T,
     typename LinearOperator,
-    typename TransposeOperator>
+    typename TransposeOperator,
+    typename LeftPreconditioner,
+    typename RightPreconditioner>
   Bicg_summary<T>
   bicg(
     BIter bfirst,
@@ -333,9 +378,19 @@ namespace sparkit::data::detail {
     XIter xlast,
     Bicg_config<T> cfg,
     LinearOperator linear_operator,
-    TransposeOperator transpose_operator) {
+    TransposeOperator transpose_operator,
+    LeftPreconditioner left_preconditioner,
+    RightPreconditioner right_preconditioner) {
     auto solver = BicgSolver(
-      bfirst, blast, xfirst, xlast, cfg, linear_operator, transpose_operator);
+      bfirst,
+      blast,
+      xfirst,
+      xlast,
+      cfg,
+      linear_operator,
+      transpose_operator,
+      left_preconditioner,
+      right_preconditioner);
     return solver.summary();
   }
 

@@ -7,13 +7,16 @@
 //
 // ... Standard header files
 //
+#include <algorithm>
 #include <cmath>
+#include <span>
 #include <vector>
 
 //
 // ... sparkit header files
 //
 #include <sparkit/data/Compressed_row_matrix.hpp>
+#include <sparkit/data/conjugate_gradient.hpp>
 #include <sparkit/data/incomplete_cholesky.hpp>
 #include <sparkit/data/numeric_cholesky.hpp>
 #include <sparkit/data/sparse_blas.hpp>
@@ -27,13 +30,21 @@ namespace sparkit::testing {
   using sparkit::data::detail::Index;
   using sparkit::data::detail::Shape;
 
+  using sparkit::data::detail::CGConfig;
   using sparkit::data::detail::cholesky;
+  using sparkit::data::detail::conjugate_gradient;
   using sparkit::data::detail::extract_lower_triangle;
+  using sparkit::data::detail::ic_apply;
   using sparkit::data::detail::incomplete_cholesky;
+  using sparkit::data::detail::mic0;
   using sparkit::data::detail::multiply;
   using sparkit::data::detail::transpose;
 
   using size_type = sparkit::config::size_type;
+
+  static auto const identity = [](auto first, auto last, auto out) {
+    std::copy(first, last, out);
+  };
 
   // Build a CSR matrix from a list of (row, col, value) entries.
   static Compressed_row_matrix<double>
@@ -62,6 +73,54 @@ namespace sparkit::testing {
     }
 
     return Compressed_row_matrix<double>{std::move(sp), std::move(vals)};
+  }
+
+  // Build a 4x4 tridiagonal SPD matrix: diag=4, off-diag=-1.
+  static Compressed_row_matrix<double>
+  make_tridiag_4() {
+    std::vector<Entry<double>> entries;
+    for (size_type i = 0; i < 4; ++i) {
+      entries.push_back(Entry<double>{Index{i, i}, 4.0});
+      if (i + 1 < 4) {
+        entries.push_back(Entry<double>{Index{i, i + 1}, -1.0});
+        entries.push_back(Entry<double>{Index{i + 1, i}, -1.0});
+      }
+    }
+    return make_matrix(Shape{4, 4}, entries);
+  }
+
+  // Build a 4x4 grid Laplacian + 5*I (16 nodes), SPD.
+  static Compressed_row_matrix<double>
+  make_grid_16() {
+    size_type const grid = 4;
+    size_type const n = grid * grid;
+
+    std::vector<Entry<double>> entries;
+    for (size_type r = 0; r < grid; ++r) {
+      for (size_type c = 0; c < grid; ++c) {
+        auto node = r * grid + c;
+        size_type degree = 0;
+        if (c > 0) {
+          entries.push_back(Entry<double>{Index{node, node - 1}, -1.0});
+          ++degree;
+        }
+        if (c + 1 < grid) {
+          entries.push_back(Entry<double>{Index{node, node + 1}, -1.0});
+          ++degree;
+        }
+        if (r > 0) {
+          entries.push_back(Entry<double>{Index{node, node - grid}, -1.0});
+          ++degree;
+        }
+        if (r + 1 < grid) {
+          entries.push_back(Entry<double>{Index{node, node + grid}, -1.0});
+          ++degree;
+        }
+        entries.push_back(
+          Entry<double>{Index{node, node}, static_cast<double>(degree) + 5.0});
+      }
+    }
+    return make_matrix(Shape{n, n}, entries);
   }
 
   // ================================================================
@@ -212,6 +271,235 @@ namespace sparkit::testing {
        Entry<double>{Index{2, 2}, 1.0}}};
 
     CHECK_THROWS_AS(incomplete_cholesky(A), std::invalid_argument);
+  }
+
+  // ================================================================
+  // ic_apply tests
+  // ================================================================
+
+  TEST_CASE("ic_apply - diagonal", "[ic_apply]") {
+    // A = diag(4, 9, 16), L = diag(2, 3, 4).
+    // ic_apply(L, r) = L^{-T} L^{-1} r = diag(1/4, 1/9, 1/16) * r
+    Compressed_row_matrix<double> A{
+      Shape{3, 3},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{1, 1}, 9.0},
+       Entry<double>{Index{2, 2}, 16.0}}};
+
+    auto L = incomplete_cholesky(A);
+    std::vector<double> r = {8.0, 27.0, 64.0};
+    std::vector<double> z(3);
+
+    ic_apply(L, r.begin(), r.end(), z.begin());
+
+    CHECK(z[0] == Catch::Approx(2.0).margin(1e-12));
+    CHECK(z[1] == Catch::Approx(3.0).margin(1e-12));
+    CHECK(z[2] == Catch::Approx(4.0).margin(1e-12));
+  }
+
+  TEST_CASE("ic_apply - tridiag", "[ic_apply]") {
+    // Tridiag: IC(0) == full Cholesky, so ic_apply gives exact A^{-1}r
+    auto A = make_tridiag_4();
+    auto L = incomplete_cholesky(A);
+
+    std::vector<double> x_true = {1.0, 2.0, 3.0, 4.0};
+    auto b = multiply(A, std::span<double const>{x_true});
+    std::vector<double> z(4);
+
+    ic_apply(L, b.begin(), b.end(), z.begin());
+
+    for (std::size_t i = 0; i < 4; ++i) {
+      CHECK(z[i] == Catch::Approx(x_true[i]).margin(1e-10));
+    }
+  }
+
+  TEST_CASE("ic_apply - left-prec CG tridiag", "[ic_apply]") {
+    auto A = make_tridiag_4();
+    auto L = incomplete_cholesky(A);
+
+    auto apply_A = [&A](auto first, auto last, auto out) {
+      auto result = multiply(A, std::span<double const>{first, last});
+      std::copy(result.begin(), result.end(), out);
+    };
+
+    auto apply_inv_M = [&L](auto first, auto last, auto out) {
+      ic_apply(L, first, last, out);
+    };
+
+    std::vector<double> x_true = {1.0, 2.0, 3.0, 4.0};
+    auto b = multiply(A, std::span<double const>{x_true});
+    std::vector<double> x(4, 0.0);
+    CGConfig<double> cfg{
+      .tolerance = 1e-12, .restart_iterations = 50, .max_iterations = 100};
+
+    auto summary = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x.begin(),
+      x.end(),
+      cfg,
+      apply_A,
+      apply_inv_M,
+      identity);
+
+    REQUIRE(summary.converged);
+    for (std::size_t i = 0; i < 4; ++i) {
+      CHECK(x[i] == Catch::Approx(x_true[i]).margin(1e-8));
+    }
+  }
+
+  TEST_CASE("ic_apply - left-prec CG grid", "[ic_apply]") {
+    auto A = make_grid_16();
+    size_type const n = 16;
+
+    auto apply_A = [&A](auto first, auto last, auto out) {
+      auto result = multiply(A, std::span<double const>{first, last});
+      std::copy(result.begin(), result.end(), out);
+    };
+
+    auto L = incomplete_cholesky(A);
+    auto apply_inv_M = [&L](auto first, auto last, auto out) {
+      ic_apply(L, first, last, out);
+    };
+
+    std::vector<double> x_true;
+    for (size_type i = 0; i < n; ++i) {
+      x_true.push_back(static_cast<double>(i + 1));
+    }
+    auto b = multiply(A, std::span<double const>{x_true});
+    std::vector<double> x(static_cast<std::size_t>(n), 0.0);
+    CGConfig<double> cfg{
+      .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
+
+    auto summary = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x.begin(),
+      x.end(),
+      cfg,
+      apply_A,
+      apply_inv_M,
+      identity);
+
+    REQUIRE(summary.converged);
+    for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
+      CHECK(x[i] == Catch::Approx(x_true[i]).margin(1e-6));
+    }
+  }
+
+  // ================================================================
+  // mic0 tests
+  // ================================================================
+
+  TEST_CASE("mic0 - diagonal same as ic0", "[mic0]") {
+    // Diagonal matrix: no fill to drop, so MIC(0) == IC(0)
+    Compressed_row_matrix<double> A{
+      Shape{4, 4},
+      {Entry<double>{Index{0, 0}, 4.0},
+       Entry<double>{Index{1, 1}, 9.0},
+       Entry<double>{Index{2, 2}, 16.0},
+       Entry<double>{Index{3, 3}, 25.0}}};
+
+    auto L_mic = mic0(A);
+    auto L_ic = incomplete_cholesky(A);
+
+    REQUIRE(L_mic.size() == L_ic.size());
+    auto mic_vals = L_mic.values();
+    auto ic_vals = L_ic.values();
+    for (size_type i = 0; i < L_mic.size(); ++i) {
+      CHECK(mic_vals[i] == Catch::Approx(ic_vals[i]).margin(1e-12));
+    }
+  }
+
+  TEST_CASE("mic0 - tridiag same as ic0", "[mic0]") {
+    // Tridiag: no fill, so MIC(0) == IC(0)
+    auto A = make_tridiag_4();
+
+    auto L_mic = mic0(A);
+    auto L_ic = incomplete_cholesky(A);
+
+    REQUIRE(L_mic.size() == L_ic.size());
+    auto mic_vals = L_mic.values();
+    auto ic_vals = L_ic.values();
+    for (size_type i = 0; i < L_mic.size(); ++i) {
+      CHECK(mic_vals[i] == Catch::Approx(ic_vals[i]).margin(1e-12));
+    }
+  }
+
+  TEST_CASE("mic0 - preserves row sums", "[mic0]") {
+    // Arrow matrix: has fill, so MIC(0) compensates diagonal.
+    // Key property: (L*L^T)*e ≈ A*e (row-sum preservation)
+    std::vector<Entry<double>> entries;
+    for (size_type i = 0; i < 5; ++i) {
+      entries.push_back(Entry<double>{Index{i, i}, 10.0});
+      if (i > 0) {
+        entries.push_back(Entry<double>{Index{0, i}, 1.0});
+        entries.push_back(Entry<double>{Index{i, 0}, 1.0});
+      }
+    }
+    auto A = make_matrix(Shape{5, 5}, entries);
+
+    auto L = mic0(A);
+    auto Lt = transpose(L);
+    auto LLt = multiply(L, Lt);
+
+    // Compute A*e and (L*L^T)*e
+    std::vector<double> ones(5, 1.0);
+    auto Ae = multiply(A, std::span<double const>{ones});
+    auto LLte = multiply(LLt, std::span<double const>{ones});
+
+    for (std::size_t i = 0; i < 5; ++i) {
+      CHECK(LLte[i] == Catch::Approx(Ae[i]).margin(1e-10));
+    }
+  }
+
+  TEST_CASE("mic0 - left-prec CG grid", "[mic0]") {
+    auto A = make_grid_16();
+    size_type const n = 16;
+
+    auto apply_A = [&A](auto first, auto last, auto out) {
+      auto result = multiply(A, std::span<double const>{first, last});
+      std::copy(result.begin(), result.end(), out);
+    };
+
+    auto L = mic0(A);
+    auto apply_inv_M = [&L](auto first, auto last, auto out) {
+      ic_apply(L, first, last, out);
+    };
+
+    std::vector<double> x_true;
+    for (size_type i = 0; i < n; ++i) {
+      x_true.push_back(static_cast<double>(i + 1));
+    }
+    auto b = multiply(A, std::span<double const>{x_true});
+    std::vector<double> x(static_cast<std::size_t>(n), 0.0);
+    CGConfig<double> cfg{
+      .tolerance = 1e-10, .restart_iterations = 50, .max_iterations = 200};
+
+    auto summary = conjugate_gradient(
+      b.begin(),
+      b.end(),
+      x.begin(),
+      x.end(),
+      cfg,
+      apply_A,
+      apply_inv_M,
+      identity);
+
+    REQUIRE(summary.converged);
+    for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
+      CHECK(x[i] == Catch::Approx(x_true[i]).margin(1e-6));
+    }
+  }
+
+  TEST_CASE("mic0 - non-square throws", "[mic0]") {
+    Compressed_row_matrix<double> A{
+      Shape{3, 4},
+      {Entry<double>{Index{0, 0}, 1.0},
+       Entry<double>{Index{1, 1}, 1.0},
+       Entry<double>{Index{2, 2}, 1.0}}};
+
+    CHECK_THROWS_AS(mic0(A), std::invalid_argument);
   }
 
 } // end of namespace sparkit::testing

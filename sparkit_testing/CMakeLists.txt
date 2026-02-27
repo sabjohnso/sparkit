@@ -72,3 +72,5 @@ sparkit_add_test(dense_tridiagonal_eigen dense_tridiagonal_eigen_test dense_trid
 sparkit_add_test(lanczos lanczos_test lanczos_test.cpp)
 sparkit_add_test(dense_hessenberg_eigen dense_hessenberg_eigen_test dense_hessenberg_eigen_test.cpp)
 sparkit_add_test(arnoldi_eig arnoldi_eig_test arnoldi_eig_test.cpp)
+sparkit_add_test(dense_bidiagonal_svd dense_bidiagonal_svd_test dense_bidiagonal_svd_test.cpp)
+sparkit_add_test(svd svd_test svd_test.cpp)

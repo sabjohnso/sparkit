@@ -93,3 +93,4 @@ sparkit_add_test(least_squares_preconditioner least_squares_preconditioner_test 
 sparkit_add_test(amg_solver amg_solver_test amg_solver_test.cpp)
 sparkit_add_test(ldlt ldlt_test ldlt_test.cpp)
 sparkit_add_test(sparse_lu sparse_lu_test sparse_lu_test.cpp)
+sparkit_add_test(matgen matgen_test matgen_test.cpp)

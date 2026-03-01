@@ -43,7 +43,10 @@ add_library(sparkit_shared_library SHARED
   data/permutation.hpp data/permutation.cpp
   data/reordering.hpp data/reordering.cpp
   data/elimination_tree.hpp data/elimination_tree.cpp
-  data/symbolic_cholesky.hpp data/symbolic_cholesky.cpp)
+  data/symbolic_cholesky.hpp data/symbolic_cholesky.cpp
+  data/supernode.hpp data/supernode.cpp
+  data/assembly_tree.hpp data/assembly_tree.cpp
+  data/multifrontal_symbolic.hpp data/multifrontal_symbolic.cpp)
 
 set_target_properties(sparkit_shared_library
   PROPERTIES

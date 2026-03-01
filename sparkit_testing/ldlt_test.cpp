@@ -15,6 +15,7 @@
 //
 #include <sparkit/data/Compressed_row_matrix.hpp>
 #include <sparkit/data/ldlt.hpp>
+#include <sparkit/data/matgen.hpp>
 #include <sparkit/data/numeric_cholesky.hpp>
 #include <sparkit/data/sparse_blas.hpp>
 #include <sparkit/data/symbolic_cholesky.hpp>
@@ -24,7 +25,6 @@
 namespace sparkit::testing {
 
   using sparkit::data::detail::Compressed_row_matrix;
-  using sparkit::data::detail::Compressed_row_sparsity;
   using sparkit::data::detail::Entry;
   using sparkit::data::detail::Index;
   using sparkit::data::detail::Ldl_factors;
@@ -36,40 +36,13 @@ namespace sparkit::testing {
   using sparkit::data::detail::ldlt;
   using sparkit::data::detail::ldlt_apply;
   using sparkit::data::detail::ldlt_solve;
+  using sparkit::data::detail::make_matrix;
   using sparkit::data::detail::multiply;
   using sparkit::data::detail::numeric_ldlt;
   using sparkit::data::detail::symbolic_cholesky;
+  using sparkit::data::detail::tridiagonal_matrix;
 
   using size_type = sparkit::config::size_type;
-
-  // Build a CSR matrix from a list of (row, col, value) entries.
-  static Compressed_row_matrix<double>
-  make_matrix(Shape shape, std::vector<Entry<double>> const& entries) {
-    std::vector<Index> indices;
-    indices.reserve(entries.size());
-    for (auto const& e : entries) {
-      indices.push_back(e.index);
-    }
-
-    Compressed_row_sparsity sp{shape, indices.begin(), indices.end()};
-
-    auto rp = sp.row_ptr();
-    auto ci = sp.col_ind();
-    std::vector<double> vals(static_cast<std::size_t>(sp.size()), 0.0);
-
-    for (auto const& e : entries) {
-      auto row = e.index.row();
-      auto col = e.index.column();
-      for (auto p = rp[row]; p < rp[row + 1]; ++p) {
-        if (ci[p] == col) {
-          vals[static_cast<std::size_t>(p)] = e.value;
-          break;
-        }
-      }
-    }
-
-    return Compressed_row_matrix<double>{std::move(sp), std::move(vals)};
-  }
 
   // Check that L * D * L^T == A entry-by-entry with tolerance.
   // Reconstructs the full dense product and compares.
@@ -144,20 +117,6 @@ namespace sparkit::testing {
     }
   }
 
-  // Build a 4x4 tridiagonal SPD matrix: diag=4, off-diag=-1.
-  static Compressed_row_matrix<double>
-  make_tridiag_4() {
-    std::vector<Entry<double>> entries;
-    for (size_type i = 0; i < 4; ++i) {
-      entries.push_back(Entry<double>{Index{i, i}, 4.0});
-      if (i + 1 < 4) {
-        entries.push_back(Entry<double>{Index{i, i + 1}, -1.0});
-        entries.push_back(Entry<double>{Index{i + 1, i}, -1.0});
-      }
-    }
-    return make_matrix(Shape{4, 4}, entries);
-  }
-
   // ================================================================
   // LDL^T factorization tests
   // ================================================================
@@ -217,13 +176,13 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ldlt - tridiag SPD reconstruction", "[ldlt]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto factors = ldlt(A);
     check_ldlt_reconstruction(factors, A);
   }
 
   TEST_CASE("ldlt - L is unit lower triangular", "[ldlt]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto factors = ldlt(A);
     auto const& L = factors.L;
 
@@ -242,7 +201,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ldlt - all pivot_size=1 for SPD", "[ldlt]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto factors = ldlt(A);
 
     for (size_type i = 0; i < 4; ++i) {
@@ -330,7 +289,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ldlt_solve - SPD tridiag", "[ldlt]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto factors = ldlt(A);
 
     std::vector<double> b = {1.0, 2.0, 3.0, 4.0};
@@ -366,7 +325,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ldlt_solve - zero RHS", "[ldlt]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto factors = ldlt(A);
 
     std::vector<double> b = {0.0, 0.0, 0.0, 0.0};
@@ -479,7 +438,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ldlt_apply - preconditioner", "[ldlt]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto factors = ldlt(A);
 
     std::vector<double> r = {1.0, 2.0, 3.0, 4.0};
@@ -505,7 +464,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ldlt - pattern reuse", "[ldlt]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto L_pattern = symbolic_cholesky(A.sparsity());
 
     auto factors_separate = numeric_ldlt(A, L_pattern);

@@ -13,6 +13,7 @@
 // ... sparkit header files
 //
 #include <sparkit/data/Compressed_row_matrix.hpp>
+#include <sparkit/data/matgen.hpp>
 #include <sparkit/data/numeric_cholesky.hpp>
 #include <sparkit/data/sparse_blas.hpp>
 #include <sparkit/data/symbolic_cholesky.hpp>
@@ -21,47 +22,20 @@
 namespace sparkit::testing {
 
   using sparkit::data::detail::Compressed_row_matrix;
-  using sparkit::data::detail::Compressed_row_sparsity;
   using sparkit::data::detail::Entry;
   using sparkit::data::detail::Index;
   using sparkit::data::detail::Shape;
 
+  using sparkit::data::detail::arrow_matrix;
   using sparkit::data::detail::cholesky;
+  using sparkit::data::detail::make_matrix;
   using sparkit::data::detail::multiply;
   using sparkit::data::detail::numeric_cholesky;
   using sparkit::data::detail::symbolic_cholesky;
   using sparkit::data::detail::transpose;
+  using sparkit::data::detail::tridiagonal_matrix;
 
   using size_type = sparkit::config::size_type;
-
-  // Build a CSR matrix from a list of (row, col, value) entries.
-  static Compressed_row_matrix<double>
-  make_matrix(Shape shape, std::vector<Entry<double>> const& entries) {
-    std::vector<Index> indices;
-    indices.reserve(entries.size());
-    for (auto const& e : entries) {
-      indices.push_back(e.index);
-    }
-
-    Compressed_row_sparsity sp{shape, indices.begin(), indices.end()};
-
-    auto rp = sp.row_ptr();
-    auto ci = sp.col_ind();
-    std::vector<double> vals(static_cast<std::size_t>(sp.size()), 0.0);
-
-    for (auto const& e : entries) {
-      auto row = e.index.row();
-      auto col = e.index.column();
-      for (auto p = rp[row]; p < rp[row + 1]; ++p) {
-        if (ci[p] == col) {
-          vals[static_cast<std::size_t>(p)] = e.value;
-          break;
-        }
-      }
-    }
-
-    return Compressed_row_matrix<double>{std::move(sp), std::move(vals)};
-  }
 
   // Check that L * L^T == A entry-by-entry with tolerance.
   static void
@@ -78,34 +52,6 @@ namespace sparkit::testing {
         CHECK(LLt(i, j) == Catch::Approx(A(i, j)).margin(1e-12));
       }
     }
-  }
-
-  // Build a 4x4 tridiagonal SPD matrix: diag=4, off-diag=-1.
-  static Compressed_row_matrix<double>
-  make_tridiag_4() {
-    std::vector<Entry<double>> entries;
-    for (size_type i = 0; i < 4; ++i) {
-      entries.push_back(Entry<double>{Index{i, i}, 4.0});
-      if (i + 1 < 4) {
-        entries.push_back(Entry<double>{Index{i, i + 1}, -1.0});
-        entries.push_back(Entry<double>{Index{i + 1, i}, -1.0});
-      }
-    }
-    return make_matrix(Shape{4, 4}, entries);
-  }
-
-  // Build a 5x5 arrow SPD matrix: diag=10, off-diag=1 from row 0.
-  static Compressed_row_matrix<double>
-  make_arrow_5() {
-    std::vector<Entry<double>> entries;
-    for (size_type i = 0; i < 5; ++i) {
-      entries.push_back(Entry<double>{Index{i, i}, 10.0});
-      if (i > 0) {
-        entries.push_back(Entry<double>{Index{0, i}, 1.0});
-        entries.push_back(Entry<double>{Index{i, 0}, 1.0});
-      }
-    }
-    return make_matrix(Shape{5, 5}, entries);
   }
 
   // ================================================================
@@ -155,19 +101,19 @@ namespace sparkit::testing {
 
   TEST_CASE(
     "numeric cholesky - tridiagonal reconstruction", "[numeric_cholesky]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto L = cholesky(A);
     check_reconstruction(L, A);
   }
 
   TEST_CASE("numeric cholesky - arrow reconstruction", "[numeric_cholesky]") {
-    auto A = make_arrow_5();
+    auto A = arrow_matrix<double>(5, 10.0, 1.0);
     auto L = cholesky(A);
     check_reconstruction(L, A);
   }
 
   TEST_CASE("numeric cholesky - lower triangular", "[numeric_cholesky]") {
-    auto A = make_arrow_5();
+    auto A = arrow_matrix<double>(5, 10.0, 1.0);
     auto L = cholesky(A);
 
     auto rp = L.row_ptr();
@@ -181,7 +127,7 @@ namespace sparkit::testing {
 
   TEST_CASE(
     "numeric cholesky - pattern matches symbolic", "[numeric_cholesky]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto L_pattern = symbolic_cholesky(A.sparsity());
     auto L = cholesky(A);
 
@@ -202,7 +148,7 @@ namespace sparkit::testing {
 
   TEST_CASE(
     "numeric cholesky - separate symbolic numeric", "[numeric_cholesky]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto L_pattern = symbolic_cholesky(A.sparsity());
     auto L_separate = numeric_cholesky(A, L_pattern);
     auto L_combined = cholesky(A);
@@ -275,7 +221,7 @@ namespace sparkit::testing {
 
   TEST_CASE(
     "numeric cholesky - diagonal values positive", "[numeric_cholesky]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto L = cholesky(A);
 
     auto rp = L.row_ptr();

@@ -109,6 +109,28 @@ namespace sparkit::data::detail {
     return make_matrix(Shape{n, n}, entries);
   }
 
+  // Hardcoded 4x4 diagonally-dominant nonsymmetric matrix.
+  //
+  // Used across solver tests for verifying nonsymmetric solvers.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  nonsymmetric_sample() {
+    return make_matrix<T>(
+      Shape{4, 4},
+      {Entry<T>{Index{0, 0}, T{4}},
+       Entry<T>{Index{0, 1}, T{-1}},
+       Entry<T>{Index{0, 2}, T{0.5}},
+       Entry<T>{Index{1, 0}, T{-0.5}},
+       Entry<T>{Index{1, 1}, T{4}},
+       Entry<T>{Index{1, 3}, T{-1}},
+       Entry<T>{Index{2, 0}, T{0.3}},
+       Entry<T>{Index{2, 2}, T{4}},
+       Entry<T>{Index{2, 3}, T{-0.8}},
+       Entry<T>{Index{3, 1}, T{-0.6}},
+       Entry<T>{Index{3, 2}, T{0.2}},
+       Entry<T>{Index{3, 3}, T{4}}});
+  }
+
   // 5-point finite-difference Laplacian on an nx x ny grid.
   //
   // Produces the standard discrete Laplacian where the diagonal entry
@@ -158,6 +180,56 @@ namespace sparkit::data::detail {
   Compressed_row_matrix<T>
   poisson_2d(config::size_type grid) {
     return poisson_2d<T>(grid, grid);
+  }
+
+  // 5-point Laplacian with diagonal shift on an nx x ny grid.
+  //
+  // Diagonal becomes degree + shift instead of just degree,
+  // producing a shifted Laplacian. With shift > 0 this increases
+  // diagonal dominance and condition number favorably.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  poisson_2d(config::size_type nx, config::size_type ny, T shift) {
+    auto const n = nx * ny;
+
+    std::vector<Entry<T>> entries;
+    entries.reserve(static_cast<std::size_t>(5 * n));
+
+    for (config::size_type r = 0; r < ny; ++r) {
+      for (config::size_type c = 0; c < nx; ++c) {
+        auto node = r * nx + c;
+        config::size_type degree = 0;
+
+        if (c > 0) {
+          entries.push_back(Entry<T>{Index{node, node - 1}, T{-1}});
+          ++degree;
+        }
+        if (c + 1 < nx) {
+          entries.push_back(Entry<T>{Index{node, node + 1}, T{-1}});
+          ++degree;
+        }
+        if (r > 0) {
+          entries.push_back(Entry<T>{Index{node, node - nx}, T{-1}});
+          ++degree;
+        }
+        if (r + 1 < ny) {
+          entries.push_back(Entry<T>{Index{node, node + nx}, T{-1}});
+          ++degree;
+        }
+
+        entries.push_back(
+          Entry<T>{Index{node, node}, static_cast<T>(degree) + shift});
+      }
+    }
+
+    return make_matrix(Shape{n, n}, entries);
+  }
+
+  // Square grid shortcut for shifted poisson_2d.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  poisson_2d(config::size_type grid, T shift) {
+    return poisson_2d<T>(grid, grid, shift);
   }
 
   // 2D convection-diffusion operator on an nx x ny grid.
@@ -214,6 +286,67 @@ namespace sparkit::data::detail {
         }
 
         entries.push_back(Entry<T>{Index{node, node}, diag_val});
+      }
+    }
+
+    return make_matrix(Shape{n, n}, entries);
+  }
+
+  // 2D convection-diffusion with centered differences on an nx x ny grid.
+  //
+  // Centered-difference stencil (as opposed to upwind):
+  //   West:  -(diffusion + convection_x)
+  //   East:  -(diffusion - convection_x)
+  //   South: -(diffusion + convection_y)
+  //   North: -(diffusion - convection_y)
+  //   Diagonal: degree * diffusion + shift
+  //
+  // The convection terms cancel on the diagonal in the centered scheme,
+  // so the diagonal depends only on diffusion and the optional shift.
+  // With zero convection, this reduces to poisson_2d with the same shift.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  convdiff_centered_2d(
+    config::size_type nx,
+    config::size_type ny,
+    T diffusion,
+    T convection_x,
+    T convection_y,
+    T shift = T{0}) {
+    auto const n = nx * ny;
+
+    std::vector<Entry<T>> entries;
+    entries.reserve(static_cast<std::size_t>(5 * n));
+
+    for (config::size_type r = 0; r < ny; ++r) {
+      for (config::size_type c = 0; c < nx; ++c) {
+        auto node = r * nx + c;
+        config::size_type degree = 0;
+
+        if (c > 0) {
+          entries.push_back(
+            Entry<T>{Index{node, node - 1}, -(diffusion + convection_x)});
+          ++degree;
+        }
+        if (c + 1 < nx) {
+          entries.push_back(
+            Entry<T>{Index{node, node + 1}, -(diffusion - convection_x)});
+          ++degree;
+        }
+        if (r > 0) {
+          entries.push_back(
+            Entry<T>{Index{node, node - nx}, -(diffusion + convection_y)});
+          ++degree;
+        }
+        if (r + 1 < ny) {
+          entries.push_back(
+            Entry<T>{Index{node, node + nx}, -(diffusion - convection_y)});
+          ++degree;
+        }
+
+        entries.push_back(
+          Entry<T>{
+            Index{node, node}, static_cast<T>(degree) * diffusion + shift});
       }
     }
 

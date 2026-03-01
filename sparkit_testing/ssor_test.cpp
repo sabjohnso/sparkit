@@ -18,6 +18,7 @@
 #include <sparkit/data/Compressed_row_matrix.hpp>
 #include <sparkit/data/conjugate_gradient.hpp>
 #include <sparkit/data/jacobi.hpp>
+#include <sparkit/data/matgen.hpp>
 #include <sparkit/data/sparse_blas.hpp>
 #include <sparkit/data/ssor.hpp>
 
@@ -25,7 +26,6 @@ namespace sparkit::testing {
 
   using sparkit::data::detail::CGConfig;
   using sparkit::data::detail::Compressed_row_matrix;
-  using sparkit::data::detail::Compressed_row_sparsity;
   using sparkit::data::detail::Entry;
   using sparkit::data::detail::Index;
   using sparkit::data::detail::Shape;
@@ -33,89 +33,18 @@ namespace sparkit::testing {
   using sparkit::data::detail::conjugate_gradient;
   using sparkit::data::detail::jacobi;
   using sparkit::data::detail::jacobi_apply;
+  using sparkit::data::detail::make_matrix;
   using sparkit::data::detail::multiply;
+  using sparkit::data::detail::poisson_2d;
   using sparkit::data::detail::ssor;
   using sparkit::data::detail::ssor_apply;
+  using sparkit::data::detail::tridiagonal_matrix;
 
   using size_type = sparkit::config::size_type;
 
   static auto const identity = [](auto first, auto last, auto out) {
     std::copy(first, last, out);
   };
-
-  static Compressed_row_matrix<double>
-  make_matrix(Shape shape, std::vector<Entry<double>> const& entries) {
-    std::vector<Index> indices;
-    indices.reserve(entries.size());
-    for (auto const& e : entries) {
-      indices.push_back(e.index);
-    }
-
-    Compressed_row_sparsity sp{shape, indices.begin(), indices.end()};
-
-    auto rp = sp.row_ptr();
-    auto ci = sp.col_ind();
-    std::vector<double> vals(static_cast<std::size_t>(sp.size()), 0.0);
-
-    for (auto const& e : entries) {
-      auto row = e.index.row();
-      auto col = e.index.column();
-      for (auto p = rp[row]; p < rp[row + 1]; ++p) {
-        if (ci[p] == col) {
-          vals[static_cast<std::size_t>(p)] = e.value;
-          break;
-        }
-      }
-    }
-
-    return Compressed_row_matrix<double>{std::move(sp), std::move(vals)};
-  }
-
-  static Compressed_row_matrix<double>
-  make_tridiag_4() {
-    std::vector<Entry<double>> entries;
-    for (size_type i = 0; i < 4; ++i) {
-      entries.push_back(Entry<double>{Index{i, i}, 4.0});
-      if (i + 1 < 4) {
-        entries.push_back(Entry<double>{Index{i, i + 1}, -1.0});
-        entries.push_back(Entry<double>{Index{i + 1, i}, -1.0});
-      }
-    }
-    return make_matrix(Shape{4, 4}, entries);
-  }
-
-  static Compressed_row_matrix<double>
-  make_grid_16() {
-    size_type const grid = 4;
-    size_type const n = grid * grid;
-
-    std::vector<Entry<double>> entries;
-    for (size_type r = 0; r < grid; ++r) {
-      for (size_type c = 0; c < grid; ++c) {
-        auto node = r * grid + c;
-        size_type degree = 0;
-        if (c > 0) {
-          entries.push_back(Entry<double>{Index{node, node - 1}, -1.0});
-          ++degree;
-        }
-        if (c + 1 < grid) {
-          entries.push_back(Entry<double>{Index{node, node + 1}, -1.0});
-          ++degree;
-        }
-        if (r > 0) {
-          entries.push_back(Entry<double>{Index{node, node - grid}, -1.0});
-          ++degree;
-        }
-        if (r + 1 < grid) {
-          entries.push_back(Entry<double>{Index{node, node + grid}, -1.0});
-          ++degree;
-        }
-        entries.push_back(
-          Entry<double>{Index{node, node}, static_cast<double>(degree) + 5.0});
-      }
-    }
-    return make_matrix(Shape{n, n}, entries);
-  }
 
   // ================================================================
   // SSOR preconditioner tests
@@ -166,7 +95,7 @@ namespace sparkit::testing {
     //
     // Final scale: z[i] = 1*(2-1) * w[i] = w[i]
 
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto sf = ssor(A, 1.0);
 
     std::vector<double> r = {1.0, 0.0, 0.0, 0.0};
@@ -181,7 +110,7 @@ namespace sparkit::testing {
 
   TEST_CASE("ssor - apply correctness", "[ssor]") {
     // Verify SSOR on tridiag with a different RHS
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
     auto sf = ssor(A, 1.0);
 
     std::vector<double> r = {4.0, 4.0, 4.0, 4.0};
@@ -202,7 +131,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ssor - left-prec CG tridiag omega=1", "[ssor]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
@@ -250,7 +179,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ssor - left-prec CG grid omega=1", "[ssor]") {
-    auto A = make_grid_16();
+    auto A = poisson_2d<double>(4, 5.0);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {
@@ -290,7 +219,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ssor - right-prec CG tridiag omega=1", "[ssor]") {
-    auto A = make_tridiag_4();
+    auto A = tridiagonal_matrix<double>(4, -1.0, 4.0, -1.0);
 
     auto apply_A = [&A](auto first, auto last, auto out) {
       auto result = multiply(A, std::span<double const>{first, last});
@@ -326,7 +255,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ssor - right-prec CG grid omega=1", "[ssor]") {
-    auto A = make_grid_16();
+    auto A = poisson_2d<double>(4, 5.0);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {
@@ -366,7 +295,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ssor - omega=0.5 converges", "[ssor]") {
-    auto A = make_grid_16();
+    auto A = poisson_2d<double>(4, 5.0);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {
@@ -406,7 +335,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ssor - omega=1.5 converges", "[ssor]") {
-    auto A = make_grid_16();
+    auto A = poisson_2d<double>(4, 5.0);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {
@@ -446,7 +375,7 @@ namespace sparkit::testing {
   }
 
   TEST_CASE("ssor - fewer iters than Jacobi on grid", "[ssor]") {
-    auto A = make_grid_16();
+    auto A = poisson_2d<double>(4, 5.0);
     size_type const n = 16;
 
     auto apply_A = [&A](auto first, auto last, auto out) {

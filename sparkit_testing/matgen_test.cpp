@@ -26,11 +26,13 @@ namespace sparkit::testing {
   using sparkit::data::detail::Shape;
 
   using sparkit::data::detail::arrow_matrix;
+  using sparkit::data::detail::convdiff_centered_2d;
   using sparkit::data::detail::convection_diffusion_2d;
   using sparkit::data::detail::diagonal_matrix;
   using sparkit::data::detail::make_matrix;
   using sparkit::data::detail::manufactured_solution;
   using sparkit::data::detail::multiply;
+  using sparkit::data::detail::nonsymmetric_sample;
   using sparkit::data::detail::poisson_2d;
   using sparkit::data::detail::random_sparse;
   using sparkit::data::detail::tridiagonal_matrix;
@@ -334,6 +336,135 @@ namespace sparkit::testing {
         Ax[static_cast<std::size_t>(i)] ==
         Catch::Approx(b[static_cast<std::size_t>(i)]).epsilon(1e-10));
     }
+  }
+
+  // ================================================================
+  // poisson_2d with shift
+  // ================================================================
+
+  TEST_CASE("matgen - poisson_2d shifted matches make_grid_16", "[matgen]") {
+    // The old make_grid_16 used diagonal = degree + 5.0.
+    // poisson_2d<double>(4, 5.0) should reproduce this exactly.
+    auto A = poisson_2d<double>(4, 5.0);
+    size_type const grid = 4;
+    size_type const n = grid * grid;
+
+    REQUIRE(A.shape() == Shape{n, n});
+
+    // Corner node (0,0): 2 neighbors, diag = 2 + 5.0 = 7.0
+    CHECK(A(0, 0) == Catch::Approx(7.0));
+    CHECK(A(0, 1) == Catch::Approx(-1.0));
+    CHECK(A(0, grid) == Catch::Approx(-1.0));
+
+    // Edge node (0,1): 3 neighbors, diag = 3 + 5.0 = 8.0
+    CHECK(A(1, 1) == Catch::Approx(8.0));
+
+    // Interior node (1,1): 4 neighbors, diag = 4 + 5.0 = 9.0
+    auto interior = 1 * grid + 1;
+    CHECK(A(interior, interior) == Catch::Approx(9.0));
+    CHECK(A(interior, interior - 1) == Catch::Approx(-1.0));
+    CHECK(A(interior, interior + 1) == Catch::Approx(-1.0));
+    CHECK(A(interior, interior - grid) == Catch::Approx(-1.0));
+    CHECK(A(interior, interior + grid) == Catch::Approx(-1.0));
+
+    // Verify symmetry (shifted Laplacian is still symmetric)
+    for (size_type i = 0; i < n; ++i) {
+      for (size_type j = i + 1; j < n; ++j) {
+        CHECK(A(i, j) == Catch::Approx(A(j, i)));
+      }
+    }
+  }
+
+  // ================================================================
+  // convdiff_centered_2d
+  // ================================================================
+
+  TEST_CASE("matgen - convdiff_centered_2d nonsymmetric", "[matgen]") {
+    auto A = convdiff_centered_2d(
+      static_cast<size_type>(4), static_cast<size_type>(4), 1.0, 0.3, 0.3, 5.0);
+
+    size_type const n = 16;
+    REQUIRE(A.shape() == Shape{n, n});
+
+    // With nonzero convection, A should be nonsymmetric
+    bool found_asymmetry = false;
+    for (size_type i = 0; i < n && !found_asymmetry; ++i) {
+      for (size_type j = i + 1; j < n && !found_asymmetry; ++j) {
+        if (std::abs(A(i, j) - A(j, i)) > 1e-14) { found_asymmetry = true; }
+      }
+    }
+    CHECK(found_asymmetry);
+
+    // Check specific stencil values for an interior node (1,1) = node 5
+    size_type const grid = 4;
+    auto node = static_cast<size_type>(1 * grid + 1);
+    // West: -(diffusion + conv_x) = -(1.0 + 0.3) = -1.3
+    CHECK(A(node, node - 1) == Catch::Approx(-1.3));
+    // East: -(diffusion - conv_x) = -(1.0 - 0.3) = -0.7
+    CHECK(A(node, node + 1) == Catch::Approx(-0.7));
+    // South: -(diffusion + conv_y) = -(1.0 + 0.3) = -1.3
+    CHECK(A(node, node - grid) == Catch::Approx(-1.3));
+    // North: -(diffusion - conv_y) = -(1.0 - 0.3) = -0.7
+    CHECK(A(node, node + grid) == Catch::Approx(-0.7));
+    // Diagonal: degree * diffusion + shift = 4 * 1.0 + 5.0 = 9.0
+    CHECK(A(node, node) == Catch::Approx(9.0));
+  }
+
+  TEST_CASE(
+    "matgen - convdiff_centered_2d reduces to shifted poisson", "[matgen]") {
+    size_type const grid = 4;
+    size_type const n = grid * grid;
+
+    // Zero convection with shift should match poisson_2d with same shift
+    auto A_cd = convdiff_centered_2d(grid, grid, 1.0, 0.0, 0.0, 5.0);
+    auto A_p = poisson_2d<double>(grid, 5.0);
+
+    REQUIRE(A_cd.shape() == A_p.shape());
+
+    for (size_type i = 0; i < n; ++i) {
+      for (size_type j = 0; j < n; ++j) {
+        CHECK(A_cd(i, j) == Catch::Approx(A_p(i, j)));
+      }
+    }
+  }
+
+  // ================================================================
+  // nonsymmetric_sample
+  // ================================================================
+
+  TEST_CASE("matgen - nonsymmetric_sample structure", "[matgen]") {
+    auto A = nonsymmetric_sample<double>();
+
+    REQUIRE(A.shape() == Shape{4, 4});
+
+    // Check it is nonsymmetric
+    bool found_asymmetry = false;
+    for (size_type i = 0; i < 4 && !found_asymmetry; ++i) {
+      for (size_type j = i + 1; j < 4 && !found_asymmetry; ++j) {
+        if (std::abs(A(i, j) - A(j, i)) > 1e-14) { found_asymmetry = true; }
+      }
+    }
+    CHECK(found_asymmetry);
+
+    // Check known values (the specific 4x4 diag-dominant matrix)
+    CHECK(A(0, 0) == Catch::Approx(4.0));
+    CHECK(A(0, 1) == Catch::Approx(-1.0));
+    CHECK(A(0, 2) == Catch::Approx(0.5));
+    CHECK(A(1, 0) == Catch::Approx(-0.5));
+    CHECK(A(1, 1) == Catch::Approx(4.0));
+    CHECK(A(1, 3) == Catch::Approx(-1.0));
+    CHECK(A(2, 0) == Catch::Approx(0.3));
+    CHECK(A(2, 2) == Catch::Approx(4.0));
+    CHECK(A(2, 3) == Catch::Approx(-0.8));
+    CHECK(A(3, 1) == Catch::Approx(-0.6));
+    CHECK(A(3, 2) == Catch::Approx(0.2));
+    CHECK(A(3, 3) == Catch::Approx(4.0));
+
+    // Zero entries
+    CHECK(A(0, 3) == Catch::Approx(0.0));
+    CHECK(A(1, 2) == Catch::Approx(0.0));
+    CHECK(A(2, 1) == Catch::Approx(0.0));
+    CHECK(A(3, 0) == Catch::Approx(0.0));
   }
 
 } // end of namespace sparkit::testing

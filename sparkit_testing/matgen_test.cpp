@@ -26,9 +26,12 @@ namespace sparkit::testing {
   using sparkit::data::detail::Shape;
 
   using sparkit::data::detail::arrow_matrix;
+  using sparkit::data::detail::assemble_matrix;
   using sparkit::data::detail::convdiff_centered_2d;
   using sparkit::data::detail::convection_diffusion_2d;
   using sparkit::data::detail::diagonal_matrix;
+  using sparkit::data::detail::fem_convdiff_2d;
+  using sparkit::data::detail::fem_laplacian_2d;
   using sparkit::data::detail::make_matrix;
   using sparkit::data::detail::manufactured_solution;
   using sparkit::data::detail::multiply;
@@ -465,6 +468,169 @@ namespace sparkit::testing {
     CHECK(A(1, 2) == Catch::Approx(0.0));
     CHECK(A(2, 1) == Catch::Approx(0.0));
     CHECK(A(3, 0) == Catch::Approx(0.0));
+  }
+
+  // ================================================================
+  // assemble_matrix
+  // ================================================================
+
+  TEST_CASE("matgen - assemble_matrix sums duplicates", "[matgen]") {
+    // Two contributions to (0,1) should be summed
+    std::vector<Entry<double>> entries = {
+      {Index{0, 0}, 1.0},
+      {Index{0, 1}, 2.0},
+      {Index{0, 1}, 3.0},
+      {Index{1, 0}, 4.0},
+      {Index{1, 1}, 5.0}};
+
+    auto A = assemble_matrix(Shape{2, 2}, entries);
+
+    REQUIRE(A.shape() == Shape{2, 2});
+    CHECK(A(0, 0) == Catch::Approx(1.0));
+    CHECK(A(0, 1) == Catch::Approx(5.0)); // 2.0 + 3.0
+    CHECK(A(1, 0) == Catch::Approx(4.0));
+    CHECK(A(1, 1) == Catch::Approx(5.0));
+  }
+
+  // ================================================================
+  // fem_laplacian_2d
+  // ================================================================
+
+  TEST_CASE("matgen - fem_laplacian_2d shape and symmetry", "[matgen]") {
+    size_type const nx = 4;
+    size_type const ny = 3;
+    auto A = fem_laplacian_2d<double>(nx, ny);
+
+    size_type const n = (nx + 1) * (ny + 1);
+    REQUIRE(A.shape() == Shape{n, n});
+
+    // Stiffness matrix must be symmetric
+    for (size_type i = 0; i < n; ++i) {
+      for (size_type j = i + 1; j < n; ++j) {
+        CHECK(A(i, j) == Catch::Approx(A(j, i)));
+      }
+    }
+  }
+
+  TEST_CASE("matgen - fem_laplacian_2d known values", "[matgen]") {
+    // nx=2, ny=2: 3x3 = 9 nodes, hx=hy=0.5
+    //
+    //   6 -- 7 -- 8      Cell(0,0): LL=(0,1,3) UR=(4,3,1)
+    //   | /| /|           Cell(1,0): LL=(1,2,4) UR=(5,4,2)
+    //   3 -- 4 -- 5      Cell(0,1): LL=(3,4,6) UR=(7,6,4)
+    //   | /| /|           Cell(1,1): LL=(4,5,7) UR=(8,7,5)
+    //   0 -- 1 -- 2
+    //
+    // Element stiffness (both triangle types on square cells):
+    //   K = [[1, -0.5, -0.5], [-0.5, 0.5, 0], [-0.5, 0, 0.5]]
+    auto A = fem_laplacian_2d<double>(2, 2);
+
+    REQUIRE(A.shape() == Shape{9, 9});
+
+    // Corner node 0: appears in 1 triangle (LL of cell(0,0))
+    // A(0,0) = 1.0
+    CHECK(A(0, 0) == Catch::Approx(1.0));
+    // A(0,1) = -0.5, A(0,3) = -0.5
+    CHECK(A(0, 1) == Catch::Approx(-0.5));
+    CHECK(A(0, 3) == Catch::Approx(-0.5));
+
+    // Interior node 4: appears in 6 triangles
+    // A(4,4) = 0.5 + 1.0 + 0.5 + 0.5 + 1.0 + 0.5 = 4.0
+    CHECK(A(4, 4) == Catch::Approx(4.0));
+
+    // Edge node 1: appears in 3 triangles (LL(0,0), UR(0,0), LL(1,0))
+    // A(1,1) = 0.5 + 0.5 + 1.0 = 2.0
+    CHECK(A(1, 1) == Catch::Approx(2.0));
+  }
+
+  TEST_CASE("matgen - fem_laplacian_2d shifted SPD", "[matgen]") {
+    // Without shift, the Laplacian is SPSD (constants in null space).
+    // With shift > 0 it becomes SPD.
+    auto A = fem_laplacian_2d<double>(3, 3, 1.0);
+
+    size_type const n = 16;
+    REQUIRE(A.shape() == Shape{n, n});
+
+    // x^T A x > 0 for nonzero x
+    std::vector<double> x(static_cast<std::size_t>(n));
+    for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
+      x[i] = static_cast<double>(i + 1);
+    }
+
+    auto Ax = multiply(A, std::span<double const>{x});
+
+    double xtAx = 0.0;
+    for (std::size_t i = 0; i < static_cast<std::size_t>(n); ++i) {
+      xtAx += x[i] * Ax[i];
+    }
+    CHECK(xtAx > 0.0);
+  }
+
+  TEST_CASE("matgen - fem_laplacian_2d rectangular", "[matgen]") {
+    // nx != ny
+    size_type const nx = 5;
+    size_type const ny = 3;
+    auto A = fem_laplacian_2d<double>(nx, ny);
+
+    size_type const n = (nx + 1) * (ny + 1);
+    REQUIRE(A.shape() == Shape{n, n});
+
+    // Still symmetric
+    for (size_type i = 0; i < n; ++i) {
+      for (size_type j = i + 1; j < n; ++j) {
+        CHECK(A(i, j) == Catch::Approx(A(j, i)));
+      }
+    }
+
+    // Grid shortcut should give same result as (grid, grid)
+    auto B = fem_laplacian_2d<double>(static_cast<size_type>(4));
+    auto C = fem_laplacian_2d<double>(4, 4);
+    size_type const m = 25;
+    for (size_type i = 0; i < m; ++i) {
+      for (size_type j = 0; j < m; ++j) {
+        CHECK(B(i, j) == Catch::Approx(C(i, j)));
+      }
+    }
+  }
+
+  // ================================================================
+  // fem_convdiff_2d
+  // ================================================================
+
+  TEST_CASE("matgen - fem_convdiff_2d nonsymmetric", "[matgen]") {
+    auto A = fem_convdiff_2d<double>(3, 3, 1.0, 1.0, 0.5);
+
+    size_type const n = 16;
+    REQUIRE(A.shape() == Shape{n, n});
+
+    // With nonzero convection, A should be nonsymmetric
+    bool found_asymmetry = false;
+    for (size_type i = 0; i < n && !found_asymmetry; ++i) {
+      for (size_type j = i + 1; j < n && !found_asymmetry; ++j) {
+        if (std::abs(A(i, j) - A(j, i)) > 1e-14) { found_asymmetry = true; }
+      }
+    }
+    CHECK(found_asymmetry);
+  }
+
+  TEST_CASE(
+    "matgen - fem_convdiff_2d reduces to scaled laplacian", "[matgen]") {
+    size_type const nx = 3;
+    size_type const ny = 3;
+    size_type const n = (nx + 1) * (ny + 1);
+
+    // With zero convection, should equal diffusion * fem_laplacian_2d
+    double diffusion = 2.5;
+    auto A_cd = fem_convdiff_2d<double>(nx, ny, diffusion, 0.0, 0.0);
+    auto A_lap = fem_laplacian_2d<double>(nx, ny);
+
+    REQUIRE(A_cd.shape() == A_lap.shape());
+
+    for (size_type i = 0; i < n; ++i) {
+      for (size_type j = 0; j < n; ++j) {
+        CHECK(A_cd(i, j) == Catch::Approx(diffusion * A_lap(i, j)));
+      }
+    }
   }
 
 } // end of namespace sparkit::testing

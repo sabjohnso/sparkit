@@ -51,6 +51,38 @@ namespace sparkit::data::detail {
     return Compressed_row_matrix<T>{std::move(sp), std::move(vals)};
   }
 
+  // Build a CSR matrix from entries, summing duplicate (row,col) pairs.
+  //
+  // Unlike make_matrix (which expects unique positions), this function
+  // handles the duplicate contributions that arise naturally from
+  // finite-element assembly. Entries are sorted by (row, col) and
+  // consecutive duplicates are merged by addition.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  assemble_matrix(Shape shape, std::vector<Entry<T>> entries) {
+    std::sort(entries.begin(), entries.end(), [](auto const& a, auto const& b) {
+      if (a.index.row() != b.index.row()) {
+        return a.index.row() < b.index.row();
+      }
+      return a.index.column() < b.index.column();
+    });
+
+    std::vector<Entry<T>> merged;
+    merged.reserve(entries.size());
+
+    for (auto const& e : entries) {
+      if (
+        !merged.empty() && merged.back().index.row() == e.index.row() &&
+        merged.back().index.column() == e.index.column()) {
+        merged.back().value += e.value;
+      } else {
+        merged.push_back(e);
+      }
+    }
+
+    return make_matrix(shape, merged);
+  }
+
   // Build an n x n diagonal matrix from a vector of diagonal values.
   template <typename T = config::value_type>
   Compressed_row_matrix<T>
@@ -351,6 +383,233 @@ namespace sparkit::data::detail {
     }
 
     return make_matrix(Shape{n, n}, entries);
+  }
+
+  // P1 finite-element stiffness matrix for -nabla^2 u on [0,1]x[0,1].
+  //
+  // Mesh: (nx+1) x (ny+1) nodes, 2*nx*ny right triangles (each grid cell
+  // split into lower-left and upper-right triangles). Node numbering is
+  // row-major: node(r,c) = r*(nx+1) + c.
+  //
+  // Element stiffness uses analytical gradients of P1 basis functions:
+  //   K_ij = (b_i*b_j + c_i*c_j) / (4*Area)
+  // where b_i = y_{(i+1)%3} - y_{(i+2)%3}, c_i = x_{(i+2)%3} - x_{(i+1)%3}.
+  //
+  // Without shift the matrix is SPSD (constant in null space).
+  // With shift > 0 it becomes SPD.
+  //
+  // Analog of SPARSKIT2 GENFEA for the Laplacian case.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  fem_laplacian_2d(config::size_type nx, config::size_type ny, T shift = T{0}) {
+    auto const nodes_x = nx + 1;
+    auto const nodes_y = ny + 1;
+    auto const n = nodes_x * nodes_y;
+    auto const hx = T{1} / static_cast<T>(nx);
+    auto const hy = T{1} / static_cast<T>(ny);
+
+    // Estimate: up to 7 entries per interior node
+    std::vector<Entry<T>> entries;
+    entries.reserve(static_cast<std::size_t>(7 * n));
+
+    auto node = [nodes_x](config::size_type r, config::size_type c) {
+      return r * nodes_x + c;
+    };
+
+    // Assemble element stiffness for each cell (cx, cy), split into
+    // two triangles: lower-left and upper-right.
+    for (config::size_type cy = 0; cy < ny; ++cy) {
+      for (config::size_type cx = 0; cx < nx; ++cx) {
+        // Cell corners:
+        //   (cx*hx, cy*hy), ((cx+1)*hx, cy*hy),
+        //   (cx*hx, (cy+1)*hy), ((cx+1)*hx, (cy+1)*hy)
+        //
+        // Node indices:
+        //   n00 = node(cy, cx)      n10 = node(cy, cx+1)
+        //   n01 = node(cy+1, cx)    n11 = node(cy+1, cx+1)
+
+        auto n00 = node(cy, cx);
+        auto n10 = node(cy, cx + 1);
+        auto n01 = node(cy + 1, cx);
+        auto n11 = node(cy + 1, cx + 1);
+
+        // Triangle coordinates
+        T x0, y0, x1, y1, x2, y2;
+
+        // --- Lower-left triangle: (n00, n10, n01) ---
+        x0 = static_cast<T>(cx) * hx;
+        y0 = static_cast<T>(cy) * hy;
+        x1 = static_cast<T>(cx + 1) * hx;
+        y1 = static_cast<T>(cy) * hy;
+        x2 = static_cast<T>(cx) * hx;
+        y2 = static_cast<T>(cy + 1) * hy;
+
+        {
+          config::size_type tri[3] = {n00, n10, n01};
+          T bv[3] = {y1 - y2, y2 - y0, y0 - y1};
+          T cv[3] = {x2 - x1, x0 - x2, x1 - x0};
+          T area2 = std::abs((x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0));
+
+          for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+              T val = (bv[i] * bv[j] + cv[i] * cv[j]) / (2 * area2);
+              entries.push_back(Entry<T>{Index{tri[i], tri[j]}, val});
+            }
+          }
+        }
+
+        // --- Upper-right triangle: (n11, n01, n10) ---
+        x0 = static_cast<T>(cx + 1) * hx;
+        y0 = static_cast<T>(cy + 1) * hy;
+        x1 = static_cast<T>(cx) * hx;
+        y1 = static_cast<T>(cy + 1) * hy;
+        x2 = static_cast<T>(cx + 1) * hx;
+        y2 = static_cast<T>(cy) * hy;
+
+        {
+          config::size_type tri[3] = {n11, n01, n10};
+          T bv[3] = {y1 - y2, y2 - y0, y0 - y1};
+          T cv[3] = {x2 - x1, x0 - x2, x1 - x0};
+          T area2 = std::abs((x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0));
+
+          for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+              T val = (bv[i] * bv[j] + cv[i] * cv[j]) / (2 * area2);
+              entries.push_back(Entry<T>{Index{tri[i], tri[j]}, val});
+            }
+          }
+        }
+      }
+    }
+
+    // Add diagonal shift
+    if (shift != T{0}) {
+      // Lumped mass: shift * h_x * h_y / 2 per triangle contribution,
+      // but for simplicity use identity shift (shift * I).
+      for (config::size_type i = 0; i < n; ++i) {
+        entries.push_back(Entry<T>{Index{i, i}, shift});
+      }
+    }
+
+    return assemble_matrix(Shape{n, n}, std::move(entries));
+  }
+
+  // Square grid shortcut for fem_laplacian_2d.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  fem_laplacian_2d(config::size_type grid) {
+    return fem_laplacian_2d<T>(grid, grid);
+  }
+
+  // Square grid shortcut for shifted fem_laplacian_2d.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  fem_laplacian_2d(config::size_type grid, T shift) {
+    return fem_laplacian_2d<T>(grid, grid, shift);
+  }
+
+  // P1 finite-element convection-diffusion on [0,1]x[0,1].
+  //
+  // Same triangular mesh as fem_laplacian_2d. Each element contributes:
+  //   diffusion * K_ij + C_ij
+  // where K_ij is the stiffness entry and C_ij is the convection term:
+  //   C_ij = (bx * b_j + by * c_j) / 6
+  // (constant test function integral over P1 triangle = Area/3,
+  //  gradient of phi_j dotted with velocity = (bx*b_j + by*c_j)/(2*Area)).
+  //
+  // Nonsymmetric when (bx, by) != (0, 0).
+  // With zero convection reduces to diffusion * fem_laplacian_2d.
+  template <typename T = config::value_type>
+  Compressed_row_matrix<T>
+  fem_convdiff_2d(
+    config::size_type nx,
+    config::size_type ny,
+    T diffusion,
+    T bx,
+    T by,
+    T shift = T{0}) {
+    auto const nodes_x = nx + 1;
+    auto const nodes_y = ny + 1;
+    auto const n = nodes_x * nodes_y;
+    auto const hx = T{1} / static_cast<T>(nx);
+    auto const hy = T{1} / static_cast<T>(ny);
+
+    std::vector<Entry<T>> entries;
+    entries.reserve(static_cast<std::size_t>(7 * n));
+
+    auto node = [nodes_x](config::size_type r, config::size_type c) {
+      return r * nodes_x + c;
+    };
+
+    for (config::size_type cy = 0; cy < ny; ++cy) {
+      for (config::size_type cx = 0; cx < nx; ++cx) {
+        auto n00 = node(cy, cx);
+        auto n10 = node(cy, cx + 1);
+        auto n01 = node(cy + 1, cx);
+        auto n11 = node(cy + 1, cx + 1);
+
+        T x0, y0, x1, y1, x2, y2;
+
+        // --- Lower-left triangle: (n00, n10, n01) ---
+        x0 = static_cast<T>(cx) * hx;
+        y0 = static_cast<T>(cy) * hy;
+        x1 = static_cast<T>(cx + 1) * hx;
+        y1 = static_cast<T>(cy) * hy;
+        x2 = static_cast<T>(cx) * hx;
+        y2 = static_cast<T>(cy + 1) * hy;
+
+        {
+          config::size_type tri[3] = {n00, n10, n01};
+          T bv[3] = {y1 - y2, y2 - y0, y0 - y1};
+          T cv[3] = {x2 - x1, x0 - x2, x1 - x0};
+          T area2 = std::abs((x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0));
+
+          for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+              T stiffness =
+                diffusion * (bv[i] * bv[j] + cv[i] * cv[j]) / (2 * area2);
+              T convection = (bx * bv[j] + by * cv[j]) / T{6};
+              entries.push_back(
+                Entry<T>{Index{tri[i], tri[j]}, stiffness + convection});
+            }
+          }
+        }
+
+        // --- Upper-right triangle: (n11, n01, n10) ---
+        x0 = static_cast<T>(cx + 1) * hx;
+        y0 = static_cast<T>(cy + 1) * hy;
+        x1 = static_cast<T>(cx) * hx;
+        y1 = static_cast<T>(cy + 1) * hy;
+        x2 = static_cast<T>(cx + 1) * hx;
+        y2 = static_cast<T>(cy) * hy;
+
+        {
+          config::size_type tri[3] = {n11, n01, n10};
+          T bv[3] = {y1 - y2, y2 - y0, y0 - y1};
+          T cv[3] = {x2 - x1, x0 - x2, x1 - x0};
+          T area2 = std::abs((x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0));
+
+          for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+              T stiffness =
+                diffusion * (bv[i] * bv[j] + cv[i] * cv[j]) / (2 * area2);
+              T convection = (bx * bv[j] + by * cv[j]) / T{6};
+              entries.push_back(
+                Entry<T>{Index{tri[i], tri[j]}, stiffness + convection});
+            }
+          }
+        }
+      }
+    }
+
+    // Add diagonal shift
+    if (shift != T{0}) {
+      for (config::size_type i = 0; i < n; ++i) {
+        entries.push_back(Entry<T>{Index{i, i}, shift});
+      }
+    }
+
+    return assemble_matrix(Shape{n, n}, std::move(entries));
   }
 
   // Generate a random sparse n x n matrix with diagonal dominance.
